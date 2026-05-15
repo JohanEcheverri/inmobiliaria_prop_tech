@@ -1,0 +1,7 @@
+//Iniciar Frontend//
+(dentro de carpeta frontend)
+npm run dev
+
+//Iniciar Backend//
+(dentro de carpeta backend)
+./mvnw spring-boot:run
