@@ -200,7 +200,37 @@ Constructor conveniente: `EventoHistorial(Inmueble, TipoEventoHistorial)` asigna
 
 #### `Alerta`
 
-Clase vacía (placeholder para futuras notificaciones o alertas del sistema).
+Notificacion interna generada por reglas de seguimiento comercial.
+
+Casos cubiertos:
+
+- contratos proximos a vencer
+- inmuebles sin visitas recientes
+- propiedades con alta demanda
+- visitas pendientes por confirmar
+- inmuebles reservados por mucho tiempo sin cierre
+- clientes sin seguimiento reciente
+
+| Campo | Tipo |
+|-------|------|
+| `codigo` | `String` |
+| `tipo` | `TipoAlerta` |
+| `prioridad` | `PrioridadAlerta` |
+| `titulo` | `String` |
+| `descripcion` | `String` |
+| `fechaGeneracion` | `LocalDateTime` |
+| `fechaLimiteAtencion` | `LocalDateTime` |
+| `atendida` | `boolean` |
+| `fechaAtencion` | `LocalDateTime` |
+| `inmueble` | `Inmueble` |
+| `cliente` | `Cliente` |
+| `contrato` | `Contrato` |
+| `visita` | `Visita` |
+| `operacion` | `Operacion` |
+| `diasReferencia` | `int` |
+| `cantidadReferencia` | `int` |
+
+Incluye metodos convenientes para construir alertas de cada caso y `marcarAtendida()` para cerrar la alerta.
 
 ---
 
@@ -218,6 +248,8 @@ Clase vacía (placeholder para futuras notificaciones o alertas del sistema).
 | `EstadoVisita` | `PENDIENTE`, `CONFIRMADA`, `REALIZADA`, `CANCELADA`, `REPROGRAMADA` | Flujo de visitas |
 | `EstadoOperacion` | `COMPLETADA`, `EN_PROCESO`, `CANCELADA` | Estado de operaciones comerciales |
 | `TipoEventoHistorial` | `CONSULTA`, `VISITA`, `DESCARTADO`, `GUARDADO`, `NEGOCIANDO`, `CERRADO` | Tipos de evento en historial |
+| `TipoAlerta` | `CONTRATO_PROXIMO_A_VENCER`, `INMUEBLE_SIN_VISITAS`, `PROPIEDAD_ALTA_DEMANDA`, `VISITA_PENDIENTE_POR_CONFIRMAR`, `INMUEBLE_RESERVADO_SIN_CIERRE`, `CLIENTE_SIN_SEGUIMIENTO_RECIENTE` | Reglas que generan alertas |
+| `PrioridadAlerta` | `BAJA`, `MEDIA`, `ALTA` | Urgencia de atencion de una alerta |
 
 ---
 

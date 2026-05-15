@@ -131,5 +131,15 @@ public class InmuebleService {
         return inmuebleRepository.findByPrecio(precio);
     }
 
-
+    public SinglyLinkedList<Inmueble> consultarInmueblesEnRangoPrecio(double min, double max) {
+        if (min > max) {
+            throw new IllegalArgumentException("El precio mínimo no puede ser mayor al precio máximo");
+        }
+        SinglyLinkedList<Inmueble> resultado = new SinglyLinkedList<>();
+        var inmuebles = inmuebleRepository.findInmueblesEnRangoPrecio(min, max);
+        for (int i = 0; i < inmuebles.size(); i++) {
+            resultado.addLast(inmuebles.get(i));
+        }
+        return resultado;
+    }
 }

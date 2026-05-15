@@ -1,4 +1,5 @@
 package uniquindio.edu.co.inmobiliaria.models.entities;
+import jakarta.persistence.Entity;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 import java.time.LocalDate;
@@ -12,6 +13,7 @@ import java.time.LocalDate;
 @ToString(callSuper = true) 
 @NoArgsConstructor
 @AllArgsConstructor
+@Entity
 
 public class Arriendo extends Operacion {
 

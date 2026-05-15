@@ -31,3 +31,8 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Local MariaDB dev instance ###
+.mariadb-data/
+.mariadb.sock
+.mariadb.pid

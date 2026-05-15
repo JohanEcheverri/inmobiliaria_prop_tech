@@ -14,6 +14,4 @@ public enum TipoEventoHistorial {
     GUARDADO,
     /** Inició o mantiene negociación. */
     NEGOCIANDO,
-    /** Cerró el proceso (compra/arriendo u otra definición de negocio). */
-    CERRADO
 }
