@@ -1,4 +1,5 @@
 package uniquindio.edu.co.inmobiliaria.models.entities;
+import jakarta.persistence.Embeddable;
 import lombok.*;
 
 /**
@@ -7,8 +8,10 @@ import lombok.*;
 @Getter
 @Setter
 @ToString
+@EqualsAndHashCode
 @NoArgsConstructor
 @AllArgsConstructor
+@Embeddable
 
 public class Ciudad {
     /** Nombre de la ciudad. */

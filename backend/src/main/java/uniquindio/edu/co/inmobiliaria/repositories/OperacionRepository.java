@@ -7,7 +7,9 @@ import uniquindio.edu.co.inmobiliaria.models.entities.Operacion;
 import uniquindio.edu.co.inmobiliaria.models.entities.Renovacion;
 import uniquindio.edu.co.inmobiliaria.models.entities.Venta;
 import uniquindio.edu.co.inmobiliaria.models.enums.EstadoOperacion;
+import uniquindio.edu.co.inmobiliaria.repositories.jpa.OperacionJpaRepository;
 import uniquindio.edu.co.inmobiliaria.structures.DynamicArrayList;
+import uniquindio.edu.co.inmobiliaria.structures.HashTable;
 
 import java.util.Objects;
 import java.util.Optional;
@@ -15,44 +17,48 @@ import java.util.Optional;
 @Repository
 public class OperacionRepository {
 
+    private final OperacionJpaRepository operacionJpaRepository;
     private final DynamicArrayList<Operacion> operaciones;
+    private final HashTable<String, Operacion> operacionesPorCodigo;
 
-    public OperacionRepository() {
+    public OperacionRepository(OperacionJpaRepository operacionJpaRepository) {
+        this.operacionJpaRepository = operacionJpaRepository;
         this.operaciones = new DynamicArrayList<>();
+        this.operacionesPorCodigo = new HashTable<>();
+        cargarDesdeBaseDeDatos();
     }
 
     public void save(Operacion operacion) {
         Objects.requireNonNull(operacion, "La operación no puede ser nula");
-        if (operacion.getCodigo() == null || operacion.getCodigo().isBlank()) {
-            throw new IllegalArgumentException("El código de la operación no puede estar vacío");
+        validarCodigo(operacion.getCodigo());
+        if (operacionesPorCodigo.containsKey(operacion.getCodigo())) {
+            throw new IllegalArgumentException("Ya existe una operación con el código: " + operacion.getCodigo());
         }
-        if (findByCodigo(operacion.getCodigo()).isPresent()) {
-            throw new IllegalArgumentException(
-                    "Ya existe una operación con el código: " + operacion.getCodigo());
-        }
-        operaciones.add(operacion);
+        operacionJpaRepository.save(operacion);
+        agregarAIndices(operacion);
     }
 
     public void update(Operacion operacionActualizada) {
         Objects.requireNonNull(operacionActualizada, "La operación no puede ser nula");
-        for (int i = 0; i < operaciones.size(); i++) {
-            if (Objects.equals(operaciones.get(i).getCodigo(), operacionActualizada.getCodigo())) {
-                operaciones.set(i, operacionActualizada);
-                return;
-            }
+        validarCodigo(operacionActualizada.getCodigo());
+        if (!operacionesPorCodigo.containsKey(operacionActualizada.getCodigo())) {
+            throw new IllegalArgumentException(
+                    "No se encontró una operación con el código: " + operacionActualizada.getCodigo());
         }
-        throw new IllegalArgumentException(
-                "No se encontró una operación con el código: " + operacionActualizada.getCodigo());
+        Operacion anterior = operacionesPorCodigo.get(operacionActualizada.getCodigo());
+        operacionJpaRepository.save(operacionActualizada);
+        eliminarDeIndices(anterior);
+        agregarAIndices(operacionActualizada);
     }
 
     public boolean deleteByCodigo(String codigo) {
-        for (int i = 0; i < operaciones.size(); i++) {
-            if (Objects.equals(operaciones.get(i).getCodigo(), codigo)) {
-                operaciones.removeAt(i);
-                return true;
-            }
+        if (codigo == null || !operacionesPorCodigo.containsKey(codigo)) {
+            return false;
         }
-        return false;
+        Operacion operacion = operacionesPorCodigo.get(codigo);
+        operacionJpaRepository.deleteById(codigo);
+        eliminarDeIndices(operacion);
+        return true;
     }
 
     public DynamicArrayList<Operacion> findAll() {
@@ -68,12 +74,10 @@ public class OperacionRepository {
     }
 
     public Optional<Operacion> findByCodigo(String codigo) {
-        for (int i = 0; i < operaciones.size(); i++) {
-            if (Objects.equals(operaciones.get(i).getCodigo(), codigo)) {
-                return Optional.of(operaciones.get(i));
-            }
+        if (codigo == null || !operacionesPorCodigo.containsKey(codigo)) {
+            return Optional.empty();
         }
-        return Optional.empty();
+        return Optional.of(operacionesPorCodigo.get(codigo));
     }
 
     public DynamicArrayList<Operacion> findByEstado(EstadoOperacion estado) {
@@ -152,5 +156,25 @@ public class OperacionRepository {
             }
         }
         return resultado;
+    }
+
+    private void cargarDesdeBaseDeDatos() {
+        operacionJpaRepository.findAll().forEach(this::agregarAIndices);
+    }
+
+    private void agregarAIndices(Operacion operacion) {
+        operaciones.add(operacion);
+        operacionesPorCodigo.put(operacion.getCodigo(), operacion);
+    }
+
+    private void eliminarDeIndices(Operacion operacion) {
+        operaciones.remove(operacion);
+        operacionesPorCodigo.remove(operacion.getCodigo());
+    }
+
+    private void validarCodigo(String codigo) {
+        if (codigo == null || codigo.isBlank()) {
+            throw new IllegalArgumentException("El código de la operación no puede estar vacío");
+        }
     }
 }

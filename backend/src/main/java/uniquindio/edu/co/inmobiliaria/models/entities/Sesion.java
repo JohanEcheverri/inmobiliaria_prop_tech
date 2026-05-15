@@ -1,5 +1,11 @@
 package uniquindio.edu.co.inmobiliaria.models.entities;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.Id;
+import jakarta.persistence.ManyToOne;
 import lombok.*;
 import uniquindio.edu.co.inmobiliaria.models.enums.TipoSesion;
 
@@ -17,13 +23,17 @@ import java.util.UUID;
 @ToString
 @NoArgsConstructor
 @AllArgsConstructor
+@Entity
 public class Sesion {
 
     /** Identificador único de la sesión (por ejemplo UUID). */
+    @Id
     private String idSesion;
     /** Indica si la sesión corresponde a un cliente o a un asesor. */
+    @Enumerated(EnumType.STRING)
     private TipoSesion tipoSesion;
     /** Usuario autenticado; en la práctica será una instancia de {@link Cliente} o {@link Asesor}. */
+    @ManyToOne(fetch = FetchType.LAZY)
     private Usuario usuario;
     /** Momento en que se inició la sesión. */
     private LocalDateTime fechaInicio;

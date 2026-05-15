@@ -6,133 +6,110 @@ import uniquindio.edu.co.inmobiliaria.models.enums.EstadoBusquedaCliente;
 import uniquindio.edu.co.inmobiliaria.models.enums.TipoCliente;
 import uniquindio.edu.co.inmobiliaria.models.enums.TipoInmueble;
 import uniquindio.edu.co.inmobiliaria.models.enums.Zona;
+import uniquindio.edu.co.inmobiliaria.repositories.jpa.ClienteJpaRepository;
 import uniquindio.edu.co.inmobiliaria.structures.DynamicArrayList;
+import uniquindio.edu.co.inmobiliaria.structures.HashTable;
 import uniquindio.edu.co.inmobiliaria.structures.Tree;
 
 import java.util.Objects;
 import java.util.Optional;
 
-/**
- * Repositorio en memoria para la entidad {@link Cliente}.
- * <p>
- * Utiliza {@link DynamicArrayList} como estructura de almacenamiento.
- * Anotado con {@code @Repository} para que Spring lo gestione como bean
- * e inyectarlo donde se necesite.
- * </p>
- */
 @Repository
 public class ClienteRepository {
 
+    private final ClienteJpaRepository clienteJpaRepository;
     private final DynamicArrayList<Cliente> clientes;
-
+    private final HashTable<String, Cliente> clientesPorId;
+    private final HashTable<String, Cliente> clientesPorEmail;
     private final Tree<Cliente> clientesPorPresupuesto;
-    // ─────────────────────────────── CRUD ───────────────────────────────
 
-    public ClienteRepository() {
+    public ClienteRepository(ClienteJpaRepository clienteJpaRepository) {
+        this.clienteJpaRepository = clienteJpaRepository;
         this.clientes = new DynamicArrayList<>();
-        this.clientesPorPresupuesto = new Tree<>(
-                (c1, c2) -> Double.compare(c1.getPresupuesto(), c2.getPresupuesto()));
+        this.clientesPorId = new HashTable<>();
+        this.clientesPorEmail = new HashTable<>();
+        this.clientesPorPresupuesto = new Tree<>(this::compararPorPresupuestoEId);
+        cargarDesdeBaseDeDatos();
     }
 
-    /**
-     * Guarda un nuevo cliente en el repositorio.
-     *
-     * @param cliente entidad a guardar
-     * @throws IllegalArgumentException si el cliente es nulo o ya existe uno con el mismo email
-     */
     public void save(Cliente cliente) {
         Objects.requireNonNull(cliente, "El cliente no puede ser nulo");
-        if (cliente.getEmail() != null && findByEmail(cliente.getEmail()).isPresent()) {
-            throw new IllegalArgumentException(
-                    "Ya existe un cliente con el email: " + cliente.getEmail());
+        validarId(cliente);
+        if (clientesPorId.containsKey(cliente.getId())) {
+            throw new IllegalArgumentException("Ya existe un cliente con el id: " + cliente.getId());
         }
-        clientes.add(cliente);
+        if (cliente.getEmail() != null && clientesPorEmail.containsKey(cliente.getEmail())) {
+            throw new IllegalArgumentException("Ya existe un cliente con el email: " + cliente.getEmail());
+        }
+        clienteJpaRepository.save(cliente);
+        agregarAIndices(cliente);
     }
 
-    /**
-     * Actualiza los datos de un cliente existente identificado por su email.
-     *
-     * @param clienteActualizado datos nuevos del cliente
-     * @throws IllegalArgumentException si no se encuentra un cliente con ese email
-     */
     public void update(Cliente clienteActualizado) {
         Objects.requireNonNull(clienteActualizado, "El cliente no puede ser nulo");
-        for (int i = 0; i < clientes.size(); i++) {
-            if (Objects.equals(clientes.get(i).getEmail(), clienteActualizado.getEmail())) {
-                clientes.set(i, clienteActualizado);
-                return;
-            }
+        validarId(clienteActualizado);
+        if (!clientesPorId.containsKey(clienteActualizado.getId())) {
+            throw new IllegalArgumentException("No se encontró un cliente con el id: " + clienteActualizado.getId());
         }
-        throw new IllegalArgumentException(
-                "No se encontró un cliente con el email: " + clienteActualizado.getEmail());
+        Cliente anterior = clientesPorId.get(clienteActualizado.getId());
+        if (clienteActualizado.getEmail() != null
+                && clientesPorEmail.containsKey(clienteActualizado.getEmail())
+                && !Objects.equals(anterior.getId(), clientesPorEmail.get(clienteActualizado.getEmail()).getId())) {
+            throw new IllegalArgumentException("Ya existe un cliente con el email: " + clienteActualizado.getEmail());
+        }
+        clienteJpaRepository.save(clienteActualizado);
+        eliminarDeIndices(anterior);
+        agregarAIndices(clienteActualizado);
     }
 
-    /**
-     * Elimina un cliente por su email.
-     *
-     * @param email correo del cliente a eliminar
-     * @return {@code true} si se eliminó, {@code false} si no existía
-     */
     public boolean deleteByEmail(String email) {
-        for (int i = 0; i < clientes.size(); i++) {
-            if (Objects.equals(clientes.get(i).getEmail(), email)) {
-                clientes.removeAt(i);
-                return true;
-            }
+        Optional<Cliente> cliente = findByEmail(email);
+        if (cliente.isEmpty()) {
+            return false;
         }
-        return false;
+        return deleteById(cliente.get().getId());
     }
 
-    /**
-     * Retorna todos los clientes almacenados.
-     *
-     * @return lista dinámica con todos los clientes
-     */
+    public boolean deleteById(String id) {
+        Optional<Cliente> cliente = findById(id);
+        if (cliente.isEmpty()) {
+            return false;
+        }
+        clienteJpaRepository.deleteById(id);
+        eliminarDeIndices(cliente.get());
+        return true;
+    }
+
     public DynamicArrayList<Cliente> findAll() {
         return clientes;
     }
 
-    /**
-     * Indica la cantidad de clientes registrados.
-     *
-     * @return número de clientes
-     */
     public int count() {
         return clientes.size();
     }
 
-    /**
-     * Verifica si el repositorio está vacío.
-     *
-     * @return {@code true} si no hay clientes
-     */
     public boolean isEmpty() {
         return clientes.isEmpty();
     }
 
-    // ──────────────────────── BÚSQUEDAS PUNTUALES ────────────────────────
-
-    /**
-     * Busca un cliente por su correo electrónico (identificador único).
-     *
-     * @param email correo a buscar
-     * @return {@link Optional} con el cliente encontrado, o vacío
-     */
-    public Optional<Cliente> findByEmail(String email) {
-        for (int i = 0; i < clientes.size(); i++) {
-            if (Objects.equals(clientes.get(i).getEmail(), email)) {
-                return Optional.of(clientes.get(i));
-            }
-        }
-        return Optional.empty();
+    public boolean existsById(String id) {
+        return id != null && clientesPorId.containsKey(id);
     }
 
-    /**
-     * Busca un cliente por su nombre (coincidencia exacta, case-insensitive).
-     *
-     * @param nombre nombre a buscar
-     * @return {@link Optional} con el primer cliente que coincida
-     */
+    public Optional<Cliente> findById(String id) {
+        if (id == null || !clientesPorId.containsKey(id)) {
+            return Optional.empty();
+        }
+        return Optional.of(clientesPorId.get(id));
+    }
+
+    public Optional<Cliente> findByEmail(String email) {
+        if (email == null || !clientesPorEmail.containsKey(email)) {
+            return Optional.empty();
+        }
+        return Optional.of(clientesPorEmail.get(email));
+    }
+
     public Optional<Cliente> findByNombre(String nombre) {
         for (int i = 0; i < clientes.size(); i++) {
             if (clientes.get(i).getNombre() != null
@@ -143,14 +120,6 @@ public class ClienteRepository {
         return Optional.empty();
     }
 
-    // ──────────────────────── BÚSQUEDAS POR FILTRO ────────────────────────
-
-    /**
-     * Filtra clientes por tipo (COMPRADOR / ARRENDATARIO).
-     *
-     * @param tipo tipo de cliente
-     * @return lista con los clientes que coinciden
-     */
     public DynamicArrayList<Cliente> findByTipoCliente(TipoCliente tipo) {
         DynamicArrayList<Cliente> resultado = new DynamicArrayList<>();
         for (int i = 0; i < clientes.size(); i++) {
@@ -161,12 +130,6 @@ public class ClienteRepository {
         return resultado;
     }
 
-    /**
-     * Filtra clientes por zona de interés.
-     *
-     * @param zona zona geográfica
-     * @return lista con los clientes de esa zona
-     */
     public DynamicArrayList<Cliente> findByZonaInteres(Zona zona) {
         DynamicArrayList<Cliente> resultado = new DynamicArrayList<>();
         for (int i = 0; i < clientes.size(); i++) {
@@ -177,12 +140,6 @@ public class ClienteRepository {
         return resultado;
     }
 
-    /**
-     * Filtra clientes por tipo de inmueble deseado.
-     *
-     * @param tipo tipo de inmueble
-     * @return lista con los clientes que buscan ese tipo
-     */
     public DynamicArrayList<Cliente> findByTipoInmuebleDeseado(TipoInmueble tipo) {
         DynamicArrayList<Cliente> resultado = new DynamicArrayList<>();
         for (int i = 0; i < clientes.size(); i++) {
@@ -193,12 +150,6 @@ public class ClienteRepository {
         return resultado;
     }
 
-    /**
-     * Filtra clientes por estado de búsqueda.
-     *
-     * @param estado estado actual de la búsqueda
-     * @return lista con los clientes en ese estado
-     */
     public DynamicArrayList<Cliente> findByEstadoBusqueda(EstadoBusquedaCliente estado) {
         DynamicArrayList<Cliente> resultado = new DynamicArrayList<>();
         for (int i = 0; i < clientes.size(); i++) {
@@ -209,32 +160,20 @@ public class ClienteRepository {
         return resultado;
     }
 
-    /**
-     * Filtra clientes cuyo presupuesto se encuentra dentro de un rango.
-     *
-     * @param min presupuesto mínimo (inclusive)
-     * @param max presupuesto máximo (inclusive)
-     * @return lista con los clientes dentro del rango
-     */
     public DynamicArrayList<Cliente> findByPresupuestoBetween(double min, double max) {
         DynamicArrayList<Cliente> resultado = new DynamicArrayList<>();
-        for (int i = 0; i < clientes.size(); i++) {
-            Cliente c = clientes.get(i);
-            if (c.getPresupuesto() != null
-                    && c.getPresupuesto() >= min
-                    && c.getPresupuesto() <= max) {
-                resultado.add(c);
+        DynamicArrayList<Cliente> ordenados = clientesPorPresupuesto.inOrder();
+        for (int i = 0; i < ordenados.size(); i++) {
+            Cliente cliente = ordenados.get(i);
+            if (cliente.getPresupuesto() != null
+                    && cliente.getPresupuesto() >= min
+                    && cliente.getPresupuesto() <= max) {
+                resultado.add(cliente);
             }
         }
         return resultado;
     }
 
-    /**
-     * Filtra clientes que buscan al menos cierta cantidad de habitaciones.
-     *
-     * @param minHabitaciones número mínimo de habitaciones deseadas
-     * @return lista con los clientes que cumplen el criterio
-     */
     public DynamicArrayList<Cliente> findByMinHabitacionesDeseadas(int minHabitaciones) {
         DynamicArrayList<Cliente> resultado = new DynamicArrayList<>();
         for (int i = 0; i < clientes.size(); i++) {
@@ -243,5 +182,56 @@ public class ClienteRepository {
             }
         }
         return resultado;
+    }
+
+    private void cargarDesdeBaseDeDatos() {
+        clienteJpaRepository.findAll().forEach(this::agregarAIndices);
+    }
+
+    private void agregarAIndices(Cliente cliente) {
+        clientes.add(cliente);
+        clientesPorId.put(cliente.getId(), cliente);
+        if (cliente.getEmail() != null) {
+            clientesPorEmail.put(cliente.getEmail(), cliente);
+        }
+        clientesPorPresupuesto.insert(cliente);
+    }
+
+    private void eliminarDeIndices(Cliente cliente) {
+        clientes.remove(cliente);
+        clientesPorId.remove(cliente.getId());
+        if (cliente.getEmail() != null && clientesPorEmail.containsKey(cliente.getEmail())) {
+            clientesPorEmail.remove(cliente.getEmail());
+        }
+        clientesPorPresupuesto.remove(cliente);
+    }
+
+    private void validarId(Cliente cliente) {
+        if (cliente.getId() == null || cliente.getId().isBlank()) {
+            throw new IllegalArgumentException("El id del cliente no puede estar vacío");
+        }
+    }
+
+    private int compararPorPresupuestoEId(Cliente c1, Cliente c2) {
+        int comparacionPresupuesto = Double.compare(
+                c1.getPresupuesto() != null ? c1.getPresupuesto() : 0,
+                c2.getPresupuesto() != null ? c2.getPresupuesto() : 0);
+        if (comparacionPresupuesto != 0) {
+            return comparacionPresupuesto;
+        }
+        return compararTexto(c1.getId(), c2.getId());
+    }
+
+    private int compararTexto(String valor1, String valor2) {
+        if (Objects.equals(valor1, valor2)) {
+            return 0;
+        }
+        if (valor1 == null) {
+            return -1;
+        }
+        if (valor2 == null) {
+            return 1;
+        }
+        return valor1.compareTo(valor2);
     }
 }

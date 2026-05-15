@@ -1,68 +1,52 @@
 package uniquindio.edu.co.inmobiliaria.repositories;
 
 import org.springframework.stereotype.Repository;
-import uniquindio.edu.co.inmobiliaria.models.entities.Inmueble;
-import uniquindio.edu.co.inmobiliaria.structures.DynamicArrayList;
-import uniquindio.edu.co.inmobiliaria.structures.Tree;
-import uniquindio.edu.co.inmobiliaria.structures.HashTable;
-import uniquindio.edu.co.inmobiliaria.structures.SinglyLinkedList;
 import uniquindio.edu.co.inmobiliaria.models.entities.Ciudad;
+import uniquindio.edu.co.inmobiliaria.models.entities.Inmueble;
 import uniquindio.edu.co.inmobiliaria.models.enums.Estado;
 import uniquindio.edu.co.inmobiliaria.models.enums.TipoInmueble;
+import uniquindio.edu.co.inmobiliaria.repositories.jpa.InmuebleJpaRepository;
+import uniquindio.edu.co.inmobiliaria.structures.DynamicArrayList;
+import uniquindio.edu.co.inmobiliaria.structures.HashTable;
 import uniquindio.edu.co.inmobiliaria.structures.PriorityQueue;
+import uniquindio.edu.co.inmobiliaria.structures.SinglyLinkedList;
+import uniquindio.edu.co.inmobiliaria.structures.Tree;
 
 import java.util.Objects;
+import java.util.Optional;
 
 @Repository
 public class InmuebleRepository {
 
-    //private final DynamicArrayList<Inmueble> inmuebles;
-
+    private final InmuebleJpaRepository inmuebleJpaRepository;
     private final Tree<Inmueble> inmueblesPorPrecio;
-
     private final HashTable<String, Inmueble> inmueblesPorCodigo;
-
     private final HashTable<Ciudad, SinglyLinkedList<Inmueble>> inmueblesPorCiudad;
-
     private final HashTable<TipoInmueble, SinglyLinkedList<Inmueble>> inmueblesPorTipo;
-
     private final HashTable<Estado, SinglyLinkedList<Inmueble>> inmueblesPorEstado;
-
     private final PriorityQueue<Inmueble> inmueblesMayorDemanda;
 
-    public InmuebleRepository() {
-        // this.inmuebles = new DynamicArrayList<>();
-        this.inmueblesPorPrecio = new Tree<>(
-            this::compararPorPrecioYCodigo);
+    public InmuebleRepository(InmuebleJpaRepository inmuebleJpaRepository) {
+        this.inmuebleJpaRepository = inmuebleJpaRepository;
+        this.inmueblesPorPrecio = new Tree<>(this::compararPorPrecioYCodigo);
         this.inmueblesPorCodigo = new HashTable<>();
         this.inmueblesPorCiudad = new HashTable<>();
         this.inmueblesPorTipo = new HashTable<>();
         this.inmueblesPorEstado = new HashTable<>();
         this.inmueblesMayorDemanda = new PriorityQueue<>(
-                (i1, i2) -> Integer.compare(i2.getNumeroHabitaciones(), i1.getNumeroHabitaciones())); // Ej
+                (i1, i2) -> Integer.compare(i2.getNumeroHabitaciones(), i1.getNumeroHabitaciones()));
+        cargarDesdeBaseDeDatos();
     }
 
     public void save(Inmueble inmueble) {
-
         if (inmueble == null || inmueble.getCodigo() == null) {
             throw new IllegalArgumentException("El inmueble o su código no pueden ser nulos");
         }
         if (inmueblesPorCodigo.containsKey(inmueble.getCodigo())) {
             throw new IllegalArgumentException("Ya existe un inmueble con el código: " + inmueble.getCodigo());
         }
-
-        // Agregar a la estructura principal
-        inmueblesPorPrecio.insert(inmueble);
-        inmueblesPorCodigo.put(inmueble.getCodigo(), inmueble);
-
-        // Agregar a índices secundarios
-        inmueblesPorCiudad.computeIfAbsent(inmueble.getCiudad(), k -> new SinglyLinkedList<>()).addLast(inmueble);
-        inmueblesPorTipo.computeIfAbsent(inmueble.getTipoInmueble(), k -> new SinglyLinkedList<>()).addLast(inmueble);
-        inmueblesPorEstado.computeIfAbsent(inmueble.getEstado(), k -> new SinglyLinkedList<>()).addLast(inmueble);
-
-        // Agregar a la cola de mayor demanda (ejemplo simple basado en número de
-        // habitaciones)
-        inmueblesMayorDemanda.enqueue(inmueble);
+        inmuebleJpaRepository.save(inmueble);
+        agregarAIndices(inmueble);
     }
 
     public void update(Inmueble inmueble) {
@@ -72,9 +56,10 @@ public class InmuebleRepository {
         if (!inmueblesPorCodigo.containsKey(inmueble.getCodigo())) {
             throw new IllegalArgumentException("No se encontró un inmueble con el código: " + inmueble.getCodigo());
         }
-
-        deleteByCodigo(inmueble.getCodigo());
-        save(inmueble);
+        Inmueble anterior = inmueblesPorCodigo.get(inmueble.getCodigo());
+        inmuebleJpaRepository.save(inmueble);
+        eliminarDeIndices(anterior);
+        agregarAIndices(inmueble);
     }
 
     public void deleteByCodigo(String codigo) {
@@ -84,15 +69,19 @@ public class InmuebleRepository {
         if (!inmueblesPorCodigo.containsKey(codigo)) {
             throw new IllegalArgumentException("No se encontró un inmueble con el código: " + codigo);
         }
-
-        Inmueble inmueble = inmueblesPorCodigo.remove(codigo);
-        inmueblesPorPrecio.remove(inmueble);
-        removerDeIndice(inmueblesPorCiudad, inmueble.getCiudad(), inmueble);
-        removerDeIndice(inmueblesPorTipo, inmueble.getTipoInmueble(), inmueble);
-        removerDeIndice(inmueblesPorEstado, inmueble.getEstado(), inmueble);
-        reconstruirColaMayorDemanda();
+        Inmueble inmueble = inmueblesPorCodigo.get(codigo);
+        inmuebleJpaRepository.deleteById(codigo);
+        eliminarDeIndices(inmueble);
     }
 
+    public boolean existsById(String codigo) {
+        return codigo != null && inmueblesPorCodigo.containsKey(codigo);
+    }
+
+    public Optional<Inmueble> findById(String codigo) {
+        Inmueble inmueble = findByCodigo(codigo);
+        return inmueble != null ? Optional.of(inmueble) : Optional.empty();
+    }
 
     public Inmueble findByCodigo(String codigo) {
         if (codigo == null || !inmueblesPorCodigo.containsKey(codigo)) {
@@ -102,23 +91,31 @@ public class InmuebleRepository {
     }
 
     public SinglyLinkedList<Inmueble> findByCiudad(Ciudad ciudad) {
-        return inmueblesPorCiudad.get(ciudad);
+        return inmueblesPorCiudad.getOrDefault(ciudad, new SinglyLinkedList<>());
     }
 
     public SinglyLinkedList<Inmueble> findByTipo(TipoInmueble tipo) {
-        return inmueblesPorTipo.get(tipo);
+        return inmueblesPorTipo.getOrDefault(tipo, new SinglyLinkedList<>());
+    }
+
+    public SinglyLinkedList<Inmueble> findByTipoInmueble(TipoInmueble tipo) {
+        return findByTipo(tipo);
     }
 
     public SinglyLinkedList<Inmueble> findByEstado(Estado estado) {
-        return inmueblesPorEstado.get(estado);
+        return inmueblesPorEstado.getOrDefault(estado, new SinglyLinkedList<>());
     }
 
     public Inmueble findInmuebleMayorDemanda() {
-        return inmueblesMayorDemanda.peek();
+        return inmueblesMayorDemanda.isEmpty() ? null : inmueblesMayorDemanda.peek();
     }
 
-    
-    public Inmueble findByPrecio(double precio){
+    public Optional<Inmueble> findFirstByOrderByNumeroHabitacionesDesc() {
+        Inmueble inmueble = findInmuebleMayorDemanda();
+        return inmueble != null ? Optional.of(inmueble) : Optional.empty();
+    }
+
+    public Inmueble findByPrecio(double precio) {
         DynamicArrayList<Inmueble> inmueblesOrdenados = inmueblesPorPrecio.inOrder();
         for (int i = 0; i < inmueblesOrdenados.size(); i++) {
             Inmueble inmueble = inmueblesOrdenados.get(i);
@@ -129,13 +126,14 @@ public class InmuebleRepository {
                 break;
             }
         }
-
         return null;
-        
     }
 
-    //!Revisar de aqui pa abajho 
-    //__________________________________________________________________________________________________________________________
+    public Optional<Inmueble> findFirstByPrecio(double precio) {
+        Inmueble inmueble = findByPrecio(precio);
+        return inmueble != null ? Optional.of(inmueble) : Optional.empty();
+    }
+
     public DynamicArrayList<Inmueble> findInmueblesEnRangoPrecio(double min, double max) {
         if (min > max) {
             throw new IllegalArgumentException("El precio mínimo no puede ser mayor al precio máximo");
@@ -153,6 +151,32 @@ public class InmuebleRepository {
             }
         }
         return resultado;
+    }
+
+    public DynamicArrayList<Inmueble> findByPrecioBetween(double min, double max) {
+        return findInmueblesEnRangoPrecio(min, max);
+    }
+
+    private void cargarDesdeBaseDeDatos() {
+        inmuebleJpaRepository.findAll().forEach(this::agregarAIndices);
+    }
+
+    private void agregarAIndices(Inmueble inmueble) {
+        inmueblesPorPrecio.insert(inmueble);
+        inmueblesPorCodigo.put(inmueble.getCodigo(), inmueble);
+        inmueblesPorCiudad.computeIfAbsent(inmueble.getCiudad(), k -> new SinglyLinkedList<>()).addLast(inmueble);
+        inmueblesPorTipo.computeIfAbsent(inmueble.getTipoInmueble(), k -> new SinglyLinkedList<>()).addLast(inmueble);
+        inmueblesPorEstado.computeIfAbsent(inmueble.getEstado(), k -> new SinglyLinkedList<>()).addLast(inmueble);
+        inmueblesMayorDemanda.enqueue(inmueble);
+    }
+
+    private void eliminarDeIndices(Inmueble inmueble) {
+        inmueblesPorCodigo.remove(inmueble.getCodigo());
+        inmueblesPorPrecio.remove(inmueble);
+        removerDeIndice(inmueblesPorCiudad, inmueble.getCiudad(), inmueble);
+        removerDeIndice(inmueblesPorTipo, inmueble.getTipoInmueble(), inmueble);
+        removerDeIndice(inmueblesPorEstado, inmueble.getEstado(), inmueble);
+        reconstruirColaMayorDemanda();
     }
 
     private <K> void removerDeIndice(HashTable<K, SinglyLinkedList<Inmueble>> indice, K llave, Inmueble inmueble) {

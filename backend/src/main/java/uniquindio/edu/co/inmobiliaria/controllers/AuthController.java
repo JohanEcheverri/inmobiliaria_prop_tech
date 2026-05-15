@@ -1,54 +1,37 @@
 package uniquindio.edu.co.inmobiliaria.controllers;
 
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-import uniquindio.edu.co.inmobiliaria.models.LoginRequest;
-import java.util.Map;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import uniquindio.edu.co.inmobiliaria.models.dto.AuthRequest;
+import uniquindio.edu.co.inmobiliaria.models.dto.AuthResponse;
+import uniquindio.edu.co.inmobiliaria.services.AsesorService;
+import uniquindio.edu.co.inmobiliaria.services.ClienteService;
 
+@CrossOrigin(origins = {"http://localhost:5173", "http://localhost:3000"})
 @RestController
 @RequestMapping("/api/auth")
-@CrossOrigin(origins = "http://localhost:5173")
 public class AuthController {
 
+    private final ClienteService clienteService;
+    private final AsesorService asesorService;
+
+    public AuthController(ClienteService clienteService, AsesorService asesorService) {
+        this.clienteService = clienteService;
+        this.asesorService = asesorService;
+    }
+
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody LoginRequest request) {
-
-        // Obtenemos los datos del DTO adaptado
-        String id = request.getIdentificacion();
-        String pass = request.getPassword();
-
-        // Simulación de validación basada en Identificación y Roles
-        // IMPORTANTE: Estos datos son quemados para la prueba inicial
-
-        if ("1094123".equals(id) && "admin123".equals(pass)) {
-            return ResponseEntity.ok(Map.of(
-                    "mensaje", "Acceso concedido: Administrador del Sistema",
-                    "rol", "ADMIN",
-                    "nombre", "Andrés Administrador"
-            ));
+    public AuthResponse login(@RequestBody AuthRequest request) {
+        if (request == null || request.credencial() == null || request.credencial().isBlank()
+                || request.password() == null || request.password().isBlank()) {
+            throw new IllegalArgumentException("La identificación/correo y la contraseña son obligatorios");
         }
 
-        else if ("2026456".equals(id) && "asesor123".equals(pass)) {
-            return ResponseEntity.ok(Map.of(
-                    "mensaje", "Acceso concedido: Panel de Asesor Inmobiliario",
-                    "rol", "ASESOR",
-                    "nombre", "Carlos Asesor"
-            ));
-        }
-
-        else if ("3030789".equals(id) && "cliente123".equals(pass)) {
-            return ResponseEntity.ok(Map.of(
-                    "mensaje", "Acceso concedido: Catálogo de Clientes",
-                    "rol", "CLIENTE",
-                    "nombre", "Juan Cliente"
-            ));
-        }
-
-        // Si no coincide ninguno
-        else {
-            return ResponseEntity.status(401).body(Map.of(
-                    "error", "Identificación o contraseña incorrectas"
-            ));
-        }
+        return clienteService.autenticar(request.credencial(), request.password())
+                .or(() -> asesorService.autenticar(request.credencial(), request.password()))
+                .orElseThrow(() -> new IllegalArgumentException("Credenciales inválidas"));
     }
 }

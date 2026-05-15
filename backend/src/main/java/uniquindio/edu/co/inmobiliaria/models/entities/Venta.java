@@ -1,4 +1,5 @@
 package uniquindio.edu.co.inmobiliaria.models.entities;
+import jakarta.persistence.Entity;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 
@@ -9,6 +10,8 @@ import lombok.experimental.SuperBuilder;
 @Getter
 @Setter
 @ToString(callSuper = true)
+@NoArgsConstructor
+@Entity
 
 public class Venta extends Operacion {
 

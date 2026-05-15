@@ -1,4 +1,5 @@
 package uniquindio.edu.co.inmobiliaria.models.entities;
+import jakarta.persistence.Entity;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 
@@ -11,6 +12,7 @@ import lombok.experimental.SuperBuilder;
 @ToString(callSuper = true)
 @NoArgsConstructor
 @AllArgsConstructor
+@Entity
 
 public class Cancelacion extends Operacion {
 
