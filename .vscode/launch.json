@@ -1,0 +1,14 @@
+{
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Spring Boot-InmobiliariaApplication<inmobiliaria>",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "mainClass": "uniquindio.edu.co.inmobiliaria.InmobiliariaApplication",
+            "projectName": "inmobiliaria",
+            "args": "",
+            "envFile": "${workspaceFolder}/.env"
+        }
+    ]
+}
