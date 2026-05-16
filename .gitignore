@@ -1,0 +1,13 @@
+# IntelliJ
+.idea/workspace.xml
+*.iml
+
+# Maven/Build
+/target/
+/backend/target/
+
+# Node
+node_modules/
+
+# OS
+.DS_Store
