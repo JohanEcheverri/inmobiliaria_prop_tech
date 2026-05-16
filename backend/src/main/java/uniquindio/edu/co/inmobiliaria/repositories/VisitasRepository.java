@@ -16,11 +16,18 @@ public class VisitasRepository {
     private final DynamicArrayList<Visita> visitas;
     private final HashTable<String, Visita> visitasPorCodigo;
 
+    
+    private final Queue<Visita> visitasPendientes; // Para gestionar visitas que aún no se han realizado, ordenadas por fecha
+
     public VisitasRepository(VisitaJpaRepository visitaJpaRepository) {
         this.visitaJpaRepository = visitaJpaRepository;
         this.visitas = new DynamicArrayList<>();
         this.visitasPorCodigo = new HashTable<>();
         cargarDesdeBaseDeDatos();
+    }
+
+    public Visita procesarVisita(){
+        return visitasPendientes.dequeue(); // Devuelve la visita más próxima a realizarse y la elimina de la cola
     }
 
     public void save(Visita visita) {

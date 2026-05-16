@@ -26,6 +26,9 @@ public class InmuebleRepository {
     private final HashTable<Estado, SinglyLinkedList<Inmueble>> inmueblesPorEstado;
     private final PriorityQueue<Inmueble> inmueblesMayorDemanda;
 
+    private final HashTable<String, Stack<Inmueble>> historialCambios; //Para Deshacer cambios recientes en publicaciones de inmuebles
+    private final HashTable<String, Stack<EstadoInmueble>> estadosAnteriores; //Para reversar modificaciones en el estado de una propiedad
+    
     public InmuebleRepository(InmuebleJpaRepository inmuebleJpaRepository) {
         this.inmuebleJpaRepository = inmuebleJpaRepository;
         this.inmueblesPorPrecio = new Tree<>(this::compararPorPrecioYCodigo);
