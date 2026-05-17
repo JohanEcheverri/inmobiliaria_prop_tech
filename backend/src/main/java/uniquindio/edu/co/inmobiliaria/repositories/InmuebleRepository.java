@@ -9,6 +9,7 @@ import uniquindio.edu.co.inmobiliaria.repositories.jpa.InmuebleJpaRepository;
 import uniquindio.edu.co.inmobiliaria.structures.DynamicArrayList;
 import uniquindio.edu.co.inmobiliaria.structures.HashTable;
 import uniquindio.edu.co.inmobiliaria.structures.PriorityQueue;
+import uniquindio.edu.co.inmobiliaria.structures.Stack;
 import uniquindio.edu.co.inmobiliaria.structures.SinglyLinkedList;
 import uniquindio.edu.co.inmobiliaria.structures.Tree;
 
@@ -26,6 +27,9 @@ public class InmuebleRepository {
     private final HashTable<Estado, SinglyLinkedList<Inmueble>> inmueblesPorEstado;
     private final PriorityQueue<Inmueble> inmueblesMayorDemanda;
 
+    private final HashTable<String, Stack<Inmueble>> historialCambios; //Para Deshacer cambios recientes en publicaciones de inmuebles
+    private final HashTable<String, Stack<EstadoInmueble>> estadosAnteriores; //Para reversar modificaciones en el estado de una propiedad
+    
     public InmuebleRepository(InmuebleJpaRepository inmuebleJpaRepository) {
         this.inmuebleJpaRepository = inmuebleJpaRepository;
         this.inmueblesPorPrecio = new Tree<>(this::compararPorPrecioYCodigo);
@@ -132,6 +136,10 @@ public class InmuebleRepository {
     public Optional<Inmueble> findFirstByPrecio(double precio) {
         Inmueble inmueble = findByPrecio(precio);
         return inmueble != null ? Optional.of(inmueble) : Optional.empty();
+    }
+
+    public DynamicArrayList<Inmueble> findAll() {
+        return inmueblesPorCodigo.values();
     }
 
     public DynamicArrayList<Inmueble> findInmueblesEnRangoPrecio(double min, double max) {
