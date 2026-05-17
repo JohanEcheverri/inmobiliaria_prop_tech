@@ -1,0 +1,89 @@
+.layout {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background-color: var(--light-bg);
+    color: var(--dark-text, #2C3E50);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.layout-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 5%;
+    background: var(--white);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.layout-brand {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    cursor: pointer;
+}
+
+.layout-logo {
+    width: 80px;
+    height: 80px;
+    object-fit: contain;
+    flex-shrink: 0;
+}
+
+.layout-title {
+    display: flex;
+    align-items: baseline;
+    gap: 0.15rem;
+    line-height: 1;
+}
+
+.layout-title-main,
+.layout-title-accent {
+    font-weight: bold;
+    font-size: 1.5rem;
+    letter-spacing: 1px;
+}
+
+.layout-title-main {
+    color: var(--primary-purple);
+}
+
+.layout-title-accent {
+    color: var(--accent-orange);
+}
+
+.layout-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.layout-main {
+    flex: 1;
+}
+
+.layout-footer {
+    padding: 1.25rem 5%;
+    background: var(--white);
+    color: #666;
+    text-align: center;
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.04);
+}
+
+.layout-footer p {
+    margin: 0;
+}
+
+.page-placeholder {
+    padding: 4rem 5%;
+}
+
+.page-placeholder h1 {
+    margin: 0 0 1rem;
+    color: var(--primary-purple);
+}
+
+.page-placeholder p {
+    margin: 0;
+    color: #666;
+}
