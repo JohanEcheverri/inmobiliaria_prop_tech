@@ -11,9 +11,7 @@ import lombok.experimental.SuperBuilder;
 @Getter
 @Setter
 @ToString(callSuper = true)
-@NoArgsConstructor
 @AllArgsConstructor
 @Entity
 public class Administrador extends Usuario {
-
 }

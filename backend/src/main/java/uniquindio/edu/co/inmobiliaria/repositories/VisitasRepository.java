@@ -6,6 +6,7 @@ import uniquindio.edu.co.inmobiliaria.models.enums.EstadoVisita;
 import uniquindio.edu.co.inmobiliaria.repositories.jpa.VisitaJpaRepository;
 import uniquindio.edu.co.inmobiliaria.structures.DynamicArrayList;
 import uniquindio.edu.co.inmobiliaria.structures.HashTable;
+import uniquindio.edu.co.inmobiliaria.structures.Queue;
 
 import java.time.LocalDate;
 
@@ -15,19 +16,18 @@ public class VisitasRepository {
     private final VisitaJpaRepository visitaJpaRepository;
     private final DynamicArrayList<Visita> visitas;
     private final HashTable<String, Visita> visitasPorCodigo;
-
-    
-    private final Queue<Visita> visitasPendientes; // Para gestionar visitas que aún no se han realizado, ordenadas por fecha
+    private final Queue<Visita> visitasPendientes;
 
     public VisitasRepository(VisitaJpaRepository visitaJpaRepository) {
         this.visitaJpaRepository = visitaJpaRepository;
         this.visitas = new DynamicArrayList<>();
         this.visitasPorCodigo = new HashTable<>();
+        this.visitasPendientes = new Queue<>();
         cargarDesdeBaseDeDatos();
     }
 
     public Visita procesarVisita(){
-        return visitasPendientes.dequeue(); // Devuelve la visita más próxima a realizarse y la elimina de la cola
+        return visitasPendientes.dequeue();
     }
 
     public void save(Visita visita) {
@@ -83,6 +83,10 @@ public class VisitasRepository {
         return resultado;
     }
 
+    public DynamicArrayList<Visita> findAll() {
+        return visitas;
+    }
+
     private void cargarDesdeBaseDeDatos() {
         visitaJpaRepository.findAll().forEach(this::agregarAIndices);
     }
@@ -90,5 +94,8 @@ public class VisitasRepository {
     private void agregarAIndices(Visita visita) {
         visitas.add(visita);
         visitasPorCodigo.put(visita.getCodigo(), visita);
+        if (visita.getEstado() == EstadoVisita.PENDIENTE) {
+            visitasPendientes.enqueue(visita);
+        }
     }
 }
