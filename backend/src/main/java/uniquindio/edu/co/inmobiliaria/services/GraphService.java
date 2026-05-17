@@ -1,6 +1,7 @@
 package uniquindio.edu.co.inmobiliaria.services;
 
 import org.springframework.stereotype.Service;
+import uniquindio.edu.co.inmobiliaria.alerts.AlertaService;
 import uniquindio.edu.co.inmobiliaria.models.entities.Cliente;
 import uniquindio.edu.co.inmobiliaria.models.entities.Inmueble;
 import uniquindio.edu.co.inmobiliaria.models.entities.Operacion;
@@ -24,7 +25,7 @@ import java.util.List;
 import java.util.Objects;
 
 @Service
-public class MovilidadComercialGraphService {
+public class GraphService {
 
     private static final int MIN_CLIENTES_COMPARTIDOS = 2;
     private static final int TRANSICIONES_ZONA_ALERTA = 3;
@@ -35,7 +36,7 @@ public class MovilidadComercialGraphService {
     private final OperacionRepository operacionRepository;
     private final AlertaService alertaService;
 
-    public MovilidadComercialGraphService(
+    public GraphService(
             ClienteRepository clienteRepository,
             InmuebleRepository inmuebleRepository,
             VisitasRepository visitasRepository,
@@ -54,11 +55,13 @@ public class MovilidadComercialGraphService {
         DynamicArrayList<Inmueble> inmuebles = inmuebleRepository.findAll();
         DynamicArrayList<Operacion> operaciones = operacionRepository.findAll();
 
-        for (Cliente cliente : clientes) {
+        for (int i = 0; i < clientes.size(); i++) {
+            Cliente cliente = clientes.get(i);
             grafo.addVertex(GraphVertex.ofCliente(cliente));
         }
 
-        for (Inmueble inmueble : inmuebles) {
+        for (int i = 0; i < inmuebles.size(); i++) {
+            Inmueble inmueble = inmuebles.get(i);
             GraphVertex inmuebleVertice = GraphVertex.ofInmueble(inmueble);
             grafo.addVertex(inmuebleVertice);
             Zona zona = inmueble.getBarrio() != null ? inmueble.getBarrio().getZona() : null;
@@ -69,7 +72,8 @@ public class MovilidadComercialGraphService {
             }
         }
 
-        for (Operacion operacion : operaciones) {
+        for (int i = 0; i < operaciones.size(); i++) {
+            Operacion operacion = operaciones.get(i);
             GraphVertex operacionVertice = GraphVertex.ofOperacion(operacion);
             grafo.addVertex(operacionVertice);
 
@@ -87,7 +91,9 @@ public class MovilidadComercialGraphService {
             }
         }
 
-        for (Visita visita : visitasRepository.findAll()) {
+        DynamicArrayList<Visita> visitas = visitasRepository.findAll();
+        for (int i = 0; i < visitas.size(); i++) {
+            Visita visita = visitas.get(i);
             if (visita.getCliente() == null || visita.getInmueble() == null) {
                 continue;
             }
@@ -115,12 +121,13 @@ public class MovilidadComercialGraphService {
             inmueblesPorCodigo.put(inmuebles.get(i).getCodigo(), inmuebles.get(i));
         }
 
-        for (Inmueble inmueble : inmuebles) {
+        for (int i = 0; i < inmuebles.size(); i++) {
+            Inmueble inmueble = inmuebles.get(i);
             GraphVertex inmuebleVertice = GraphVertex.ofInmueble(inmueble);
             HashTable<String, Integer> visitanteCompartido = new HashTable<>();
 
-            for (int i = 0; i < grafo.getNeighbors(inmuebleVertice).size(); i++) {
-                Graph.Edge<GraphVertex> arista = grafo.getNeighbors(inmuebleVertice).get(i);
+            for (int edgeIndex = 0; edgeIndex < grafo.getNeighbors(inmuebleVertice).size(); edgeIndex++) {
+                Graph.Edge<GraphVertex> arista = grafo.getNeighbors(inmuebleVertice).get(edgeIndex);
                 if (arista.getTarget().getType() != GraphVertex.Type.CLIENTE) {
                     continue;
                 }
@@ -141,8 +148,8 @@ public class MovilidadComercialGraphService {
 
             HashTable<String, Integer> entradas = visitanteCompartido;
             DynamicArrayList<String> claves = entradas.keys();
-            for (int i = 0; i < claves.size(); i++) {
-                String otroCodigo = claves.get(i);
+            for (int claveIndex = 0; claveIndex < claves.size(); claveIndex++) {
+                String otroCodigo = claves.get(claveIndex);
                 int cuenta = entradas.get(otroCodigo);
                 if (cuenta >= MIN_CLIENTES_COMPARTIDOS) {
                     Inmueble otroInmueble = inmueblesPorCodigo.get(otroCodigo);
@@ -167,7 +174,8 @@ public class MovilidadComercialGraphService {
 
         DynamicArrayList<String> zonas = new DynamicArrayList<>();
         Zona anterior = null;
-        for (Visita visita : visitas) {
+        for (int i = 0; i < visitas.size(); i++) {
+            Visita visita = visitas.get(i);
             if (visita.getInmueble() == null || visita.getInmueble().getBarrio() == null) {
                 continue;
             }

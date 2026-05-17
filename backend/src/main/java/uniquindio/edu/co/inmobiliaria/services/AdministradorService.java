@@ -20,7 +20,7 @@ public class AdministradorService {
         if (estaVacio(id) || estaVacio(password)) {
             return Optional.empty();
         }
-        return Optional.ofNullable(administradorRepository.findById(id))
+        return administradorRepository.findById(id)
                 .filter(administrador -> passwordCoincide(administrador.getPassword(), password))
                 .map(this::mapearAuth);
     }

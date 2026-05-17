@@ -28,7 +28,6 @@ public class InmuebleRepository {
     private final PriorityQueue<Inmueble> inmueblesMayorDemanda;
 
     private final HashTable<String, Stack<Inmueble>> historialCambios; //Para Deshacer cambios recientes en publicaciones de inmuebles
-    private final HashTable<String, Stack<EstadoInmueble>> estadosAnteriores; //Para reversar modificaciones en el estado de una propiedad
     
     public InmuebleRepository(InmuebleJpaRepository inmuebleJpaRepository) {
         this.inmuebleJpaRepository = inmuebleJpaRepository;
@@ -39,6 +38,7 @@ public class InmuebleRepository {
         this.inmueblesPorEstado = new HashTable<>();
         this.inmueblesMayorDemanda = new PriorityQueue<>(
                 (i1, i2) -> Integer.compare(i2.getNumeroHabitaciones(), i1.getNumeroHabitaciones()));
+        this.historialCambios = new HashTable<>();
         cargarDesdeBaseDeDatos();
     }
 
