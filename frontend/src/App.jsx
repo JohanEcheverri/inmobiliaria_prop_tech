@@ -1,22 +1,31 @@
 import { Routes, Route } from 'react-router-dom';
 import Login from './Login';
+import Portada from './Portada';
+import Register from './Register';
+import AdminDashboard from './dashboards/AdminDashboard';
+import AsesorDashboard from './dashboards/AsesorDashboard';
+import ClienteDashboard from './dashboards/ClienteDashboard';
 
 function App() {
     return (
         <Routes>
-            <Route path="/" element={<Login />} />
+            {/* Ahora la raíz es la Portada de DomusTech */}
+            <Route path="/" element={<Portada />} />
 
-            {/* Vistas según el Rol */}
-            <Route path="/admin-dashboard" element={<AdminPanel />} />
-            <Route path="/asesor-panel" element={<AsesorPanel />} />
-            <Route path="/catalogo" element={<CatalogoCliente />} />
+            {/* El login ahora está en su propia URL */}
+            <Route path="/login" element={<Login />} />
+
+            <Route path="/register" element={<Register />} />
+            <Route path="/registro" element={<Register />} />
+
+            {/* Vistas según el Rol (Dashboards) */}
+            <Route path="/cliente-dashboard" element={<ClienteDashboard />} />
+            <Route path="/admin-dashboard" element={<AdminDashboard />} />
+            <Route path="/asesor-dashboard" element={<AsesorDashboard />} />
+            <Route path="/asesor-panel" element={<AsesorDashboard />} />
+            <Route path="/catalogo" element={<ClienteDashboard />} />
         </Routes>
     );
 }
-
-// Componentes temporales (luego los creas en archivos separados)
-const AdminPanel = () => <div className="p-4"><h1>Panel de Administración</h1><p>Gestión de usuarios y reportes globales.</p></div>;
-const AsesorPanel = () => <div className="p-4"><h1>Panel del Asesor</h1><p>Gestión de inmuebles y citas.</p></div>;
-const CatalogoCliente = () => <div className="p-4"><h1>Catálogo de Inmuebles</h1><p>Busca tu próximo hogar.</p></div>;
 
 export default App;

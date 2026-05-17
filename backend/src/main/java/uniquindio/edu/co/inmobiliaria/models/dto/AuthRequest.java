@@ -5,8 +5,4 @@ public record AuthRequest(
         String email,
         String password
 ) {
-
-    public String credencial() {
-        return email != null && !email.isBlank() ? email : identificacion;
-    }
 }

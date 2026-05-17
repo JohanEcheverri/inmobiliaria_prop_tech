@@ -16,12 +16,11 @@ public class AsesorService {
         this.asesorRepository = asesorRepository;
     }
 
-    public Optional<AuthResponse> autenticar(String credencial, String password) {
-        if (estaVacio(credencial) || estaVacio(password)) {
+    public Optional<AuthResponse> autenticar(String id, String password) {
+        if (estaVacio(id) || estaVacio(password)) {
             return Optional.empty();
         }
-        return asesorRepository.findByEmail(credencial)
-                .or(() -> Optional.ofNullable(asesorRepository.findById(credencial)))
+        return Optional.ofNullable(asesorRepository.findById(id))
                 .filter(asesor -> passwordCoincide(asesor.getPassword(), password))
                 .map(this::mapearAuth);
     }

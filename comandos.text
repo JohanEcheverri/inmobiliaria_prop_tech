@@ -5,3 +5,18 @@ npm run dev
 //Iniciar Backend//
 (dentro de carpeta backend)
 ./mvnw spring-boot:run
+
+
+Credenciales de prueba
+
+Cliente:
+ID: 3030789
+Contraseña: cliente123
+
+Asesor:
+ID: 10949001
+Contraseña: asesor123
+
+Administrador:
+ID: 10000001
+Contraseña: admin123

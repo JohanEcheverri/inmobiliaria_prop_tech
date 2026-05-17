@@ -2,6 +2,7 @@ import { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import './App.css';
+import Layout from './components/Layout';
 
 function Login() {
     const [identificacion, setIdentificacion] = useState('');
@@ -20,15 +21,16 @@ function Login() {
             });
 
             const { rol, nombre } = response.data;
+            const normalizedRol = String(rol || '').toUpperCase();
             console.log(`Bienvenido ${nombre} (${rol})`);
 
             // Redirección lógica por roles
-            if (rol === 'ADMIN') {
+            if (normalizedRol === 'ADMIN' || normalizedRol === 'ADMINISTRADOR') {
                 navigate('/admin-dashboard');
-            } else if (rol === 'ASESOR') {
-                navigate('/asesor-panel');
+            } else if (normalizedRol === 'ASESOR') {
+                navigate('/asesor-dashboard');
             } else {
-                navigate('/catalogo');
+                navigate('/cliente-dashboard');
             }
 
         } catch (err) {
@@ -41,14 +43,14 @@ function Login() {
     };
 
     return (
-        <div className="login-container">
+        <Layout contentClassName="login-container">
             <div className="login-card">
                 <h2>Prop-Tech</h2>
                 <p>Ingresa tus credenciales para continuar</p>
 
                 <form onSubmit={handleLogin}>
                     <div className="input-group">
-                        <label htmlFor="identificacion">Número de Identificación</label>
+                        <label htmlFor="identificacion">ID / Usuario</label>
                         <input
                             id="identificacion"
                             type="text"
@@ -72,13 +74,17 @@ function Login() {
                     </div>
 
                     <button type="submit" className="btn-login">
-                        Entrar al Sistema
+                        Iniciar Sesión
                     </button>
 
                     {error && <div className="error-message">{error}</div>}
                 </form>
+
+                <button type="button" className="auth-link-button" onClick={() => navigate('/register')}>
+                    ¿No tienes cuenta? Regístrate aquí
+                </button>
             </div>
-        </div>
+        </Layout>
     );
 }
 

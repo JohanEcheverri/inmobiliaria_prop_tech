@@ -5,6 +5,7 @@
 # Maven/Build
 /target/
 /backend/target/
+/backend/data/
 
 # Node
 node_modules/

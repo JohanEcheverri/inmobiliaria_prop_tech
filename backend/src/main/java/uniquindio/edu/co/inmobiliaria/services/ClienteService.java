@@ -35,12 +35,11 @@ public class ClienteService {
         return mapear(cliente);
     }
 
-    public Optional<AuthResponse> autenticar(String credencial, String password) {
-        if (estaVacio(credencial) || estaVacio(password)) {
+    public Optional<AuthResponse> autenticar(String id, String password) {
+        if (estaVacio(id) || estaVacio(password)) {
             return Optional.empty();
         }
-        return clienteRepository.findByEmail(credencial)
-                .or(() -> clienteRepository.findById(credencial))
+        return clienteRepository.findById(id)
                 .filter(cliente -> passwordCoincide(cliente.getPassword(), password))
                 .map(this::mapearAuth);
     }
