@@ -32,11 +32,34 @@ const Layout = ({ children, actions, contentClassName = '' }) => {
                 </div>
 
                 <div className="layout-header-right">
-                    {/* Si hay usuario, mostramos sus datos y el logout */}
                     {user ? (
-                        <div className="user-nav-info">
-                            <span className="user-welcome">Hola, <strong>{user.nombre}</strong></span>
-                            <button className="btn-logout-minimal" onClick={handleLogout}>Cerrar Sesión</button>
+                        <div className="user-nav-container">
+                            <div className="user-nav-info">
+                                <span className="user-welcome">
+                                    Hola, <strong>{user.nombre.split(' ')[0]}</strong>
+                                </span>
+                                <button className="btn-logout-minimal" onClick={handleLogout}>
+                                    Cerrar Sesión
+                                </button>
+                            </div>
+
+                            {/* Visualización de la foto de perfil */}
+                            <div className="user-avatar-nav">
+                                {user.fotoPerfil ? (
+                                    <img
+                                        src={user.fotoPerfil}
+                                        alt="Perfil"
+                                        className="nav-avatar-img"
+                                        onError={(e) => {
+                                            e.target.src = 'https://ui-avatars.com/api/?name=' + user.nombre;
+                                        }}
+                                    />
+                                ) : (
+                                    <div className="nav-avatar-placeholder">
+                                        {user.nombre.charAt(0).toUpperCase()}
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     ) : (
                         actions && <div className="layout-actions">{actions}</div>

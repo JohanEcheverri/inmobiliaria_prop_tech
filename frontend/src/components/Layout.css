@@ -16,7 +16,8 @@
 }
 
 .layout-actions .btn-login,
-.layout-actions .btn-catalogo {
+.layout-actions .btn-catalogo,
+.btn-create{
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -41,7 +42,7 @@
 }
 
 .layout-actions .btn-login:hover,
-.layout-actions .btn-catalogo:hover {
+.layout-actions .btn-catalogo:hover, .btn-create:hover {
     background: var(--primary-purple);
     color: var(--white);
     transform: translateY(-2px);
@@ -188,4 +189,48 @@
 .layout-logo,
 .layout-title {
     user-select: none;
+}
+
+
+.user-nav-container {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+
+.user-nav-info {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+}
+
+
+
+.btn-logout-minimal:hover {
+    color: #7e57c2;
+}
+
+.user-avatar-nav {
+    width: 65px;
+    height: 65px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 2px solid #9370db;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #f3e5f5;
+}
+
+.nav-avatar-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.nav-avatar-placeholder {
+    font-weight: bold;
+    color: #9370db;
+    font-size: 1.2rem;
 }

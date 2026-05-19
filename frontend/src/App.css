@@ -134,7 +134,7 @@
 
 .password-wrapper input {
   width: 100%;
-  padding-right: 40px; /* Espacio para el icono */
+  padding-right: 40px;
 }
 
 .toggle-password {
@@ -162,3 +162,85 @@
   text-align: center;
 }
 
+
+.photo-group label:first-child {
+  align-self: flex-start;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 8px;
+}
+
+.photo-upload-label {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  border: 2px dashed #9370db;
+  background-color: #f8f9fa;
+  cursor: pointer;
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: all 0.3s ease;
+}
+
+.photo-upload-label:hover {
+  background-color: #f3e5f5;
+  border-color: #7e57c2;
+}
+
+
+.upload-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+}
+
+.upload-icon {
+  font-size: 3rem;
+  font-weight: 300;
+}
+.photo-upload-label.has-preview {
+  border-style: solid;
+  border-color: #ddd;
+}
+
+.avatar-preview {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+.avatar-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+
+.avatar-preview span {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  color: white;
+  text-align: center;
+  padding: 5px 0;
+  font-size: 0.8rem;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.avatar-preview:hover span {
+  opacity: 1;
+}
+
+.photo-column {
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* Centra el círculo horizontalmente en su columna */
+  justify-content: center;
+  padding-left: 20px; /* Desplazamiento sutil a la derecha */
+}
