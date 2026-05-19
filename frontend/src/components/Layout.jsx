@@ -1,9 +1,24 @@
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import logo from '../assets/logo.png';
 import './Layout.css';
 
 const Layout = ({ children, actions, contentClassName = '' }) => {
     const navigate = useNavigate();
+    const [user, setUser] = useState(null);
+
+    useEffect(() => {
+        const savedSession = localStorage.getItem("user_session");
+        if (savedSession) {
+            setUser(JSON.parse(savedSession));
+        }
+    }, []);
+
+    const handleLogout = () => {
+        localStorage.removeItem("user_session");
+        setUser(null);
+        navigate('/');
+    };
 
     return (
         <div className="layout">
@@ -16,7 +31,17 @@ const Layout = ({ children, actions, contentClassName = '' }) => {
                     </div>
                 </div>
 
-                {actions && <div className="layout-actions">{actions}</div>}
+                <div className="layout-header-right">
+                    {/* Si hay usuario, mostramos sus datos y el logout */}
+                    {user ? (
+                        <div className="user-nav-info">
+                            <span className="user-welcome">Hola, <strong>{user.nombre}</strong></span>
+                            <button className="btn-logout-minimal" onClick={handleLogout}>Cerrar Sesión</button>
+                        </div>
+                    ) : (
+                        actions && <div className="layout-actions">{actions}</div>
+                    )}
+                </div>
             </header>
 
             <main className={`layout-main ${contentClassName}`}>

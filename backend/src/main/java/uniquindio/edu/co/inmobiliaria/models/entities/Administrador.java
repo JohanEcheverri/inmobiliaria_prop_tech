@@ -18,7 +18,7 @@ import lombok.experimental.SuperBuilder;
 @Entity
 public class Administrador extends Usuario {
 
-    public Administrador(String nombre, String id, String email, String telefono, String password, String fotoPerfil) {
-        super(nombre, id, email, telefono, password, fotoPerfil);
+    public Administrador(String nombre, String id, String email, String telefono, String contrasenia, String fotoPerfil) {
+        super(nombre, id, email, telefono, contrasenia, fotoPerfil);
     }
 }

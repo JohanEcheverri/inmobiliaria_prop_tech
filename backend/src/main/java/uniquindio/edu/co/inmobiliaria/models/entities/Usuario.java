@@ -32,7 +32,7 @@ public class Usuario {
     /** Número de teléfono de contacto. */
     private String telefono;
     /** Credencial de acceso; en producción debe almacenarse de forma segura (hash), no en texto plano. */
-    private String password;
+    private String contrasenia;
     /** Referencia a la imagen de perfil (URL, ruta o identificador según la implementación). */
     private String fotoPerfil;
 

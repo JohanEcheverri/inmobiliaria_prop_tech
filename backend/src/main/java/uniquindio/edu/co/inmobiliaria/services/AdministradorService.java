@@ -4,16 +4,20 @@ import org.springframework.stereotype.Service;
 import uniquindio.edu.co.inmobiliaria.models.dto.AuthResponse;
 import uniquindio.edu.co.inmobiliaria.models.entities.Administrador;
 import uniquindio.edu.co.inmobiliaria.repositories.AdministradorRepository;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+
 
 import java.util.Optional;
-
 @Service
 public class AdministradorService {
 
     private final AdministradorRepository administradorRepository;
+    private final BCryptPasswordEncoder passwordEncoder;
 
-    public AdministradorService(AdministradorRepository administradorRepository) {
+    // Se añadió el encoder al constructor
+    public AdministradorService(AdministradorRepository administradorRepository, BCryptPasswordEncoder passwordEncoder) {
         this.administradorRepository = administradorRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     public Optional<AuthResponse> autenticar(String id, String password) {
@@ -21,7 +25,7 @@ public class AdministradorService {
             return Optional.empty();
         }
         return administradorRepository.findById(id)
-                .filter(administrador -> passwordCoincide(administrador.getPassword(), password))
+                .filter(administrador -> passwordCoincide(administrador.getContrasenia(), password))
                 .map(this::mapearAuth);
     }
 
@@ -37,7 +41,8 @@ public class AdministradorService {
     }
 
     private boolean passwordCoincide(String passwordGuardada, String passwordIngresada) {
-        return passwordGuardada != null && passwordGuardada.equals(passwordIngresada);
+        // Validación con BCrypt obligatoria para el administrador registrado
+        return passwordGuardada != null && passwordEncoder.matches(passwordIngresada, passwordGuardada);
     }
 
     private boolean estaVacio(String valor) {

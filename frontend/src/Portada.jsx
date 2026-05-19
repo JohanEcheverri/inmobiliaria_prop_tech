@@ -2,6 +2,10 @@ import { useNavigate } from 'react-router-dom';
 import './Portada.css';
 import Layout from './components/Layout';
 
+import imgBusqueda from './assets/Busqueda.png';
+import imgGestion from './assets/Gestion.png';
+import imgAnalisis from './assets/Analisis.png';
+
 const Portada = () => {
     const navigate = useNavigate();
 
@@ -17,7 +21,6 @@ const Portada = () => {
                 </>
             }
         >
-            {/* Sección Hero: El primer impacto */}
             <header className="hero-section">
                 <div className="hero-content">
                     <div className="badge">PropTech Ecosystem</div>
@@ -38,17 +41,10 @@ const Portada = () => {
                         <button type="submit">Buscar</button>
                     </form>
 
-                    <div className="hero-buttons">
-                        <button className="btn-primary" onClick={() => navigate('/login')}>
-                            Ingresar
-                        </button>
-                        <button className="btn-secondary" onClick={() => navigate('/register')}>
-                            Registrarse
-                        </button>
-                    </div>
+                    {/* Los botones inferiores se han eliminado por redundancia */}
                 </div>
+
                 <div className="hero-visual">
-                    {/* El gradiente simula la energía de los datos del logo */}
                     <div className="abstract-blob"></div>
                     <div className="stats-mini-card">
                         <span>+500</span>
@@ -57,26 +53,34 @@ const Portada = () => {
                 </div>
             </header>
 
-            {/* Sección de Valor Técnico */}
+            {/* Sección de Valor Técnico con Imágenes Mejoradas */}
             <section className="features">
                 <div className="feature-card">
-                    <div className="icon">🔍</div>
+                    <div className="feature-image-container">
+                        <img src={imgBusqueda} alt="Búsqueda Inteligente" className="feature-illustration" />
+                    </div>
                     <h3>Búsqueda Inteligente</h3>
                     <p>Optimización mediante estructuras de datos para filtrado instantáneo por zonas y precios.</p>
                 </div>
+
                 <div className="feature-card">
-                    <div className="icon">📅</div>
+                    <div className="feature-image-container">
+                        <img src={imgGestion} alt="Gestión de Visitas" className="feature-illustration" />
+                    </div>
                     <h3>Gestión de Visitas</h3>
                     <p>Sistema de priorización para asesores, garantizando una atención ágil y organizada.</p>
                 </div>
+
                 <div className="feature-card">
-                    <div className="icon">📊</div>
+                    <div className="feature-image-container">
+                        <img src={imgAnalisis} alt="Market Analytics" className="feature-illustration" />
+                    </div>
                     <h3>Market Analytics</h3>
                     <p>Análisis de tendencias y relaciones cliente-inmueble para decisiones basadas en datos.</p>
                 </div>
             </section>
 
-            {/* Nueva sección: Zonas en Tendencia (Simulando el contexto del proyecto) */}
+            {/* Zonas en Tendencia */}
             <section className="trending-zones">
                 <h2>Zonas con mayor actividad</h2>
                 <div className="zones-grid">
@@ -86,7 +90,6 @@ const Portada = () => {
                     <div className="zone-tag">Occidente - En Crecimiento</div>
                 </div>
             </section>
-
         </Layout>
     );
 };

@@ -91,9 +91,11 @@ function Register() {
                         </div>
                     </div>
 
-                    <button type="submit" className="btn-login">
-                        Crear Cuenta
-                    </button>
+                    <div className="layout-actions">
+                        <button type="submit" className="btn-login">
+                            Crear Cuenta
+                        </button>
+                    </div>
 
                     {error && <div className="error-message">{error}</div>}
 

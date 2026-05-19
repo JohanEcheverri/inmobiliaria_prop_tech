@@ -14,7 +14,7 @@ import uniquindio.edu.co.inmobiliaria.repositories.AdministradorRepository;
 import uniquindio.edu.co.inmobiliaria.repositories.AsesorRepository;
 import uniquindio.edu.co.inmobiliaria.repositories.ClienteRepository;
 import uniquindio.edu.co.inmobiliaria.services.ClienteService;
-
+/**
 @Configuration
 public class DataSeeder {
 
@@ -65,3 +65,5 @@ public class DataSeeder {
         };
     }
 }
+
+ */

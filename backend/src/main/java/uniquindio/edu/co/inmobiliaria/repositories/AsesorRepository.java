@@ -39,11 +39,11 @@ public class AsesorRepository {
         agregarAIndices(asesor);
     }
 
-    public Asesor findById(String id) {
+    public Optional<Asesor> findById(String id) {
         if (id == null || !asesoresPorId.containsKey(id)) {
-            return null;
+            return Optional.empty(); // En lugar de null
         }
-        return asesoresPorId.get(id);
+        return Optional.of(asesoresPorId.get(id));
     }
 
     public Optional<Asesor> findByEmail(String email) {

@@ -29,8 +29,8 @@ public class Asesor extends Usuario {
     /** */
     public Integer numeroDeCierres;
 
-    public Asesor(String nombre, String id, String email, String telefono,String password, String fotoPerfil, Zona zonaAsignada, TipoInmueble especialidad) {
-        super(nombre, id, email, telefono, password, fotoPerfil);
+    public Asesor(String nombre, String id, String email, String telefono,String contrasenia, String fotoPerfil, Zona zonaAsignada, TipoInmueble especialidad) {
+        super(nombre, id, email, telefono, contrasenia, fotoPerfil);
         this.zonaAsignada = zonaAsignada;
         this.especialidad = especialidad;
         this.numeroDeCierres = 0; // Inicialmente sin cierres

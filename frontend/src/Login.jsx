@@ -6,8 +6,9 @@ import Layout from './components/Layout';
 
 function Login() {
     const [identificacion, setIdentificacion] = useState('');
-    const [password, setPassword] = useState('');
+    const [contrasenia, setContrasenia] = useState('');
     const [error, setError] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
     const navigate = useNavigate();
 
     const handleLogin = async (e) => {
@@ -15,17 +16,18 @@ function Login() {
         setError('');
 
         try {
+            // Envío correcto según tu última captura
             const response = await axios.post('http://localhost:8080/api/auth/login', {
-                identificacion, // Enviamos el nuevo campo al backend
-                password
+                identificacion,
+                contrasenia
             });
 
-            const { rol, nombre } = response.data;
-            const normalizedRol = String(rol || '').toUpperCase();
-            console.log(`Bienvenido ${nombre} (${rol})`);
+            localStorage.setItem("user_session", JSON.stringify(response.data));
 
-            // Redirección lógica por roles
-            if (normalizedRol === 'ADMIN' || normalizedRol === 'ADMINISTRADOR') {
+            const { rol } = response.data;
+            const normalizedRol = String(rol || '').toUpperCase();
+
+            if (normalizedRol === 'ADMINISTRADOR') {
                 navigate('/admin-dashboard');
             } else if (normalizedRol === 'ASESOR') {
                 navigate('/asesor-dashboard');
@@ -34,18 +36,15 @@ function Login() {
             }
 
         } catch (err) {
-            if (err.response) {
-                setError(err.response.data.error || "Error al iniciar sesión");
-            } else {
-                setError("No se pudo conectar con el servidor");
-            }
+            // Si el Payload es correcto pero falla, el error viene de AutenticacionService
+            setError(err.response?.data?.error || "Credenciales incorrectas");
         }
     };
 
     return (
         <Layout contentClassName="login-container">
             <div className="login-card">
-                <h2>Prop-Tech</h2>
+                <h2>DomusTech</h2>
                 <p>Ingresa tus credenciales para continuar</p>
 
                 <form onSubmit={handleLogin}>
@@ -54,7 +53,7 @@ function Login() {
                         <input
                             id="identificacion"
                             type="text"
-                            placeholder="Ej: 1094123"
+                            placeholder="Ej: 1095208966"
                             value={identificacion}
                             onChange={(e) => setIdentificacion(e.target.value)}
                             required
@@ -63,19 +62,31 @@ function Login() {
 
                     <div className="input-group">
                         <label htmlFor="password">Contraseña</label>
-                        <input
-                            id="password"
-                            type="password"
-                            placeholder="••••••••"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            required
-                        />
+                        <div className="password-wrapper">
+                            <input
+                                id="password"
+                                type={showPassword ? "text" : "password"}
+                                placeholder="••••••••"
+                                value={contrasenia}
+                                onChange={(e) => setContrasenia(e.target.value)}
+                                required
+                            />
+                            <button
+                                type="button"
+                                className="toggle-password"
+                                onClick={() => setShowPassword(!showPassword)}
+                            >
+                                {showPassword ? "👁️" : "🙈"}
+                            </button>
+                        </div>
                     </div>
 
-                    <button type="submit" className="btn-login">
-                        Iniciar Sesión
-                    </button>
+                    <div className="layout-actions">
+                        <button type="submit" className="btn-login">
+                            Iniciar Sesión
+                        </button>
+                    </div>
+
 
                     {error && <div className="error-message">{error}</div>}
                 </form>

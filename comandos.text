@@ -6,6 +6,9 @@ npm run dev
 (dentro de carpeta backend)
 ./mvnw spring-boot:run
 
+//Verificar base de datos//
+docker compose up -d
+sudo systemctl start docker
 
 Credenciales de prueba
 

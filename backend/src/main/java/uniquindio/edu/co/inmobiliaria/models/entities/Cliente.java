@@ -39,5 +39,4 @@ public class Cliente extends Usuario{
     @Enumerated(EnumType.STRING)
     private EstadoBusquedaCliente estadoBusqueda;
 
-
 }

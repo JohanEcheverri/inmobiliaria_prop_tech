@@ -7,6 +7,7 @@ import uniquindio.edu.co.inmobiliaria.models.dto.AuthResponse;
 import uniquindio.edu.co.inmobiliaria.models.entities.Cliente;
 import uniquindio.edu.co.inmobiliaria.repositories.ClienteRepository;
 import uniquindio.edu.co.inmobiliaria.structures.DynamicArrayList;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,9 +17,11 @@ import java.util.Optional;
 public class ClienteService {
 
     private final ClienteRepository clienteRepository;
+    private final BCryptPasswordEncoder passwordEncoder;
 
-    public ClienteService(ClienteRepository clienteRepository) {
+    public ClienteService(ClienteRepository clienteRepository, BCryptPasswordEncoder passwordEncoder) {
         this.clienteRepository = clienteRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     public ClienteResponse registrarCliente(ClienteRequest request) {
@@ -40,7 +43,7 @@ public class ClienteService {
             return Optional.empty();
         }
         return clienteRepository.findById(id)
-                .filter(cliente -> passwordCoincide(cliente.getPassword(), password))
+                .filter(cliente -> passwordCoincide(cliente.getContrasenia(), password))
                 .map(this::mapearAuth);
     }
 
@@ -80,7 +83,9 @@ public class ClienteService {
                 .nombre(request.nombre())
                 .email(request.email())
                 .telefono(request.telefono())
-                .password(!estaVacio(request.password()) ? request.password() : clienteExistente.getPassword())
+
+                .contrasenia(!estaVacio(request.password()) ? passwordEncoder.encode(request.password()) : clienteExistente.getContrasenia())
+
                 .fotoPerfil(request.fotoPerfil())
                 .tipoCliente(request.tipoCliente())
                 .zonaInteres(request.zonaInteres())
@@ -127,7 +132,7 @@ public class ClienteService {
                 .nombre(request.nombre())
                 .email(request.email())
                 .telefono(request.telefono())
-                .password(request.password())
+                .contrasenia(passwordEncoder.encode(request.password()))
                 .fotoPerfil(request.fotoPerfil())
                 .tipoCliente(request.tipoCliente())
                 .zonaInteres(request.zonaInteres())
@@ -194,6 +199,6 @@ public class ClienteService {
     }
 
     private boolean passwordCoincide(String passwordGuardada, String passwordIngresada) {
-        return passwordGuardada != null && passwordGuardada.equals(passwordIngresada);
+        return passwordGuardada != null && passwordEncoder.matches(passwordIngresada, passwordGuardada);
     }
 }
