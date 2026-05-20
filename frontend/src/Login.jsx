@@ -16,7 +16,6 @@ function Login() {
         setError('');
 
         try {
-            // Envío correcto según tu última captura
             const response = await axios.post('http://localhost:8080/api/auth/login', {
                 identificacion,
                 contrasenia
@@ -36,7 +35,6 @@ function Login() {
             }
 
         } catch (err) {
-            // Si el Payload es correcto pero falla, el error viene de AutenticacionService
             setError(err.response?.data?.error || "Credenciales incorrectas");
         }
     };

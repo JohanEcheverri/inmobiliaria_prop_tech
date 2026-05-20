@@ -5,50 +5,99 @@ import AdminTables from '../components/AdminTables';
 import AdminModal from '../components/AdminModal';
 import './AdminDashboard.css';
 
+const API_BASE_URL = "http://localhost:8080/api"; // Centralizamos la URL del backend
+
 function AdminDashboard() {
     const navigate = useNavigate();
     const [seccionActiva, setSeccionActiva] = useState('inmuebles');
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [elementoAEditar, setElementoAEditar] = useState(null);
 
-    // ESTADOS DE LA APP CONECTADOS DIRECTAMENTE A LOS MODELOS DEL BACKEND
     const [inmuebles, setInmuebles] = useState([]);
     const [clientes, setClientes] = useState([]);
     const [asesores, setAsesores] = useState([]);
 
+    // Validación de sesión y disparo de peticiones iniciales
     useEffect(() => {
         const session = JSON.parse(localStorage.getItem("user_session"));
         if (!session || session.rol !== 'ADMINISTRADOR') {
             navigate('/login');
         } else {
-            // Aquí llamarás tus funciones de carga inicial, por ejemplo:
-            // fetchInmuebles(); fetchClientes(); fetchAsesores();
+            // Carga inicial automática de datos desde Spring Boot
+            fetchClientes();
+            // fetchInmuebles();
+            // fetchAsesores();
         }
     }, [navigate]);
 
-    const handleDelete = (id, tipo) => {
-        if (window.confirm(`¿Seguro que deseas eliminar permanentemente este registro en ${tipo}?`)) {
-            console.log(`Disparando Axios DELETE para: /api/${tipo}/${id}`);
-            // axios.delete(`http://localhost:8080/api/${tipo}/${id}`).then(...)
+    // ==========================================================================
+    // PETICIONES HTTP (FETCH ASYNC/AWAIT)
+    // ==========================================================================
+
+    const fetchClientes = async () => {
+        try {
+            const response = await fetch(`${API_BASE_URL}/clientes`);
+            if (!response.ok) throw new Error("Error al obtener el listado de clientes");
+            const data = await response.json();
+            setClientes(data); // Setea el array de ClienteResponse en el estado
+        } catch (error) {
+            console.error("Error en fetchClientes:", error);
         }
     };
 
-    const handleAssignSpecialty = (asesor) => {
+    const handleDelete = async (id, tipo) => {
+        if (window.confirm(`¿Seguro que deseas eliminar permanentemente este registro en ${tipo}?`)) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/${tipo}/${id}`, {
+                    method: 'DELETE'
+                });
+
+                if (!response.ok) {
+                    throw new Error(`No se pudo eliminar el registro con ID ${id}`);
+                }
+
+                // Sincronización inmediata del estado de React según la sección
+                if (tipo === 'clientes') {
+                    // Comparamos contra item.id (que mapea la cédula del DTO)
+                    setClientes(prev => prev.filter(item => item.id !== id));
+                } else if (tipo === 'inmuebles') {
+                    setInmuebles(prev => prev.filter(item => item.codigo !== id));
+                } else if (tipo === 'asesores') {
+                    setAsesores(prev => prev.filter(item => item.identificacion !== id));
+                }
+
+                alert("Registro eliminado correctamente");
+            } catch (error) {
+                alert(`Error al eliminar: ${error.message}`);
+            }
+        }
+    };
+
+    const handleAssignSpecialty = async (asesor) => {
         const nuevaZona = window.prompt(`Asignar nueva especialidad o zona para ${asesor.nombre}:`, asesor.especialidad || '');
         if (nuevaZona !== null) {
             console.log(`Actualizando zona de asesor ${asesor.identificacion} a: ${nuevaZona}`);
-            // axios.put(...)
+            // Aquí iría tu petición PUT correspondiente cuando acoples Asesores
         }
     };
 
+    // ==========================================================================
+    // CONTROL DE MODALES Y SELECCIÓN DE ESTADO
+    // ==========================================================================
     const abrirModalRegistro = () => { setElementoAEditar(null); setIsModalOpen(true); };
     const abrirModalEdicion = (elemento) => { setElementoAEditar(elemento); setIsModalOpen(true); };
 
-    // Selector dinámico para pasar el set de datos correspondiente a la tabla
     const obtenerColeccionActiva = () => {
         if (seccionActiva === 'inmuebles') return inmuebles;
         if (seccionActiva === 'clientes') return clientes;
         return asesores;
+    };
+
+    // Callback para que el modal le avise al padre que debe refrescar la tabla tras guardar/editar
+    const handleModalSuccess = () => {
+        setIsModalOpen(false);
+        if (seccionActiva === 'clientes') fetchClientes();
+        // Add hooks para inmuebles/asesores cuando estén operativos
     };
 
     return (
@@ -108,6 +157,7 @@ function AdminDashboard() {
                     seccion={seccionActiva}
                     datos={elementoAEditar}
                     onClose={() => setIsModalOpen(false)}
+                    onSuccess={handleModalSuccess}
                 />
             )}
         </Layout>
