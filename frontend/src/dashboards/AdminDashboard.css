@@ -1,0 +1,415 @@
+/* ==========================================================================
+   1. DISEÑO GENERAL Y LAYOUT
+   ========================================================================== */
+.admin-layout-container {
+    padding: 0 !important;
+}
+
+.dashboard-wrapper {
+    display: flex;
+    min-height: calc(100vh - 140px);
+    background-color: #f4f6f9;
+}
+
+/* ==========================================================================
+   2. MENÚ LATERAL (SIDEBAR)
+   ========================================================================== */
+.dashboard-sidebar {
+    width: 260px;
+    background-color: #ffffff;
+    border-right: 1px solid #e0e0e0;
+    padding: 20px 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.sidebar-header {
+    padding: 0 20px 15px 20px;
+    border-bottom: 2px solid #f4f6f9;
+    margin-bottom: 15px;
+}
+
+.sidebar-header h3 {
+    color: #444;
+    font-size: 1.1rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    text-align: center;
+}
+
+.sidebar-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    padding: 0 10px;
+}
+
+.nav-item {
+    width: 95%;
+    padding: 10px 12px;
+    border: none;
+    background: none;
+    text-align: left;
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: #555;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transition: all 0.2s ease;
+}
+
+.nav-item:hover {
+    background-color: #f3e5f5;
+    color: #9370db;
+}
+
+.nav-item.active {
+    background-color: #9370db;
+    color: #ffffff;
+    font-weight: bold;
+}
+
+.sidebar-icon-svg {
+    width: 18px;
+    height: 18px;
+    stroke: currentColor;
+}
+
+/* ==========================================================================
+   3. ÁREA DE CONTENIDO CENTRAL
+   ========================================================================== */
+.dashboard-content {
+    flex: 1;
+    padding: 30px;
+    overflow-y: auto;
+}
+
+.content-view-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+}
+
+.content-view-header h1 {
+    font-size: 1.8rem;
+    color: #333;
+    margin: 0 0 5px 0;
+}
+
+.content-view-header p {
+    color: #777;
+    margin: 0;
+    font-size: 0.95rem;
+}
+
+.btn-add-registry {
+    background-color: #9370db;
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 6px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.btn-add-registry:hover {
+    background-color: #7e57c2;
+}
+
+/* ==========================================================================
+   4. TABLAS ADMINISTRATIVAS Y COMPONENTES
+   ========================================================================== */
+.table-responsive-wrapper {
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    overflow-x: auto;
+}
+
+.domustech-admin-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+    font-size: 0.9rem;
+}
+
+.domustech-admin-table th {
+    background-color: #f8f9fa;
+    color: #555;
+    padding: 15px;
+    font-weight: 600;
+    border-bottom: 2px solid #eaeaea;
+}
+
+.domustech-admin-table td {
+    padding: 15px;
+    border-bottom: 1px solid #eaeaea;
+    color: #444;
+    vertical-align: middle;
+}
+
+/* Filas vacías o estados de carga */
+.table-empty-row {
+    text-align: center;
+    padding: 40px !important;
+    color: #888;
+    font-style: italic;
+}
+
+/* Avatares en tablas */
+.table-avatar-preview {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    overflow: hidden;
+    background-color: #e1bee7;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.table-avatar-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.table-avatar-placeholder {
+    font-weight: bold;
+    color: #7b1fa2;
+    font-size: 0.95rem;
+}
+
+/* Badges de Estados, Finalidades y Especialidades */
+.badge-type {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: bold;
+    background-color: #eee;
+}
+
+.badge-type.venta { background-color: #e8f5e9; color: #2e7d32; }
+.badge-type.arriendo { background-color: #e3f2fd; color: #1565c0; }
+.status-active { color: #2e7d32; font-weight: 600; }
+
+.badge-specialty-zone {
+    background-color: #f3e5f5;
+    color: #7b1fa2;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+/* Botones de acción basados en SVG */
+.btn-action-svg-edit,
+.btn-action-svg-delete,
+.btn-action-svg-assign {
+    background: none;
+    border: none;
+    padding: 6px;
+    cursor: pointer;
+    border-radius: 4px;
+    color: #666;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.btn-action-svg-edit:hover { background-color: #e3f2fd; color: #1565c0; }
+.btn-action-svg-delete:hover { background-color: #ffebee; color: #c62828; }
+.btn-action-svg-assign:hover { background-color: #e8f5e9; color: #2e7d32; }
+
+.table-icon-svg {
+    width: 17px;
+    height: 17px;
+}
+
+/* ==========================================================================
+   5. VENTANAS FLOTANTES (MODALES)
+   ========================================================================== */
+.modal-backdrop {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background-color: rgba(0, 0, 0, 0.4);
+    display: flex; justify-content: center; align-items: center;
+    z-index: 1000;
+}
+
+.modal-window-card {
+    background-color: white;
+    border-radius: 10px;
+    width: 90%;
+    max-width: 650px;
+    max-height: 85vh;
+    overflow-y: auto;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    animation: fadeInModal 0.2s ease-out;
+}
+
+@keyframes fadeInModal {
+    from { opacity: 0; transform: translateY(-15px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.modal-window-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    border-bottom: 1px solid #eee;
+}
+
+.modal-window-header h2 { margin: 0; font-size: 1.4rem; color: #333; }
+.btn-close-modal { background: none; border: none; font-size: 1.8rem; cursor: pointer; color: #aaa; }
+.btn-close-modal:hover { color: #333; }
+
+.modal-form-body { padding: 20px; }
+
+/* Formulación en Grids */
+.modal-grid-inputs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+}
+
+.modal-grid-inputs.data-user-grid {
+    grid-template-columns: 1fr 1fr;
+}
+
+.modal-user-fields-subgrid {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+}
+
+.modal-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.modal-group.full-row {
+    grid-column: 1 / -1;
+}
+
+.modal-group label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-bottom: 5px;
+    color: #555;
+}
+
+.modal-group input,
+.modal-group select {
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 0.95rem;
+}
+
+/* Cargador Multimedia de Avatar del Perfil */
+.user-avatar-upload-row {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 10px;
+    background: #fdfbfe;
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px dashed #d1c4e9;
+}
+
+.avatar-picker-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+.avatar-picker-preview {
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    border: 2px dashed #9370db;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    background-color: #fff;
+}
+
+.avatar-picker-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.avatar-plus-icon {
+    font-size: 1.8rem;
+    color: #9370db;
+}
+
+#avatar-file-input {
+    display: none;
+}
+
+.btn-select-avatar-file {
+    background-color: #fff;
+    border: 1px solid #9370db;
+    color: #9370db;
+    padding: 4px 12px;
+    border-radius: 15px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.btn-select-avatar-file:hover {
+    background-color: #9370db;
+    color: #fff;
+}
+
+/* Acciones del pie de formulario */
+.modal-footer-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 25px;
+    padding-top: 15px;
+    border-top: 1px solid #eee;
+}
+
+.btn-cancel-modal {
+    background-color: #e0e0e0;
+    color: #333;
+    border: none;
+    padding: 10px 18px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: 500;
+}
+
+.btn-submit-modal {
+    background-color: #9370db;
+    color: white;
+    border: none;
+    padding: 10px 18px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.2s;
+}
+
+.btn-submit-modal:hover {
+    background-color: #7e57c2;
+}

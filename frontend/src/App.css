@@ -126,30 +126,7 @@
   }
 }
 
-.password-wrapper {
-  position: relative;
-  display: flex;
-  align-items: center;
-}
 
-.password-wrapper input {
-  width: 100%;
-  padding-right: 40px;
-}
-
-.toggle-password {
-  position: absolute;
-  right: 10px;
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-size: 1.2rem;
-  padding: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #666;
-}
 
 .error-message {
   color: #d9534f;
@@ -240,7 +217,57 @@
 .photo-column {
   display: flex;
   flex-direction: column;
-  align-items: center; /* Centra el círculo horizontalmente en su columna */
+  align-items: center;
   justify-content: center;
-  padding-left: 20px; /* Desplazamiento sutil a la derecha */
+  padding-left: 20px;
+}
+
+.password-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+
+.password-wrapper input {
+  width: 100%;
+  padding: 10px;
+  padding-right: 40px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 1rem;
+  box-sizing: border-box;
+}
+
+
+.toggle-password {
+  position: absolute;
+  right: 12px;
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #888;
+  transition: color 0.2s ease, transform 0.1s ease;
+}
+
+
+.toggle-password:hover {
+  color: #9370db;
+}
+
+
+.toggle-password:active {
+  transform: scale(0.9);
+}
+
+
+.eye-icon {
+  width: 20px;
+  height: 20px;
 }
