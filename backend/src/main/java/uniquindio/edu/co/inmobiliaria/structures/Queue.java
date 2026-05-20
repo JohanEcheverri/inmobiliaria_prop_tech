@@ -90,6 +90,41 @@ public class Queue<T> {
         return false;
     }
 
+    public boolean remove(T value) {
+        if (front == null) {
+            return false;
+        }
+        if (front.getValue() == null ? value == null : front.getValue().equals(value)) {
+            dequeue();
+            return true;
+        }
+        Node<T> previous = front;
+        Node<T> current = front.getNext();
+        while (current != null) {
+            if (current.getValue() == null ? value == null : current.getValue().equals(value)) {
+                previous.setNext(current.getNext());
+                if (current == rear) {
+                    rear = previous;
+                }
+                size--;
+                return true;
+            }
+            previous = current;
+            current = current.getNext();
+        }
+        return false;
+    }
+
+    public java.util.List<T> toList() {
+        java.util.List<T> values = new java.util.ArrayList<>(size);
+        Node<T> cur = front;
+        while (cur != null) {
+            values.add(cur.getValue());
+            cur = cur.getNext();
+        }
+        return values;
+    }
+
     public void clear() {
         front = null;
         rear = null;

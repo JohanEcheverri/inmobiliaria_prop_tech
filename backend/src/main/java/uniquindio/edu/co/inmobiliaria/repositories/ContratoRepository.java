@@ -15,4 +15,8 @@ public class ContratoRepository {
         this.contratoJpaRepository = contratoJpaRepository;
         this.contratos = new SinglyLinkedList<>();
     }
+
+    
+
+
 }

@@ -3,6 +3,8 @@ package uniquindio.edu.co.inmobiliaria.services;
 import org.springframework.stereotype.Service;
 import org.springframework.beans.factory.annotation.Autowired;
 import uniquindio.edu.co.inmobiliaria.repositories.InmuebleRepository;
+import uniquindio.edu.co.inmobiliaria.repositories.VisitasRepository;
+import uniquindio.edu.co.inmobiliaria.comportamiento.ComportamientoService;
 import uniquindio.edu.co.inmobiliaria.models.entities.Inmueble;
 import uniquindio.edu.co.inmobiliaria.models.entities.Ciudad;
 import uniquindio.edu.co.inmobiliaria.models.entities.Barrio;
@@ -16,10 +18,14 @@ import uniquindio.edu.co.inmobiliaria.structures.SinglyLinkedList;
 public class InmuebleService {
 
     private final InmuebleRepository inmuebleRepository;
+    private final VisitasRepository visitasRepository;
+    private final ComportamientoService comportamientoService;
 
     @Autowired
-    public InmuebleService(InmuebleRepository inmuebleRepository) {
+    public InmuebleService(InmuebleRepository inmuebleRepository, VisitasRepository visitasRepository, ComportamientoService comportamientoService) {
         this.inmuebleRepository = inmuebleRepository;
+        this.visitasRepository = visitasRepository;
+        this.comportamientoService = comportamientoService;
     }
 
     public void registrarInmueble(String codigo, String direccion, Ciudad ciudad, Barrio barriro , TipoInmueble tipo, Finalidad finalidad, double precio, double area, int numeroHabitaciones, int numeroBanios, Estado estado, Asesor asesor, String imagen) {
@@ -94,7 +100,13 @@ public class InmuebleService {
                 .asesor(asesor)
                 .imagen(imagen)
                 .build();
+
+        double precioAnterior = inmuebleExistente.getPrecio();
         inmuebleRepository.update(inmuebleActualizado);
+
+        if (Double.compare(precioAnterior, precio) != 0) {
+            comportamientoService.registrarCambioPrecio(codigo, precioAnterior, precio);
+        }
     }
 
     public void eliminarInmueble(String codigo) {
@@ -137,6 +149,39 @@ public class InmuebleService {
         }
         SinglyLinkedList<Inmueble> resultado = new SinglyLinkedList<>();
         var inmuebles = inmuebleRepository.findInmueblesEnRangoPrecio(min, max);
+        for (int i = 0; i < inmuebles.size(); i++) {
+            resultado.addLast(inmuebles.get(i));
+        }
+        return resultado;
+    }
+
+    public SinglyLinkedList<Inmueble> sortByPrice() {
+        SinglyLinkedList<Inmueble> resultado = new SinglyLinkedList<>();
+        var inmuebles = inmuebleRepository.findAll();
+        inmuebles.sort((i1, i2) -> Double.compare(i1.getPrecio(), i2.getPrecio()));
+        for (int i = 0; i < inmuebles.size(); i++) {
+            resultado.addLast(inmuebles.get(i));
+        }
+        return resultado;
+    }
+
+    public SinglyLinkedList<Inmueble> sortByArea() {
+        SinglyLinkedList<Inmueble> resultado = new SinglyLinkedList<>();
+        var inmuebles = inmuebleRepository.findAll();
+        inmuebles.sort((i1, i2) -> Double.compare(i1.getArea(), i2.getArea()));
+        for (int i = 0; i < inmuebles.size(); i++) {
+            resultado.addLast(inmuebles.get(i));
+        }
+        return resultado;
+    }
+
+    public SinglyLinkedList<Inmueble> sortByDemand() {
+        SinglyLinkedList<Inmueble> resultado = new SinglyLinkedList<>();
+        var inmuebles = inmuebleRepository.findAll();
+        inmuebles.sort((i1, i2) -> Integer.compare(
+                visitasRepository.findByInmuebleCodigo(i1.getCodigo()).size(),
+                visitasRepository.findByInmuebleCodigo(i2.getCodigo()).size()
+        ));
         for (int i = 0; i < inmuebles.size(); i++) {
             resultado.addLast(inmuebles.get(i));
         }

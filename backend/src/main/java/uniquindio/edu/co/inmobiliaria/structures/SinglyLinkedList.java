@@ -22,6 +22,16 @@ public class SinglyLinkedList<T> {
         return size == 0;
     }
 
+    public java.util.List<T> toList() {
+        java.util.List<T> list = new java.util.ArrayList<>(size);
+        Node<T> cur = head;
+        while (cur != null) {
+            list.add(cur.getValue());
+            cur = cur.getNext();
+        }
+        return list;
+    }
+
     public void clear() {
         head = null;
         tail = null;

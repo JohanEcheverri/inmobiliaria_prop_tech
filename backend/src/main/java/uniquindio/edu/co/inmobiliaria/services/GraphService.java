@@ -3,13 +3,16 @@ package uniquindio.edu.co.inmobiliaria.services;
 import org.springframework.stereotype.Service;
 import uniquindio.edu.co.inmobiliaria.alerts.AlertaService;
 import uniquindio.edu.co.inmobiliaria.models.entities.Cliente;
+import uniquindio.edu.co.inmobiliaria.models.entities.EventoHistorial;
 import uniquindio.edu.co.inmobiliaria.models.entities.Inmueble;
 import uniquindio.edu.co.inmobiliaria.models.entities.Operacion;
 import uniquindio.edu.co.inmobiliaria.models.entities.Visita;
 import uniquindio.edu.co.inmobiliaria.models.enums.PrioridadAlerta;
 import uniquindio.edu.co.inmobiliaria.models.enums.TipoAlerta;
+import uniquindio.edu.co.inmobiliaria.models.enums.TipoEventoHistorial;
 import uniquindio.edu.co.inmobiliaria.models.enums.Zona;
 import uniquindio.edu.co.inmobiliaria.repositories.ClienteRepository;
+import uniquindio.edu.co.inmobiliaria.repositories.EventoHistorialRepository;
 import uniquindio.edu.co.inmobiliaria.repositories.InmuebleRepository;
 import uniquindio.edu.co.inmobiliaria.repositories.OperacionRepository;
 import uniquindio.edu.co.inmobiliaria.repositories.VisitasRepository;
@@ -34,6 +37,7 @@ public class GraphService {
     private final InmuebleRepository inmuebleRepository;
     private final VisitasRepository visitasRepository;
     private final OperacionRepository operacionRepository;
+    private final EventoHistorialRepository eventoHistorialRepository;
     private final AlertaService alertaService;
 
     public GraphService(
@@ -41,11 +45,13 @@ public class GraphService {
             InmuebleRepository inmuebleRepository,
             VisitasRepository visitasRepository,
             OperacionRepository operacionRepository,
+            EventoHistorialRepository eventoHistorialRepository,
             AlertaService alertaService) {
         this.clienteRepository = clienteRepository;
         this.inmuebleRepository = inmuebleRepository;
         this.visitasRepository = visitasRepository;
         this.operacionRepository = operacionRepository;
+        this.eventoHistorialRepository = eventoHistorialRepository;
         this.alertaService = alertaService;
     }
 
@@ -99,13 +105,32 @@ public class GraphService {
             }
             GraphVertex clienteVertice = GraphVertex.ofCliente(visita.getCliente());
             GraphVertex inmuebleVertice = GraphVertex.ofInmueble(visita.getInmueble());
-            addOrUpdateEdge(grafo, clienteVertice, inmuebleVertice, 1.0);
+            addOrUpdateEdge(grafo, clienteVertice, inmuebleVertice, 1.5);
 
             Zona zona = visita.getInmueble().getBarrio() != null
                     ? visita.getInmueble().getBarrio().getZona()
                     : null;
             if (zona != null) {
                 addOrUpdateEdge(grafo, clienteVertice, GraphVertex.ofZona(zona), 1.0);
+            }
+        }
+
+        DynamicArrayList<EventoHistorial> eventos = eventoHistorialRepository.findAll();
+        for (int i = 0; i < eventos.size(); i++) {
+            EventoHistorial evento = eventos.get(i);
+            if (evento.getCliente() == null || evento.getInmueble() == null) {
+                continue;
+            }
+            GraphVertex clienteVertice = GraphVertex.ofCliente(evento.getCliente());
+            GraphVertex inmuebleVertice = GraphVertex.ofInmueble(evento.getInmueble());
+            double peso = calcularPesoPorEvento(evento.getTipoEvento());
+            addOrUpdateEdge(grafo, clienteVertice, inmuebleVertice, peso);
+
+            Zona zona = evento.getInmueble().getBarrio() != null
+                    ? evento.getInmueble().getBarrio().getZona()
+                    : null;
+            if (zona != null) {
+                addOrUpdateEdge(grafo, clienteVertice, GraphVertex.ofZona(zona), 0.8);
             }
         }
 
@@ -202,6 +227,61 @@ public class GraphService {
             }
         }
         return zonasConConexion;
+    }
+
+    public DynamicArrayList<GraphVertex> consultarRelacionesClienteInmuebles(String clienteId) {
+        Cliente cliente = clienteRepository.findById(clienteId)
+                .orElseThrow(() -> new IllegalArgumentException("Cliente no encontrado: " + clienteId));
+        Graph<GraphVertex> grafo = construirGrafoDeMovilidadComercial();
+        GraphVertex inicio = GraphVertex.ofCliente(cliente);
+        if (!grafo.containsVertex(inicio)) {
+            return new DynamicArrayList<>();
+        }
+
+        DynamicArrayList<GraphVertex> recorrido = grafo.bfs(inicio);
+        DynamicArrayList<GraphVertex> relaciones = new DynamicArrayList<>();
+        for (int i = 0; i < recorrido.size(); i++) {
+            GraphVertex vertice = recorrido.get(i);
+            if (vertice.equals(inicio)) {
+                continue;
+            }
+            if (vertice.getType() == GraphVertex.Type.INMUEBLE
+                    || vertice.getType() == GraphVertex.Type.ZONA
+                    || vertice.getType() == GraphVertex.Type.OPERACION) {
+                relaciones.add(vertice);
+            }
+        }
+        return relaciones;
+    }
+
+    public DynamicArrayList<GraphVertex> consultarRutaClienteAInmueble(String clienteId, String codigoInmueble) {
+        Cliente cliente = clienteRepository.findById(clienteId)
+                .orElseThrow(() -> new IllegalArgumentException("Cliente no encontrado: " + clienteId));
+        if (codigoInmueble == null || codigoInmueble.isBlank()) {
+            return new DynamicArrayList<>();
+        }
+        Inmueble inmueble = inmuebleRepository.findByCodigo(codigoInmueble);
+        if (inmueble == null) {
+            return new DynamicArrayList<>();
+        }
+        Graph<GraphVertex> grafo = construirGrafoDeMovilidadComercial();
+        GraphVertex inicio = GraphVertex.ofCliente(cliente);
+        GraphVertex destino = GraphVertex.ofInmueble(inmueble);
+        if (!grafo.containsVertex(inicio) || !grafo.containsVertex(destino)) {
+            return new DynamicArrayList<>();
+        }
+        return grafo.shortestPath(inicio, destino);
+    }
+
+    private double calcularPesoPorEvento(TipoEventoHistorial tipoEvento) {
+        return switch (tipoEvento) {
+            case FAVORITO -> 3.0;
+            case GUARDADO -> 2.0;
+            case VISITA -> 2.5;
+            case NEGOCIANDO -> 2.8;
+            case CONSULTA -> 1.2;
+            case DESCARTADO -> 0.5;
+        };
     }
 
     private void addOrUpdateEdge(Graph<GraphVertex> grafo,

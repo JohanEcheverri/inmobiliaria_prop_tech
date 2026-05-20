@@ -19,6 +19,8 @@ public class AdministradorRepository {
     private final HashTable<String, Administrador> administradoresPorEmail;
     private final Tree<Administrador> administradoresPorNombre;
 
+   // private final Queue<TareaAdministrativa> tareasPendientes;
+
     public AdministradorRepository(AdministradorJpaRepository administradorJpaRepository) {
         this.administradorJpaRepository = administradorJpaRepository;
         this.administradores = new DynamicArrayList<>();

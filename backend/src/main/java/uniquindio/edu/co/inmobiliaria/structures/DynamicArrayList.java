@@ -102,6 +102,11 @@ public class DynamicArrayList<T> {
         return Arrays.copyOf(elements, size);
     }
 
+    @SuppressWarnings("unchecked")
+    public void sort(java.util.Comparator<? super T> c) {
+        Arrays.sort((T[]) elements, 0, size, c);
+    }
+
     private void ensureCapacity(int desiredCapacity) {
         if (desiredCapacity <= elements.length) {
             return;
