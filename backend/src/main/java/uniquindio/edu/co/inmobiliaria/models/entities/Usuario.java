@@ -34,6 +34,7 @@ public class Usuario {
     /** Credencial de acceso; en producción debe almacenarse de forma segura (hash), no en texto plano. */
     private String contrasenia;
     /** Referencia a la imagen de perfil (URL, ruta o identificador según la implementación). */
+    @Column(name = "foto_perfil", columnDefinition = "longtext")
     private String fotoPerfil;
 
 }
