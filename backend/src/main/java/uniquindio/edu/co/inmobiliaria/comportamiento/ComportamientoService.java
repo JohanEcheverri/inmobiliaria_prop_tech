@@ -119,7 +119,9 @@ public class ComportamientoService {
             int visitasRecientes = 0;
             for (int j = 0; j < visitas.size(); j++) {
                 Visita v = visitas.get(j);
-                if (v.getFecha() != null && !v.getFecha().isBefore(haceUnaSemana)) {
+                if (v.getFecha() != null
+                        && v.getEstado() != EstadoVisita.CANCELADA
+                        && !v.getFecha().isBefore(haceUnaSemana)) {
                     visitasRecientes++;
                 }
             }
@@ -180,7 +182,9 @@ public class ComportamientoService {
             for (int j = 0; j < visitas.size(); j++) {
                 Visita vis = visitas.get(j);
                 if (vis.getAsesotAsignado() != null && asesor.getId().equals(vis.getAsesotAsignado().getId())
-                        && (vis.getEstado() == EstadoVisita.PENDIENTE || vis.getEstado() == EstadoVisita.CONFIRMADA)) {
+                        && (vis.getEstado() == EstadoVisita.PENDIENTE
+                        || vis.getEstado() == EstadoVisita.CONFIRMADA
+                        || vis.getEstado() == EstadoVisita.REPROGRAMADA)) {
                     visitasActivas++;
                 }
             }
@@ -262,7 +266,9 @@ public class ComportamientoService {
         HashTable<Zona, Integer> conteoZonas = new HashTable<>();
         for (int i = 0; i < visitas.size(); i++) {
             Visita visita = visitas.get(i);
-            if (visita.getFecha() == null || visita.getFecha().isBefore(haceUnaSemana)) {
+            if (visita.getFecha() == null
+                    || visita.getEstado() == EstadoVisita.CANCELADA
+                    || visita.getFecha().isBefore(haceUnaSemana)) {
                 continue;
             }
             if (visita.getInmueble() == null || visita.getInmueble().getBarrio() == null) {

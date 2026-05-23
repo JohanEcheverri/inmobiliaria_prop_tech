@@ -124,6 +124,9 @@ public class GraphService {
             GraphVertex clienteVertice = GraphVertex.ofCliente(evento.getCliente());
             GraphVertex inmuebleVertice = GraphVertex.ofInmueble(evento.getInmueble());
             double peso = calcularPesoPorEvento(evento.getTipoEvento());
+            if (peso <= 0) {
+                continue;
+            }
             addOrUpdateEdge(grafo, clienteVertice, inmuebleVertice, peso);
 
             Zona zona = evento.getInmueble().getBarrio() != null
@@ -138,9 +141,9 @@ public class GraphService {
     }
 
     public DynamicArrayList<GraphVertex> detectarPropiedadesSimilaresConsultadasPorMultiplesClientes() {
-        Graph<GraphVertex> grafo = construirGrafoDeMovilidadComercial();
         DynamicArrayList<GraphVertex> similares = new DynamicArrayList<>();
         DynamicArrayList<Inmueble> inmuebles = inmuebleRepository.findAll();
+        DynamicArrayList<EventoHistorial> eventos = eventoHistorialRepository.findAll();
         HashTable<String, Inmueble> inmueblesPorCodigo = new HashTable<>();
         for (int i = 0; i < inmuebles.size(); i++) {
             inmueblesPorCodigo.put(inmuebles.get(i).getCodigo(), inmuebles.get(i));
@@ -148,26 +151,38 @@ public class GraphService {
 
         for (int i = 0; i < inmuebles.size(); i++) {
             Inmueble inmueble = inmuebles.get(i);
-            GraphVertex inmuebleVertice = GraphVertex.ofInmueble(inmueble);
             HashTable<String, Integer> visitanteCompartido = new HashTable<>();
+            HashTable<String, Boolean> clienteCandidatoContado = new HashTable<>();
 
-            for (int edgeIndex = 0; edgeIndex < grafo.getNeighbors(inmuebleVertice).size(); edgeIndex++) {
-                Graph.Edge<GraphVertex> arista = grafo.getNeighbors(inmuebleVertice).get(edgeIndex);
-                if (arista.getTarget().getType() != GraphVertex.Type.CLIENTE) {
+            for (int eventoBaseIndex = 0; eventoBaseIndex < eventos.size(); eventoBaseIndex++) {
+                EventoHistorial eventoBase = eventos.get(eventoBaseIndex);
+                if (!esConsultaDeInmueble(eventoBase, inmueble.getCodigo())) {
                     continue;
                 }
-                GraphVertex clienteVertice = arista.getTarget();
-                DynamicArrayList<Graph.Edge<GraphVertex>> vecinosCliente = grafo.getNeighbors(clienteVertice);
-                for (int j = 0; j < vecinosCliente.size(); j++) {
-                    Graph.Edge<GraphVertex> clienteEdge = vecinosCliente.get(j);
-                    GraphVertex candidato = clienteEdge.getTarget();
-                    if (candidato.equals(inmuebleVertice) || candidato.getType() != GraphVertex.Type.INMUEBLE) {
+
+                String clienteId = eventoBase.getCliente().getId();
+                for (int candidatoIndex = 0; candidatoIndex < eventos.size(); candidatoIndex++) {
+                    EventoHistorial eventoCandidato = eventos.get(candidatoIndex);
+                    if (!esConsultaValida(eventoCandidato)
+                            || !Objects.equals(clienteId, eventoCandidato.getCliente().getId())) {
                         continue;
                     }
-                    int frecuencia = visitanteCompartido.containsKey(candidato.getId())
-                            ? visitanteCompartido.get(candidato.getId())
+
+                    String codigoCandidato = eventoCandidato.getInmueble().getCodigo();
+                    if (Objects.equals(inmueble.getCodigo(), codigoCandidato)) {
+                        continue;
+                    }
+
+                    String llaveConteo = clienteId + "|" + codigoCandidato;
+                    if (clienteCandidatoContado.containsKey(llaveConteo)) {
+                        continue;
+                    }
+                    clienteCandidatoContado.put(llaveConteo, true);
+
+                    int frecuencia = visitanteCompartido.containsKey(codigoCandidato)
+                            ? visitanteCompartido.get(codigoCandidato)
                             : 0;
-                    visitanteCompartido.put(candidato.getId(), frecuencia + 1);
+                    visitanteCompartido.put(codigoCandidato, frecuencia + 1);
                 }
             }
 
@@ -274,13 +289,16 @@ public class GraphService {
     }
 
     private double calcularPesoPorEvento(TipoEventoHistorial tipoEvento) {
+        if (tipoEvento == null) {
+            return 0.0;
+        }
         return switch (tipoEvento) {
             case FAVORITO -> 3.0;
             case GUARDADO -> 2.0;
             case VISITA -> 2.5;
             case NEGOCIANDO -> 2.8;
             case CONSULTA -> 1.2;
-            case DESCARTADO -> 0.5;
+            case DESCARTADO -> 0.0;
         };
     }
 
@@ -323,6 +341,20 @@ public class GraphService {
         return diferenciaRelativa <= 0.25;
     }
 
+    private boolean esConsultaDeInmueble(EventoHistorial evento, String codigoInmueble) {
+        return esConsultaValida(evento)
+                && Objects.equals(evento.getInmueble().getCodigo(), codigoInmueble);
+    }
+
+    private boolean esConsultaValida(EventoHistorial evento) {
+        return evento != null
+                && evento.getTipoEvento() == TipoEventoHistorial.CONSULTA
+                && evento.getCliente() != null
+                && evento.getCliente().getId() != null
+                && evento.getInmueble() != null
+                && evento.getInmueble().getCodigo() != null;
+    }
+
     public void generarAlertasDeMovilidadComercial() {
         DynamicArrayList<GraphVertex> similares = detectarPropiedadesSimilaresConsultadasPorMultiplesClientes();
         for (int i = 0; i < similares.size(); i++) {
@@ -331,7 +363,7 @@ public class GraphService {
                     TipoAlerta.PROPIEDAD_ALTA_DEMANDA,
                     PrioridadAlerta.MEDIA,
                     "Propiedades similares con demanda compartida",
-                    "El inmueble " + inmuebleVertice.getId() + " está conectado con consultoras de múltiples clientes.",
+                    "El inmueble " + inmuebleVertice.getId() + " está conectado por consultas de múltiples clientes.",
                     inmuebleVertice.getId()
             );
         }

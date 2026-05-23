@@ -136,7 +136,18 @@ public class InmuebleService {
     }
 
     public Inmueble consultarInmuebleMayorDemanda() {
-        return inmuebleRepository.findInmuebleMayorDemanda();
+        var inmuebles = inmuebleRepository.findAll();
+        Inmueble mayorDemanda = null;
+        int maxVisitas = -1;
+        for (int i = 0; i < inmuebles.size(); i++) {
+            Inmueble inmueble = inmuebles.get(i);
+            int visitas = visitasRepository.findByInmuebleCodigo(inmueble.getCodigo()).size();
+            if (visitas > maxVisitas) {
+                maxVisitas = visitas;
+                mayorDemanda = inmueble;
+            }
+        }
+        return mayorDemanda;
     }
 
     public Inmueble consultarInmueblePorPrecio(double precio) {
@@ -179,8 +190,8 @@ public class InmuebleService {
         SinglyLinkedList<Inmueble> resultado = new SinglyLinkedList<>();
         var inmuebles = inmuebleRepository.findAll();
         inmuebles.sort((i1, i2) -> Integer.compare(
-                visitasRepository.findByInmuebleCodigo(i1.getCodigo()).size(),
-                visitasRepository.findByInmuebleCodigo(i2.getCodigo()).size()
+                visitasRepository.findByInmuebleCodigo(i2.getCodigo()).size(),
+                visitasRepository.findByInmuebleCodigo(i1.getCodigo()).size()
         ));
         for (int i = 0; i < inmuebles.size(); i++) {
             resultado.addLast(inmuebles.get(i));

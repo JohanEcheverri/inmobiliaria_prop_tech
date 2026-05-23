@@ -20,7 +20,7 @@ public class AsesorRepository {
     public AsesorRepository(AsesorJpaRepository asesorJpaRepository) {
         this.asesorJpaRepository = asesorJpaRepository;
         this.numeroDeCierres = new Tree<>(
-                (a1, a2) -> Integer.compare(a2.getNumeroDeCierres(), a1.getNumeroDeCierres()));
+                this::compararPorCierresEId);
         this.asesoresPorId = new HashTable<>();
         this.asesoresPorEmail = new HashTable<>();
         cargarDesdeBaseDeDatos();
@@ -99,5 +99,22 @@ public class AsesorRepository {
             asesoresPorEmail.remove(asesor.getEmail());
         }
         numeroDeCierres.remove(asesor);
+    }
+
+    private int compararPorCierresEId(Asesor a1, Asesor a2) {
+        int comparacionCierres = Integer.compare(a2.getNumeroDeCierres(), a1.getNumeroDeCierres());
+        if (comparacionCierres != 0) {
+            return comparacionCierres;
+        }
+        if (a1.getId() == null && a2.getId() == null) {
+            return 0;
+        }
+        if (a1.getId() == null) {
+            return -1;
+        }
+        if (a2.getId() == null) {
+            return 1;
+        }
+        return a1.getId().compareTo(a2.getId());
     }
 }

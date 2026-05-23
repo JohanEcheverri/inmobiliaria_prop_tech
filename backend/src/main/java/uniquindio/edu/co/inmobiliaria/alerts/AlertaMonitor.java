@@ -75,7 +75,9 @@ public class AlertaMonitor {
         contratos.stream()
                 .filter(Contrato::isVigente)
                 .forEach(contrato -> {
-                    if (contrato.getFechaVencimiento() == null) {
+                    if (contrato.getFechaVencimiento() == null
+                            || contrato.getOperacion() == null
+                            || contrato.getOperacion().getInmueble() == null) {
                         return;
                     }
                     long diasRestantes = ChronoUnit.DAYS.between(hoy, contrato.getFechaVencimiento().toLocalDate());
@@ -108,7 +110,9 @@ public class AlertaMonitor {
                 .filter(inmueble -> inmueble.getEstado() == Estado.DISPONIBLE)
                 .forEach(inmueble -> {
                     Optional<LocalDate> ultimaVisita = visitas.stream()
-                            .filter(v -> v.getInmueble() != null && inmueble.getCodigo().equals(v.getInmueble().getCodigo()))
+                            .filter(v -> esVisitaConFechaHora(v)
+                                    && v.getInmueble() != null
+                                    && inmueble.getCodigo().equals(v.getInmueble().getCodigo()))
                             .map(v -> LocalDateTime.of(v.getFecha(), v.getHora()).toLocalDate())
                             .max(Comparator.naturalOrder());
                     if (ultimaVisita.isEmpty()) {
@@ -140,7 +144,9 @@ public class AlertaMonitor {
 
         inmuebles.forEach(inmueble -> {
             long totalVisitas = visitas.stream()
-                    .filter(v -> v.getInmueble() != null && inmueble.getCodigo().equals(v.getInmueble().getCodigo()))
+                    .filter(v -> v.getInmueble() != null
+                            && inmueble.getCodigo().equals(v.getInmueble().getCodigo())
+                            && v.getEstado() != EstadoVisita.CANCELADA)
                     .count();
             if (totalVisitas < VISITAS_ALTA_DEMANDA) {
                 return;
@@ -161,7 +167,7 @@ public class AlertaMonitor {
 
     private void verificarVisitasPendientesConfirmar() {
         List<Visita> pendientes = iterableToList(visitaJpaRepository.findAll()).stream()
-                .filter(v -> v.getEstado() == EstadoVisita.PENDIENTE)
+                .filter(v -> v.getEstado() == EstadoVisita.PENDIENTE && esVisitaConFechaHora(v))
                 .collect(Collectors.toList());
 
         LocalDateTime ahora = LocalDateTime.now();
@@ -232,6 +238,7 @@ public class AlertaMonitor {
         clientes.forEach(cliente -> {
             Optional<LocalDateTime> ultimaInteraccion = StreamSupport.stream(visitas.spliterator(), false)
                     .filter(v -> v.getCliente() != null && cliente.getId().equals(v.getCliente().getId()))
+                    .filter(this::esVisitaConFechaHora)
                     .map(v -> LocalDateTime.of(v.getFecha(), v.getHora()))
                     .max(Comparator.naturalOrder());
 
@@ -269,5 +276,9 @@ public class AlertaMonitor {
     private <T> List<T> iterableToList(Iterable<T> iterable) {
         return StreamSupport.stream(iterable.spliterator(), false)
                 .collect(Collectors.toList());
+    }
+
+    private boolean esVisitaConFechaHora(Visita visita) {
+        return visita != null && visita.getFecha() != null && visita.getHora() != null;
     }
 }

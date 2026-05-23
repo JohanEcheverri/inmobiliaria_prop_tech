@@ -74,6 +74,22 @@ public class VisitasRepository {
         return Optional.ofNullable(visitasPorCodigo.get(codigo));
     }
 
+    public boolean existsByCodigo(String codigo) {
+        return codigo != null && visitasPorCodigo.containsKey(codigo);
+    }
+
+    public void deleteByCodigo(String codigo) {
+        if (codigo == null || codigo.isBlank()) {
+            throw new IllegalArgumentException("El código de la visita no puede estar vacío");
+        }
+        Visita visita = visitasPorCodigo.get(codigo);
+        if (visita == null) {
+            throw new IllegalArgumentException("No se encontró una visita con el código: " + codigo);
+        }
+        visitaJpaRepository.deleteById(codigo);
+        eliminarDeIndices(visita);
+    }
+
     public DynamicArrayList<Visita> findByClienteId(String idCliente) {
         DynamicArrayList<Visita> resultado = new DynamicArrayList<>();
         for (int i = 0; i < visitas.size(); i++) {
@@ -90,6 +106,17 @@ public class VisitasRepository {
         for (int i = 0; i < visitas.size(); i++) {
             Visita visita = visitas.get(i);
             if (visita.getInmueble() != null && codigoInmueble.equals(visita.getInmueble().getCodigo())) {
+                resultado.add(visita);
+            }
+        }
+        return resultado;
+    }
+
+    public DynamicArrayList<Visita> findByAsesorId(String idAsesor) {
+        DynamicArrayList<Visita> resultado = new DynamicArrayList<>();
+        for (int i = 0; i < visitas.size(); i++) {
+            Visita visita = visitas.get(i);
+            if (visita.getAsesotAsignado() != null && idAsesor.equals(visita.getAsesotAsignado().getId())) {
                 resultado.add(visita);
             }
         }
