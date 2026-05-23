@@ -1,4 +1,5 @@
 package uniquindio.edu.co.inmobiliaria.models.entities;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -27,13 +28,14 @@ public class Asesor extends Usuario {
     @Enumerated(EnumType.STRING)
     public TipoInmueble especialidad;
     /** */
-    public Integer numeroDeCierres;
+    @Column(name = "numero_de_cierres")
+    private Integer numeroDeCierres = 0;
 
     public Asesor(String nombre, String id, String email, String telefono,String contrasenia, String fotoPerfil, Zona zonaAsignada, TipoInmueble especialidad) {
         super(nombre, id, email, telefono, contrasenia, fotoPerfil);
         this.zonaAsignada = zonaAsignada;
         this.especialidad = especialidad;
-        this.numeroDeCierres = 0; // Inicialmente sin cierres
+        this.numeroDeCierres = 0;
     }
 
 

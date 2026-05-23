@@ -1,43 +1,45 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import { useState } from 'react';
 import axiosDirect from 'axios';
 
 const API_BASE_URL = "http://localhost:8080/api";
+
+const formDataBase = {
+    // Inmuebles
+    codigo: '', direccion: '', ciudad: '', barrio: '', tipoInmueble: 'CASA',
+    finalidad: 'VENTA', precio: '', area: '', habitaciones: '', banos: '',
+    estadoInmueble: 'DISPONIBLE', disponibilidad: 'DISPONIBLE', asesorResponsable: '',
+
+    // Usuarios comunes
+    identificacion: '',
+    nombre: '',
+    email: '',
+    password: '',
+    telefono: '',
+    fotoPerfil: null,
+
+    // Exclusivos Asesores
+    zonaAsignada: 'CENTRO',
+    especialidad: 'CASA'
+};
+
+const crearFormDataInicial = (datos) => ({
+    ...formDataBase,
+    ...(datos || {}),
+    identificacion: datos?.id || datos?.identificacion || '',
+    email: datos?.email || datos?.correo || '',
+    zonaAsignada: datos?.zonaAsignada || 'CENTRO',
+    especialidad: datos?.especialidad || 'CASA',
+    estadoInmueble: datos?.estadoInmueble || datos?.estado || 'DISPONIBLE',
+    disponibilidad: datos?.disponibilidad || datos?.estado || 'DISPONIBLE',
+    asesorResponsable: datos?.asesorId || datos?.asesorResponsable || '',
+    password: ''
+});
 
 function AdminModal({ seccion, datos, onClose, onSuccess }) {
     const isEdit = !!datos;
     const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState('');
-
-    // Estado unificado usando las propiedades exactas que tus DTOs y base de datos esperan
-    const [formData, setFormData] = useState({
-        // Inmuebles
-        codigo: '', direccion: '', ciudad: '', barrio: '', tipoInmueble: 'casa',
-        finalidad: 'venta', precio: '', area: '', habitaciones: '', banos: '',
-        estadoInmueble: '', disponibilidad: 'Disponible', asesorResponsable: '',
-
-        // Usuarios (Sincronizado al 100% con Register y ClienteRequest DTO)
-        identificacion: '', // Se mapeará a "id" en el payload del Cliente
-        nombre: '',
-        email: '',          // Cambiado de 'correo' a 'email'
-        password: '',       // Cambiado de 'contrasenia' a 'password'
-        telefono: '',
-        fotoPerfil: null,
-        especialidad: ''
-    });
-
-    useEffect(() => {
-        if (isEdit && datos) {
-            // Mapeamos los datos entrantes al estado del formulario local
-            setFormData(prev => ({
-                ...prev,
-                ...datos,
-                identificacion: datos.id || datos.identificacion || '',
-                email: datos.email || datos.correo || '',
-                password: '' // Vacía por seguridad en modo edición
-            }));
-        }
-    }, [datos, isEdit]);
+    const [formData, setFormData] = useState(() => crearFormDataInicial(datos));
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
@@ -47,9 +49,11 @@ function AdminModal({ seccion, datos, onClose, onSuccess }) {
     const handleFileChange = (e) => {
         const file = e.target.files[0];
         if (file) {
-            // Aquí puedes manejar la carga temporal o guardarlo en el estado si usas MultipartForm
-            const imageUrl = URL.createObjectURL(file);
-            setFormData(prev => ({ ...prev, fotoPerfil: imageUrl }));
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setFormData(prev => ({ ...prev, fotoPerfil: reader.result }));
+            };
+            reader.readAsDataURL(file);
         }
     };
 
@@ -61,7 +65,6 @@ function AdminModal({ seccion, datos, onClose, onSuccess }) {
         let payload = {};
 
         try {
-            // Construcción del Payload estructural según la sección
             if (seccion === 'inmuebles') {
                 payload = {
                     codigo: formData.codigo,
@@ -79,7 +82,6 @@ function AdminModal({ seccion, datos, onClose, onSuccess }) {
                     asesorResponsable: formData.asesorResponsable
                 };
             } else if (seccion === 'clientes') {
-                // Estructura idéntica a tu Register.jsx funcional
                 payload = {
                     id: formData.identificacion,
                     nombre: formData.nombre,
@@ -95,7 +97,7 @@ function AdminModal({ seccion, datos, onClose, onSuccess }) {
                     estadoBusqueda: formData.estadoBusqueda || 'BUSCANDO'
                 };
             } else if (seccion === 'asesores') {
-                // Estructura adaptada para los Asesores
+                // Envía las variables mapeando perfectamente con tu AsesorRequest DTO
                 payload = {
                     id: formData.identificacion,
                     nombre: formData.nombre,
@@ -103,18 +105,17 @@ function AdminModal({ seccion, datos, onClose, onSuccess }) {
                     telefono: formData.telefono,
                     password: formData.password,
                     fotoPerfil: formData.fotoPerfil || null,
-                    especialidad: formData.especialidad || 'General'
+                    zonaAsignada: formData.zonaAsignada, // Enum Zona
+                    especialidad: formData.especialidad   // Enum TipoInmueble
                 };
             }
 
-            // Si estamos editando y no cambiaron la contraseña, la quitamos del payload para no sobreescribirla
             if (isEdit && !formData.password) {
                 delete payload.password;
             }
 
-            // Ejecución de la petición HTTP
             if (isEdit) {
-                const idRegistro = formData.identificacion;
+                const idRegistro = seccion === 'inmuebles' ? formData.codigo : formData.identificacion;
                 await axiosDirect.put(`${endpoint}/${idRegistro}`, payload);
             } else {
                 await axiosDirect.post(endpoint, payload);
@@ -125,7 +126,7 @@ function AdminModal({ seccion, datos, onClose, onSuccess }) {
         } catch (err) {
             console.error("Error al guardar en el modal:", err);
             if (err.response) {
-                setError(err.response.data.error || `No se pudo procesar la solicitud en ${seccion}`);
+                setError(err.response.data.message || err.response.data.error || `No se pudo procesar la solicitud en ${seccion}`);
             } else {
                 setError('No se pudo conectar con el servidor backend');
             }
@@ -162,17 +163,19 @@ function AdminModal({ seccion, datos, onClose, onSuccess }) {
                             <div className="modal-group">
                                 <label>Tipo de Inmueble</label>
                                 <select name="tipoInmueble" value={formData.tipoInmueble} onChange={handleInputChange}>
-                                    <option value="casa">Casa</option>
-                                    <option value="apartamento">Apartamento</option>
-                                    <option value="local comercial">Local Comercial</option>
-                                    <option value="oficina">Oficina</option>
+                                    <option value="CASA">Casa</option>
+                                    <option value="APARTAMENTO">Apartamento</option>
+                                    <option value="LOCAL_COMERCIAL">Local Comercial</option>
+                                    <option value="OFICINA">Oficina</option>
+                                    <option value="LOTE">Lote</option>
+                                    <option value="BODEGA">Bodega</option>
                                 </select>
                             </div>
                             <div className="modal-group">
                                 <label>Finalidad</label>
                                 <select name="finalidad" value={formData.finalidad} onChange={handleInputChange}>
-                                    <option value="venta">Venta</option>
-                                    <option value="arriendo">Arriendo</option>
+                                    <option value="VENTA">Venta</option>
+                                    <option value="ARRENDAMIENTO">Arriendo</option>
                                 </select>
                             </div>
                             <div className="modal-group">
@@ -193,19 +196,31 @@ function AdminModal({ seccion, datos, onClose, onSuccess }) {
                             </div>
                             <div className="modal-group">
                                 <label>Estado del Inmueble</label>
-                                <input type="text" name="estadoInmueble" value={formData.estadoInmueble} onChange={handleInputChange} required />
+                                <select name="estadoInmueble" value={formData.estadoInmueble} onChange={(e) => {
+                                    handleInputChange(e);
+                                    setFormData(prev => ({ ...prev, disponibilidad: e.target.value }));
+                                }}>
+                                    <option value="DISPONIBLE">Disponible</option>
+                                    <option value="VENDIDO">Vendido</option>
+                                    <option value="ARRENDADO">Arrendado</option>
+                                    <option value="RESERVADO">Reservado</option>
+                                </select>
                             </div>
                             <div className="modal-group">
                                 <label>Disponibilidad</label>
                                 <select name="disponibilidad" value={formData.disponibilidad} onChange={handleInputChange}>
-                                    <option value="Disponible">Disponible</option>
-                                    <option value="Vendido">Vendido</option>
-                                    <option value="Arrendado">Arrendado</option>
+                                    <option value="DISPONIBLE">Disponible</option>
+                                    <option value="VENDIDO">Vendido</option>
+                                    <option value="ARRENDADO">Arrendado</option>
+                                    <option value="RESERVADO">Reservado</option>
                                 </select>
+                            </div>
+                            <div className="modal-group">
+                                <label>ID o Email del Asesor</label>
+                                <input type="text" name="asesorResponsable" value={formData.asesorResponsable} onChange={handleInputChange} placeholder="Opcional" />
                             </div>
                         </div>
                     ) : (
-                        /* ESTRUCTURA DE USUARIOS UNIFICADA (CLIENTE / ASESOR) */
                         <div className="modal-grid-inputs data-user-grid">
 
                             <div className="modal-group user-avatar-upload-row">
@@ -275,11 +290,31 @@ function AdminModal({ seccion, datos, onClose, onSuccess }) {
                                 </div>
                             </div>
 
+                            {/* SECCIÓN CORREGIDA CON ENUMS EXACTOS DE JAVA */}
                             {seccion === 'asesores' && (
-                                <div className="modal-group">
-                                    <label>Especialidad / Zona Inicial</label>
-                                    <input type="text" name="especialidad" value={formData.especialidad} onChange={handleInputChange} placeholder="Ej: Norte / Residencial" />
-                                </div>
+                                <>
+                                    <div className="modal-group">
+                                        <label>Zona Asignada</label>
+                                        <select name="zonaAsignada" value={formData.zonaAsignada} onChange={handleInputChange}>
+                                            <option value="NORTE">Norte</option>
+                                            <option value="SUR">Sur</option>
+                                            <option value="ESTE">Este</option>
+                                            <option value="OESTE">Oeste</option>
+                                            <option value="CENTRO">Centro</option>
+                                        </select>
+                                    </div>
+                                    <div className="modal-group">
+                                        <label>Especialidad Inmueble</label>
+                                        <select name="especialidad" value={formData.especialidad} onChange={handleInputChange}>
+                                            <option value="CASA">Casa</option>
+                                            <option value="APARTAMENTO">Apartamento</option>
+                                            <option value="LOCAL_COMERCIAL">Local Comercial</option>
+                                            <option value="OFICINA">Oficina</option>
+                                            <option value="LOTE">Lote</option>
+                                            <option value="BODEGA">Bodega</option>
+                                        </select>
+                                    </div>
+                                </>
                             )}
                         </div>
                     )}

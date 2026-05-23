@@ -1,5 +1,3 @@
-import React from 'react';
-
 // ==========================================================================
 // 1. COMPONENTE: TABLA DE INMUEBLES
 // ==========================================================================
@@ -113,7 +111,7 @@ function ClientesTable({ data, onEdit, onDelete }) {
 // ==========================================================================
 // 3. COMPONENTE: TABLA DE ASESORES
 // ==========================================================================
-function AsesoresTable({ data, onEdit, onDelete, onAssignSpecialty }) {
+function AsesoresTable({ data, onEdit, onDelete }) {
     return (
         <table className="domustech-admin-table">
             <thead>
@@ -134,7 +132,7 @@ function AsesoresTable({ data, onEdit, onDelete, onAssignSpecialty }) {
                 </tr>
             ) : (
                 data.map((item) => (
-                    <tr key={item.identificacion}>
+                    <tr key={item.id}>
                         <td>
                             <div className="table-avatar-preview">
                                 {item.fotoPerfil ? (
@@ -144,23 +142,22 @@ function AsesoresTable({ data, onEdit, onDelete, onAssignSpecialty }) {
                                 )}
                             </div>
                         </td>
-                        <td>{item.identificacion}</td>
+                        <td>{item.id}</td>
                         <td><strong>{item.nombre}</strong></td>
-                        <td>{item.correo}</td>
+                        <td>{item.email}</td>
                         <td>{item.telefono}</td>
                         <td>
+                            <div className="flex flex-col gap-1">
                                 <span className="badge-specialty-zone">
-                                    {item.especialidad || 'No asignada'}
+                                    {item.especialidad} / {item.zonaAsignada}
                                 </span>
+                            </div>
                         </td>
                         <td>
-                            <button className="btn-action-svg-assign" onClick={() => onAssignSpecialty(item)} title="Asignar Especialidad e Inmuebles">
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="table-icon-svg"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
-                            </button>
                             <button className="btn-action-svg-edit" onClick={() => onEdit(item)} title="Editar Asesor">
                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="table-icon-svg"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                             </button>
-                            <button className="btn-action-svg-delete" onClick={() => onDelete(item.identificacion, 'asesores')} title="Eliminar Asesor">
+                            <button className="btn-action-svg-delete" onClick={() => onDelete(item.id, 'asesores')} title="Eliminar Asesor">
                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="table-icon-svg"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
                             </button>
                         </td>
@@ -175,14 +172,14 @@ function AsesoresTable({ data, onEdit, onDelete, onAssignSpecialty }) {
 // ==========================================================================
 // 4. ENRUTADOR PRINCIPAL (AdminTables)
 // ==========================================================================
-function AdminTables({ seccion, data = [], onEdit, onDelete, onAssignSpecialty }) {
+function AdminTables({ seccion, data = [], onEdit, onDelete }) {
     switch (seccion) {
         case 'inmuebles':
             return <InmueblesTable data={data} onEdit={onEdit} onDelete={onDelete} />;
         case 'clientes':
             return <ClientesTable data={data} onEdit={onEdit} onDelete={onDelete} />;
         case 'asesores':
-            return <AsesoresTable data={data} data={data} onEdit={onEdit} onDelete={onDelete} onAssignSpecialty={onAssignSpecialty} />;
+            return <AsesoresTable data={data} onEdit={onEdit} onDelete={onDelete} />;
         default:
             return <div className="table-empty-row">Sección no válida</div>;
     }

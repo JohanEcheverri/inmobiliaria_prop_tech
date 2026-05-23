@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout';
 import AdminTables from '../components/AdminTables';
@@ -17,24 +17,12 @@ function AdminDashboard() {
     const [clientes, setClientes] = useState([]);
     const [asesores, setAsesores] = useState([]);
 
-    // Validación de sesión y disparo de peticiones iniciales
-    useEffect(() => {
-        const session = JSON.parse(localStorage.getItem("user_session"));
-        if (!session || session.rol !== 'ADMINISTRADOR') {
-            navigate('/login');
-        } else {
-            // Carga inicial automática de datos desde Spring Boot
-            fetchClientes();
-            // fetchInmuebles();
-            // fetchAsesores();
-        }
-    }, [navigate]);
 
     // ==========================================================================
     // PETICIONES HTTP (FETCH ASYNC/AWAIT)
     // ==========================================================================
 
-    const fetchClientes = async () => {
+    const fetchClientes = useCallback(async () => {
         try {
             const response = await fetch(`${API_BASE_URL}/clientes`);
             if (!response.ok) throw new Error("Error al obtener el listado de clientes");
@@ -43,7 +31,43 @@ function AdminDashboard() {
         } catch (error) {
             console.error("Error en fetchClientes:", error);
         }
-    };
+    }, []);
+
+    const fetchAsesores = useCallback(async () => {
+        try {
+            const response = await fetch(`${API_BASE_URL}/asesores`);
+            if (!response.ok) throw new Error("Error al obtener el listado de asesores");
+            const data = await response.json();
+            setAsesores(data); // Setea el array de AsesorResponse en el estado
+        } catch (error) {
+            console.error("Error en fetchAsesores:", error);
+        }
+    }, []);
+
+    const fetchInmuebles = useCallback(async () => {
+        try {
+            const response = await fetch(`${API_BASE_URL}/inmuebles`);
+            if (!response.ok) throw new Error("Error al obtener el listado de inmuebles");
+            const data = await response.json();
+            setInmuebles(data);
+        } catch (error) {
+            console.error("Error en fetchInmuebles:", error);
+        }
+    }, []);
+
+    useEffect(() => {
+        const session = JSON.parse(localStorage.getItem("user_session"));
+        if (!session || session.rol !== 'ADMINISTRADOR') {
+            navigate('/login');
+        } else {
+            const timer = window.setTimeout(() => {
+                fetchClientes();
+                fetchInmuebles();
+                fetchAsesores();
+            }, 0);
+            return () => window.clearTimeout(timer);
+        }
+    }, [fetchAsesores, fetchClientes, fetchInmuebles, navigate]);
 
     const handleDelete = async (id, tipo) => {
         if (window.confirm(`¿Seguro que deseas eliminar permanentemente este registro en ${tipo}?`)) {
@@ -63,21 +87,13 @@ function AdminDashboard() {
                 } else if (tipo === 'inmuebles') {
                     setInmuebles(prev => prev.filter(item => item.codigo !== id));
                 } else if (tipo === 'asesores') {
-                    setAsesores(prev => prev.filter(item => item.identificacion !== id));
+                    setAsesores(prev => prev.filter(item => item.id !== id));
                 }
 
                 alert("Registro eliminado correctamente");
             } catch (error) {
                 alert(`Error al eliminar: ${error.message}`);
             }
-        }
-    };
-
-    const handleAssignSpecialty = async (asesor) => {
-        const nuevaZona = window.prompt(`Asignar nueva especialidad o zona para ${asesor.nombre}:`, asesor.especialidad || '');
-        if (nuevaZona !== null) {
-            console.log(`Actualizando zona de asesor ${asesor.identificacion} a: ${nuevaZona}`);
-            // Aquí iría tu petición PUT correspondiente cuando acoples Asesores
         }
     };
 
@@ -93,11 +109,11 @@ function AdminDashboard() {
         return asesores;
     };
 
-    // Callback para que el modal le avise al padre que debe refrescar la tabla tras guardar/editar
     const handleModalSuccess = () => {
         setIsModalOpen(false);
         if (seccionActiva === 'clientes') fetchClientes();
-        // Add hooks para inmuebles/asesores cuando estén operativos
+        if (seccionActiva === 'asesores') fetchAsesores(); // <--- AGREGAR ESTA LÍNEA
+        if (seccionActiva === 'inmuebles') fetchInmuebles();
     };
 
     return (
@@ -146,7 +162,6 @@ function AdminDashboard() {
                             data={obtenerColeccionActiva()}
                             onEdit={abrirModalEdicion}
                             onDelete={handleDelete}
-                            onAssignSpecialty={handleAssignSpecialty}
                         />
                     </div>
                 </main>

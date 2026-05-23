@@ -15,13 +15,7 @@ const Layout = ({ children, actions, contentClassName = '' }) => {
         return savedSession ? JSON.parse(savedSession) : null;
     });
 
-    // Sincronizar por si la sesión cambia en otra parte de la app
     useEffect(() => {
-        const savedSession = localStorage.getItem("user_session");
-        if (savedSession) {
-            setUser(JSON.parse(savedSession));
-        }
-
         const handleClickOutside = (event) => {
             if (menuRef.current && !menuRef.current.contains(event.target)) {
                 setIsMenuOpen(false);
