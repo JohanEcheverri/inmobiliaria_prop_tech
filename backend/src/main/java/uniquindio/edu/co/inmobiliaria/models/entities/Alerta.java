@@ -19,6 +19,7 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @ToString
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -26,6 +27,7 @@ import java.time.LocalDateTime;
 public class Alerta {
 
     /** Identificador interno de la alerta. */
+    @EqualsAndHashCode.Include
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private String codigo;
@@ -56,4 +58,6 @@ public class Alerta {
 
     /** Momento en que se marco como atendida. */
     private LocalDateTime fechaAtencion;
+
+
 }

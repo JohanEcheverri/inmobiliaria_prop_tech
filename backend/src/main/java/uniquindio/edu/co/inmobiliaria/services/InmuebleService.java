@@ -6,6 +6,8 @@ import uniquindio.edu.co.inmobiliaria.models.dto.InmuebleRequest;
 import uniquindio.edu.co.inmobiliaria.models.dto.InmuebleResponse;
 import uniquindio.edu.co.inmobiliaria.repositories.InmuebleRepository;
 import uniquindio.edu.co.inmobiliaria.repositories.AsesorRepository;
+import uniquindio.edu.co.inmobiliaria.repositories.VisitasRepository;
+import uniquindio.edu.co.inmobiliaria.comportamiento.ComportamientoService;
 import uniquindio.edu.co.inmobiliaria.models.entities.Inmueble;
 import uniquindio.edu.co.inmobiliaria.models.entities.Ciudad;
 import uniquindio.edu.co.inmobiliaria.models.entities.Barrio;
@@ -25,9 +27,12 @@ public class InmuebleService {
 
     private final InmuebleRepository inmuebleRepository;
     private final AsesorRepository asesorRepository;
+    private final VisitasRepository visitasRepository;
+    private final ComportamientoService comportamientoService;
 
     @Autowired
     public InmuebleService(InmuebleRepository inmuebleRepository, AsesorRepository asesorRepository) {
+    public InmuebleService(InmuebleRepository inmuebleRepository, VisitasRepository visitasRepository, ComportamientoService comportamientoService) {
         this.inmuebleRepository = inmuebleRepository;
         this.asesorRepository = asesorRepository;
     }
@@ -70,6 +75,8 @@ public class InmuebleService {
         Inmueble inmueble = construirInmueble(request, codigo);
         inmuebleRepository.update(inmueble);
         return mapear(inmueble);
+        this.visitasRepository = visitasRepository;
+        this.comportamientoService = comportamientoService;
     }
 
     public void registrarInmueble(String codigo, String direccion, Ciudad ciudad, Barrio barriro , TipoInmueble tipo, Finalidad finalidad, double precio, double area, int numeroHabitaciones, int numeroBanios, Estado estado, Asesor asesor, String imagen) {
@@ -144,7 +151,13 @@ public class InmuebleService {
                 .asesor(asesor)
                 .imagen(imagen)
                 .build();
+
+        double precioAnterior = inmuebleExistente.getPrecio();
         inmuebleRepository.update(inmuebleActualizado);
+
+        if (Double.compare(precioAnterior, precio) != 0) {
+            comportamientoService.registrarCambioPrecio(codigo, precioAnterior, precio);
+        }
     }
 
     public void eliminarInmueble(String codigo) {
@@ -174,7 +187,18 @@ public class InmuebleService {
     }
 
     public Inmueble consultarInmuebleMayorDemanda() {
-        return inmuebleRepository.findInmuebleMayorDemanda();
+        var inmuebles = inmuebleRepository.findAll();
+        Inmueble mayorDemanda = null;
+        int maxVisitas = -1;
+        for (int i = 0; i < inmuebles.size(); i++) {
+            Inmueble inmueble = inmuebles.get(i);
+            int visitas = visitasRepository.findByInmuebleCodigo(inmueble.getCodigo()).size();
+            if (visitas > maxVisitas) {
+                maxVisitas = visitas;
+                mayorDemanda = inmueble;
+            }
+        }
+        return mayorDemanda;
     }
 
     public Inmueble consultarInmueblePorPrecio(double precio) {
@@ -319,5 +343,38 @@ public class InmuebleService {
 
     private boolean estaVacio(String valor) {
         return valor == null || valor.isBlank();
+    }
+
+    public SinglyLinkedList<Inmueble> sortByPrice() {
+        SinglyLinkedList<Inmueble> resultado = new SinglyLinkedList<>();
+        var inmuebles = inmuebleRepository.findAll();
+        inmuebles.sort((i1, i2) -> Double.compare(i1.getPrecio(), i2.getPrecio()));
+        for (int i = 0; i < inmuebles.size(); i++) {
+            resultado.addLast(inmuebles.get(i));
+        }
+        return resultado;
+    }
+
+    public SinglyLinkedList<Inmueble> sortByArea() {
+        SinglyLinkedList<Inmueble> resultado = new SinglyLinkedList<>();
+        var inmuebles = inmuebleRepository.findAll();
+        inmuebles.sort((i1, i2) -> Double.compare(i1.getArea(), i2.getArea()));
+        for (int i = 0; i < inmuebles.size(); i++) {
+            resultado.addLast(inmuebles.get(i));
+        }
+        return resultado;
+    }
+
+    public SinglyLinkedList<Inmueble> sortByDemand() {
+        SinglyLinkedList<Inmueble> resultado = new SinglyLinkedList<>();
+        var inmuebles = inmuebleRepository.findAll();
+        inmuebles.sort((i1, i2) -> Integer.compare(
+                visitasRepository.findByInmuebleCodigo(i2.getCodigo()).size(),
+                visitasRepository.findByInmuebleCodigo(i1.getCodigo()).size()
+        ));
+        for (int i = 0; i < inmuebles.size(); i++) {
+            resultado.addLast(inmuebles.get(i));
+        }
+        return resultado;
     }
 }

@@ -3,13 +3,16 @@ package uniquindio.edu.co.inmobiliaria.services;
 import org.springframework.stereotype.Service;
 import uniquindio.edu.co.inmobiliaria.alerts.AlertaService;
 import uniquindio.edu.co.inmobiliaria.models.entities.Cliente;
+import uniquindio.edu.co.inmobiliaria.models.entities.EventoHistorial;
 import uniquindio.edu.co.inmobiliaria.models.entities.Inmueble;
 import uniquindio.edu.co.inmobiliaria.models.entities.Operacion;
 import uniquindio.edu.co.inmobiliaria.models.entities.Visita;
 import uniquindio.edu.co.inmobiliaria.models.enums.PrioridadAlerta;
 import uniquindio.edu.co.inmobiliaria.models.enums.TipoAlerta;
+import uniquindio.edu.co.inmobiliaria.models.enums.TipoEventoHistorial;
 import uniquindio.edu.co.inmobiliaria.models.enums.Zona;
 import uniquindio.edu.co.inmobiliaria.repositories.ClienteRepository;
+import uniquindio.edu.co.inmobiliaria.repositories.EventoHistorialRepository;
 import uniquindio.edu.co.inmobiliaria.repositories.InmuebleRepository;
 import uniquindio.edu.co.inmobiliaria.repositories.OperacionRepository;
 import uniquindio.edu.co.inmobiliaria.repositories.VisitasRepository;
@@ -34,6 +37,7 @@ public class GraphService {
     private final InmuebleRepository inmuebleRepository;
     private final VisitasRepository visitasRepository;
     private final OperacionRepository operacionRepository;
+    private final EventoHistorialRepository eventoHistorialRepository;
     private final AlertaService alertaService;
 
     public GraphService(
@@ -41,11 +45,13 @@ public class GraphService {
             InmuebleRepository inmuebleRepository,
             VisitasRepository visitasRepository,
             OperacionRepository operacionRepository,
+            EventoHistorialRepository eventoHistorialRepository,
             AlertaService alertaService) {
         this.clienteRepository = clienteRepository;
         this.inmuebleRepository = inmuebleRepository;
         this.visitasRepository = visitasRepository;
         this.operacionRepository = operacionRepository;
+        this.eventoHistorialRepository = eventoHistorialRepository;
         this.alertaService = alertaService;
     }
 
@@ -99,7 +105,7 @@ public class GraphService {
             }
             GraphVertex clienteVertice = GraphVertex.ofCliente(visita.getCliente());
             GraphVertex inmuebleVertice = GraphVertex.ofInmueble(visita.getInmueble());
-            addOrUpdateEdge(grafo, clienteVertice, inmuebleVertice, 1.0);
+            addOrUpdateEdge(grafo, clienteVertice, inmuebleVertice, 1.5);
 
             Zona zona = visita.getInmueble().getBarrio() != null
                     ? visita.getInmueble().getBarrio().getZona()
@@ -109,13 +115,35 @@ public class GraphService {
             }
         }
 
+        DynamicArrayList<EventoHistorial> eventos = eventoHistorialRepository.findAll();
+        for (int i = 0; i < eventos.size(); i++) {
+            EventoHistorial evento = eventos.get(i);
+            if (evento.getCliente() == null || evento.getInmueble() == null) {
+                continue;
+            }
+            GraphVertex clienteVertice = GraphVertex.ofCliente(evento.getCliente());
+            GraphVertex inmuebleVertice = GraphVertex.ofInmueble(evento.getInmueble());
+            double peso = calcularPesoPorEvento(evento.getTipoEvento());
+            if (peso <= 0) {
+                continue;
+            }
+            addOrUpdateEdge(grafo, clienteVertice, inmuebleVertice, peso);
+
+            Zona zona = evento.getInmueble().getBarrio() != null
+                    ? evento.getInmueble().getBarrio().getZona()
+                    : null;
+            if (zona != null) {
+                addOrUpdateEdge(grafo, clienteVertice, GraphVertex.ofZona(zona), 0.8);
+            }
+        }
+
         return grafo;
     }
 
     public DynamicArrayList<GraphVertex> detectarPropiedadesSimilaresConsultadasPorMultiplesClientes() {
-        Graph<GraphVertex> grafo = construirGrafoDeMovilidadComercial();
         DynamicArrayList<GraphVertex> similares = new DynamicArrayList<>();
         DynamicArrayList<Inmueble> inmuebles = inmuebleRepository.findAll();
+        DynamicArrayList<EventoHistorial> eventos = eventoHistorialRepository.findAll();
         HashTable<String, Inmueble> inmueblesPorCodigo = new HashTable<>();
         for (int i = 0; i < inmuebles.size(); i++) {
             inmueblesPorCodigo.put(inmuebles.get(i).getCodigo(), inmuebles.get(i));
@@ -123,26 +151,38 @@ public class GraphService {
 
         for (int i = 0; i < inmuebles.size(); i++) {
             Inmueble inmueble = inmuebles.get(i);
-            GraphVertex inmuebleVertice = GraphVertex.ofInmueble(inmueble);
             HashTable<String, Integer> visitanteCompartido = new HashTable<>();
+            HashTable<String, Boolean> clienteCandidatoContado = new HashTable<>();
 
-            for (int edgeIndex = 0; edgeIndex < grafo.getNeighbors(inmuebleVertice).size(); edgeIndex++) {
-                Graph.Edge<GraphVertex> arista = grafo.getNeighbors(inmuebleVertice).get(edgeIndex);
-                if (arista.getTarget().getType() != GraphVertex.Type.CLIENTE) {
+            for (int eventoBaseIndex = 0; eventoBaseIndex < eventos.size(); eventoBaseIndex++) {
+                EventoHistorial eventoBase = eventos.get(eventoBaseIndex);
+                if (!esConsultaDeInmueble(eventoBase, inmueble.getCodigo())) {
                     continue;
                 }
-                GraphVertex clienteVertice = arista.getTarget();
-                DynamicArrayList<Graph.Edge<GraphVertex>> vecinosCliente = grafo.getNeighbors(clienteVertice);
-                for (int j = 0; j < vecinosCliente.size(); j++) {
-                    Graph.Edge<GraphVertex> clienteEdge = vecinosCliente.get(j);
-                    GraphVertex candidato = clienteEdge.getTarget();
-                    if (candidato.equals(inmuebleVertice) || candidato.getType() != GraphVertex.Type.INMUEBLE) {
+
+                String clienteId = eventoBase.getCliente().getId();
+                for (int candidatoIndex = 0; candidatoIndex < eventos.size(); candidatoIndex++) {
+                    EventoHistorial eventoCandidato = eventos.get(candidatoIndex);
+                    if (!esConsultaValida(eventoCandidato)
+                            || !Objects.equals(clienteId, eventoCandidato.getCliente().getId())) {
                         continue;
                     }
-                    int frecuencia = visitanteCompartido.containsKey(candidato.getId())
-                            ? visitanteCompartido.get(candidato.getId())
+
+                    String codigoCandidato = eventoCandidato.getInmueble().getCodigo();
+                    if (Objects.equals(inmueble.getCodigo(), codigoCandidato)) {
+                        continue;
+                    }
+
+                    String llaveConteo = clienteId + "|" + codigoCandidato;
+                    if (clienteCandidatoContado.containsKey(llaveConteo)) {
+                        continue;
+                    }
+                    clienteCandidatoContado.put(llaveConteo, true);
+
+                    int frecuencia = visitanteCompartido.containsKey(codigoCandidato)
+                            ? visitanteCompartido.get(codigoCandidato)
                             : 0;
-                    visitanteCompartido.put(candidato.getId(), frecuencia + 1);
+                    visitanteCompartido.put(codigoCandidato, frecuencia + 1);
                 }
             }
 
@@ -204,6 +244,64 @@ public class GraphService {
         return zonasConConexion;
     }
 
+    public DynamicArrayList<GraphVertex> consultarRelacionesClienteInmuebles(String clienteId) {
+        Cliente cliente = clienteRepository.findById(clienteId)
+                .orElseThrow(() -> new IllegalArgumentException("Cliente no encontrado: " + clienteId));
+        Graph<GraphVertex> grafo = construirGrafoDeMovilidadComercial();
+        GraphVertex inicio = GraphVertex.ofCliente(cliente);
+        if (!grafo.containsVertex(inicio)) {
+            return new DynamicArrayList<>();
+        }
+
+        DynamicArrayList<GraphVertex> recorrido = grafo.bfs(inicio);
+        DynamicArrayList<GraphVertex> relaciones = new DynamicArrayList<>();
+        for (int i = 0; i < recorrido.size(); i++) {
+            GraphVertex vertice = recorrido.get(i);
+            if (vertice.equals(inicio)) {
+                continue;
+            }
+            if (vertice.getType() == GraphVertex.Type.INMUEBLE
+                    || vertice.getType() == GraphVertex.Type.ZONA
+                    || vertice.getType() == GraphVertex.Type.OPERACION) {
+                relaciones.add(vertice);
+            }
+        }
+        return relaciones;
+    }
+
+    public DynamicArrayList<GraphVertex> consultarRutaClienteAInmueble(String clienteId, String codigoInmueble) {
+        Cliente cliente = clienteRepository.findById(clienteId)
+                .orElseThrow(() -> new IllegalArgumentException("Cliente no encontrado: " + clienteId));
+        if (codigoInmueble == null || codigoInmueble.isBlank()) {
+            return new DynamicArrayList<>();
+        }
+        Inmueble inmueble = inmuebleRepository.findByCodigo(codigoInmueble);
+        if (inmueble == null) {
+            return new DynamicArrayList<>();
+        }
+        Graph<GraphVertex> grafo = construirGrafoDeMovilidadComercial();
+        GraphVertex inicio = GraphVertex.ofCliente(cliente);
+        GraphVertex destino = GraphVertex.ofInmueble(inmueble);
+        if (!grafo.containsVertex(inicio) || !grafo.containsVertex(destino)) {
+            return new DynamicArrayList<>();
+        }
+        return grafo.shortestPath(inicio, destino);
+    }
+
+    private double calcularPesoPorEvento(TipoEventoHistorial tipoEvento) {
+        if (tipoEvento == null) {
+            return 0.0;
+        }
+        return switch (tipoEvento) {
+            case FAVORITO -> 3.0;
+            case GUARDADO -> 2.0;
+            case VISITA -> 2.5;
+            case NEGOCIANDO -> 2.8;
+            case CONSULTA -> 1.2;
+            case DESCARTADO -> 0.0;
+        };
+    }
+
     private void addOrUpdateEdge(Graph<GraphVertex> grafo,
                                  GraphVertex from,
                                  GraphVertex to,
@@ -243,6 +341,20 @@ public class GraphService {
         return diferenciaRelativa <= 0.25;
     }
 
+    private boolean esConsultaDeInmueble(EventoHistorial evento, String codigoInmueble) {
+        return esConsultaValida(evento)
+                && Objects.equals(evento.getInmueble().getCodigo(), codigoInmueble);
+    }
+
+    private boolean esConsultaValida(EventoHistorial evento) {
+        return evento != null
+                && evento.getTipoEvento() == TipoEventoHistorial.CONSULTA
+                && evento.getCliente() != null
+                && evento.getCliente().getId() != null
+                && evento.getInmueble() != null
+                && evento.getInmueble().getCodigo() != null;
+    }
+
     public void generarAlertasDeMovilidadComercial() {
         DynamicArrayList<GraphVertex> similares = detectarPropiedadesSimilaresConsultadasPorMultiplesClientes();
         for (int i = 0; i < similares.size(); i++) {
@@ -251,7 +363,7 @@ public class GraphService {
                     TipoAlerta.PROPIEDAD_ALTA_DEMANDA,
                     PrioridadAlerta.MEDIA,
                     "Propiedades similares con demanda compartida",
-                    "El inmueble " + inmuebleVertice.getId() + " está conectado con consultoras de múltiples clientes.",
+                    "El inmueble " + inmuebleVertice.getId() + " está conectado por consultas de múltiples clientes.",
                     inmuebleVertice.getId()
             );
         }

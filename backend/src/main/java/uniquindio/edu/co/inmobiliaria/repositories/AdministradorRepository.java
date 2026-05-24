@@ -19,6 +19,8 @@ public class AdministradorRepository {
     private final HashTable<String, Administrador> administradoresPorEmail;
     private final Tree<Administrador> administradoresPorNombre;
 
+   // private final Queue<TareaAdministrativa> tareasPendientes;
+
     public AdministradorRepository(AdministradorJpaRepository administradorJpaRepository) {
         this.administradorJpaRepository = administradorJpaRepository;
         this.administradores = new DynamicArrayList<>();
@@ -119,15 +121,28 @@ public class AdministradorRepository {
     }
 
     private int compararPorNombre(Administrador a1, Administrador a2) {
+        int comparacionNombre;
         if (Objects.equals(a1.getNombre(), a2.getNombre())) {
+            comparacionNombre = 0;
+        } else if (a1.getNombre() == null) {
+            comparacionNombre = -1;
+        } else if (a2.getNombre() == null) {
+            comparacionNombre = 1;
+        } else {
+            comparacionNombre = a1.getNombre().compareToIgnoreCase(a2.getNombre());
+        }
+        if (comparacionNombre != 0) {
+            return comparacionNombre;
+        }
+        if (Objects.equals(a1.getId(), a2.getId())) {
             return 0;
         }
-        if (a1.getNombre() == null) {
+        if (a1.getId() == null) {
             return -1;
         }
-        if (a2.getNombre() == null) {
+        if (a2.getId() == null) {
             return 1;
         }
-        return a1.getNombre().compareToIgnoreCase(a2.getNombre());
+        return a1.getId().compareTo(a2.getId());
     }
 }

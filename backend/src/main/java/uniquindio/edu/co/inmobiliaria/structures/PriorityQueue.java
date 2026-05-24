@@ -107,6 +107,27 @@ public class PriorityQueue<T> {
         return false;
     }
 
+    public boolean remove(T value) {
+        for (int i = 0; i < size; i++) {
+            if (heap[i] == null ? value == null : heap[i].equals(value)) {
+                removeAt(i);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public java.util.List<T> toList() {
+        java.util.List<T> list = new java.util.ArrayList<>(size);
+        for (int i = 0; i < size; i++) {
+            @SuppressWarnings("unchecked")
+            T element = (T) heap[i];
+            list.add(element);
+        }
+        list.sort(comparator);
+        return list;
+    }
+
     public void clear() {
         Arrays.fill(heap, 0, size, null);
         size = 0;
@@ -148,6 +169,23 @@ public class PriorityQueue<T> {
         Object tmp = heap[i];
         heap[i] = heap[j];
         heap[j] = tmp;
+    }
+
+    private void removeAt(int index) {
+        int lastIndex = size - 1;
+        heap[index] = heap[lastIndex];
+        heap[lastIndex] = null;
+        size--;
+        if (index < size) {
+            int parent = (index - 1) / 2;
+            @SuppressWarnings("unchecked")
+            T element = (T) heap[index];
+            if (index > 0 && comparator.compare(element, (T) heap[parent]) < 0) {
+                siftUp(index);
+            } else {
+                siftDown(index);
+            }
+        }
     }
 
     private void ensureCapacity(int needed) {

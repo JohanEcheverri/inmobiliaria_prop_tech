@@ -16,5 +16,15 @@ public enum TipoAlerta {
     /** Inmuebles reservados demasiado tiempo sin cerrar la operacion. */
     INMUEBLE_RESERVADO_SIN_CIERRE,
     /** Clientes que no han recibido seguimiento comercial reciente. */
-    CLIENTE_SIN_SEGUIMIENTO_RECIENTE
+    CLIENTE_SIN_SEGUIMIENTO_RECIENTE,
+    /** Inmuebles con un número anormalmente alto de visitas sin cierre. */
+    INMUEBLE_EXCESO_VISITAS_SIN_CIERRE,
+    /** Clientes que agendan múltiples visitas en corto tiempo sin continuidad. */
+    CLIENTE_MULTIPLES_VISITAS_SIN_CONTINUIDAD,
+    /** Asesores con sobrecarga excesiva de atención. */
+    ASESOR_SOBRECARGA_ATENCION,
+    /** Propiedades cuyo precio cambia con demasiada frecuencia. */
+    PROPIEDAD_PRECIO_CAMBIO_FRECUENTE,
+    /** Concentración de interés en una misma zona en un tiempo reducido. */
+    ZONA_CONCENTRACION_INTERES
 }

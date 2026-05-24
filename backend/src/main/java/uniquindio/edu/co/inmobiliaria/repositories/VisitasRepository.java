@@ -9,6 +9,8 @@ import uniquindio.edu.co.inmobiliaria.structures.HashTable;
 import uniquindio.edu.co.inmobiliaria.structures.Queue;
 
 import java.time.LocalDate;
+import java.util.Objects;
+import java.util.Optional;
 
 @Repository
 public class VisitasRepository {
@@ -26,7 +28,7 @@ public class VisitasRepository {
         cargarDesdeBaseDeDatos();
     }
 
-    public Visita procesarVisita(){
+    public Visita procesarVisita() {
         return visitasPendientes.dequeue();
     }
 
@@ -39,6 +41,53 @@ public class VisitasRepository {
         }
         visitaJpaRepository.save(visita);
         agregarAIndices(visita);
+    }
+
+    public void update(Visita visitaActualizada) {
+        if (visitaActualizada == null || visitaActualizada.getCodigo() == null || visitaActualizada.getCodigo().isBlank()) {
+            throw new IllegalArgumentException("La visita o su código no pueden ser nulos");
+        }
+        if (!visitasPorCodigo.containsKey(visitaActualizada.getCodigo())) {
+            throw new IllegalArgumentException("No se encontró una visita con el código: " + visitaActualizada.getCodigo());
+        }
+        Visita existente = visitasPorCodigo.get(visitaActualizada.getCodigo());
+        boolean estabaPendiente = existente.getEstado() == EstadoVisita.PENDIENTE;
+        eliminarDeIndices(existente);
+        existente.setCliente(visitaActualizada.getCliente());
+        existente.setInmueble(visitaActualizada.getInmueble());
+        existente.setFecha(visitaActualizada.getFecha());
+        existente.setHora(visitaActualizada.getHora());
+        existente.setEstado(visitaActualizada.getEstado());
+        existente.setAsesotAsignado(visitaActualizada.getAsesotAsignado());
+        existente.setObservaciones(visitaActualizada.getObservaciones());
+        visitaJpaRepository.save(existente);
+        agregarAIndices(existente);
+        if (estabaPendiente && existente.getEstado() != EstadoVisita.PENDIENTE) {
+            visitasPendientes.remove(existente);
+        }
+    }
+
+    public Optional<Visita> findByCodigo(String codigo) {
+        if (codigo == null || codigo.isBlank()) {
+            return Optional.empty();
+        }
+        return Optional.ofNullable(visitasPorCodigo.get(codigo));
+    }
+
+    public boolean existsByCodigo(String codigo) {
+        return codigo != null && visitasPorCodigo.containsKey(codigo);
+    }
+
+    public void deleteByCodigo(String codigo) {
+        if (codigo == null || codigo.isBlank()) {
+            throw new IllegalArgumentException("El código de la visita no puede estar vacío");
+        }
+        Visita visita = visitasPorCodigo.get(codigo);
+        if (visita == null) {
+            throw new IllegalArgumentException("No se encontró una visita con el código: " + codigo);
+        }
+        visitaJpaRepository.deleteById(codigo);
+        eliminarDeIndices(visita);
     }
 
     public DynamicArrayList<Visita> findByClienteId(String idCliente) {
@@ -57,6 +106,17 @@ public class VisitasRepository {
         for (int i = 0; i < visitas.size(); i++) {
             Visita visita = visitas.get(i);
             if (visita.getInmueble() != null && codigoInmueble.equals(visita.getInmueble().getCodigo())) {
+                resultado.add(visita);
+            }
+        }
+        return resultado;
+    }
+
+    public DynamicArrayList<Visita> findByAsesorId(String idAsesor) {
+        DynamicArrayList<Visita> resultado = new DynamicArrayList<>();
+        for (int i = 0; i < visitas.size(); i++) {
+            Visita visita = visitas.get(i);
+            if (visita.getAsesotAsignado() != null && idAsesor.equals(visita.getAsesotAsignado().getId())) {
                 resultado.add(visita);
             }
         }
@@ -96,6 +156,22 @@ public class VisitasRepository {
         visitasPorCodigo.put(visita.getCodigo(), visita);
         if (visita.getEstado() == EstadoVisita.PENDIENTE) {
             visitasPendientes.enqueue(visita);
+        }
+    }
+
+    private void eliminarDeIndices(Visita visita) {
+        if (visita == null) {
+            return;
+        }
+        for (int i = 0; i < visitas.size(); i++) {
+            if (Objects.equals(visitas.get(i).getCodigo(), visita.getCodigo())) {
+                visitas.removeAt(i);
+                break;
+            }
+        }
+        visitasPorCodigo.remove(visita.getCodigo());
+        if (visita.getEstado() == EstadoVisita.PENDIENTE) {
+            visitasPendientes.remove(visita);
         }
     }
 }
