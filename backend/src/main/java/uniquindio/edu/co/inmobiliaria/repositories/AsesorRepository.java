@@ -2,60 +2,73 @@ package uniquindio.edu.co.inmobiliaria.repositories;
 
 import lombok.Getter;
 import org.springframework.stereotype.Repository;
-import jakarta.annotation.PostConstruct;
 import uniquindio.edu.co.inmobiliaria.models.entities.Asesor;
 import uniquindio.edu.co.inmobiliaria.repositories.jpa.AsesorJpaRepository;
 import uniquindio.edu.co.inmobiliaria.structures.DynamicArrayList;
 import uniquindio.edu.co.inmobiliaria.structures.HashTable;
 import uniquindio.edu.co.inmobiliaria.structures.Tree;
 
+import java.util.Objects;
 import java.util.Optional;
 
 @Repository
 public class AsesorRepository {
 
-    @Getter
-    public final Tree<Asesor> numeroDeCierres = new Tree<>(
-            (a1, a2) -> Integer.compare(a2.getNumeroDeCierres(), a1.getNumeroDeCierres())
-    );
-    @Getter
-    public final HashTable<String, Asesor> asesoresPorId = new HashTable<>();
-    @Getter
-    public final HashTable<String, Asesor> asesoresPorEmail = new HashTable<>();
-
     private final AsesorJpaRepository asesorJpaRepository;
+
+    @Getter
+    public final Tree<Asesor> numeroDeCierres;
+    @Getter
+    public final HashTable<String, Asesor> asesoresPorId;
+    @Getter
+    public final HashTable<String, Asesor> asesoresPorEmail;
 
     public AsesorRepository(AsesorJpaRepository asesorJpaRepository) {
         this.asesorJpaRepository = asesorJpaRepository;
-        this.numeroDeCierres = new Tree<>(
-                this::compararPorCierresEId);
+        this.numeroDeCierres = new Tree<>(this::compararPorCierresEId);
         this.asesoresPorId = new HashTable<>();
         this.asesoresPorEmail = new HashTable<>();
-    }
-
-    @jakarta.annotation.PostConstruct
-    public void inicializarDatos() {
         cargarDesdeBaseDeDatos();
-    }
-    private void cargarDesdeBaseDeDatos() {
-        // Tu bucle de carga normal...
-        for (Asesor asesor : asesorJpaRepository.findAll()) {
-            if (asesor != null && asesor.getId() != null) {
-                asesoresPorId.put(asesor.getId(), asesor);
-                if (asesor.getEmail() != null) {
-                    asesoresPorEmail.put(asesor.getEmail(), asesor);
-                }
-                numeroDeCierres.insert(asesor);
-            }
-        }
     }
 
     public void save(Asesor asesor) {
-        if (asesor == null || asesor.getId() == null) {
-            throw new IllegalArgumentException("El asesor o su id no pueden ser nulos");
+        validarAsesorConId(asesor);
+        if (asesoresPorId.containsKey(asesor.getId())) {
+            throw new IllegalArgumentException("Ya existe un asesor con el id: " + asesor.getId());
+        }
+        if (asesor.getEmail() != null && asesoresPorEmail.containsKey(asesor.getEmail())) {
+            throw new IllegalArgumentException("Ya existe un asesor con el email: " + asesor.getEmail());
         }
         asesorJpaRepository.save(asesor);
         agregarAIndices(asesor);
+    }
+
+    public void update(Asesor asesorActualizado) {
+        validarAsesorConId(asesorActualizado);
+        if (!asesoresPorId.containsKey(asesorActualizado.getId())) {
+            throw new IllegalArgumentException("No se encontró un asesor con el id: " + asesorActualizado.getId());
+        }
+
+        Asesor anterior = asesoresPorId.get(asesorActualizado.getId());
+        if (asesorActualizado.getEmail() != null
+                && asesoresPorEmail.containsKey(asesorActualizado.getEmail())
+                && !Objects.equals(anterior.getId(), asesoresPorEmail.get(asesorActualizado.getEmail()).getId())) {
+            throw new IllegalArgumentException("Ya existe un asesor con el email: " + asesorActualizado.getEmail());
+        }
+
+        asesorJpaRepository.save(asesorActualizado);
+        eliminarDeIndices(anterior);
+        agregarAIndices(asesorActualizado);
+    }
+
+    public boolean deleteById(String id) {
+        Optional<Asesor> asesor = findById(id);
+        if (asesor.isEmpty()) {
+            return false;
+        }
+        asesorJpaRepository.deleteById(id);
+        eliminarDeIndices(asesor.get());
+        return true;
     }
 
     public Optional<Asesor> findById(String id) {
@@ -76,51 +89,16 @@ public class AsesorRepository {
         return asesoresPorId.values();
     }
 
-    public void update(Asesor asesorActualizado) {
-        if (asesorActualizado == null || asesorActualizado.getId() == null) {
-            throw new IllegalArgumentException("El asesor o su id no pueden ser nulos");
-        }
-        if (!asesoresPorId.containsKey(asesorActualizado.getId())) {
-            throw new IllegalArgumentException("No se encontró un asesor con el id: " + asesorActualizado.getId());
-        }
-        Asesor anterior = asesoresPorId.get(asesorActualizado.getId());
-        asesorJpaRepository.save(asesorActualizado);
-        eliminarDeIndices(anterior);
-        agregarAIndices(asesorActualizado);
-    }
-
-    public boolean deleteById(String id) {
-        if (id == null || !asesoresPorId.containsKey(id)) {
-            return false;
-        }
-        Asesor asesor = asesoresPorId.get(id);
-        asesorJpaRepository.deleteById(id);
-        eliminarDeIndices(asesor);
-        return true;
-    }
-
     private void cargarDesdeBaseDeDatos() {
         asesorJpaRepository.findAll().forEach(this::agregarAIndices);
     }
 
     private void agregarAIndices(Asesor asesor) {
-    public void agregarAIndices(Asesor asesor) {
         asesoresPorId.put(asesor.getId(), asesor);
         if (asesor.getEmail() != null) {
             asesoresPorEmail.put(asesor.getEmail(), asesor);
         }
         numeroDeCierres.insert(asesor);
-    }
-
-    public void deleteById(String id) {
-        if (id != null && asesoresPorId.containsKey(id)) {
-            Asesor asesor = asesoresPorId.get(id);
-            asesoresPorId.remove(id);
-            if (asesor.getEmail() != null) {
-                asesoresPorEmail.remove(asesor.getEmail());
-            }
-            asesorJpaRepository.deleteById(id);
-        }
     }
 
     private void eliminarDeIndices(Asesor asesor) {
@@ -131,12 +109,20 @@ public class AsesorRepository {
         numeroDeCierres.remove(asesor);
     }
 
+    private void validarAsesorConId(Asesor asesor) {
+        if (asesor == null || asesor.getId() == null || asesor.getId().isBlank()) {
+            throw new IllegalArgumentException("El asesor o su id no pueden ser nulos");
+        }
+    }
+
     private int compararPorCierresEId(Asesor a1, Asesor a2) {
-        int comparacionCierres = Integer.compare(a2.getNumeroDeCierres(), a1.getNumeroDeCierres());
+        int cierres1 = a1.getNumeroDeCierres() != null ? a1.getNumeroDeCierres() : 0;
+        int cierres2 = a2.getNumeroDeCierres() != null ? a2.getNumeroDeCierres() : 0;
+        int comparacionCierres = Integer.compare(cierres2, cierres1);
         if (comparacionCierres != 0) {
             return comparacionCierres;
         }
-        if (a1.getId() == null && a2.getId() == null) {
+        if (Objects.equals(a1.getId(), a2.getId())) {
             return 0;
         }
         if (a1.getId() == null) {
@@ -147,7 +133,4 @@ public class AsesorRepository {
         }
         return a1.getId().compareTo(a2.getId());
     }
-}
-
-
 }

@@ -24,7 +24,9 @@ public class GeminiChatService {
 
     private final RestClient restClient;
     private final ClienteService clienteService;
+
     private final String apiKey;
+
     private final String model;
     private final double temperature;
     private final int maxOutputTokens;

@@ -1,21 +1,20 @@
 package uniquindio.edu.co.inmobiliaria.services;
 
 import org.springframework.stereotype.Service;
-import org.springframework.beans.factory.annotation.Autowired;
+import uniquindio.edu.co.inmobiliaria.comportamiento.ComportamientoService;
 import uniquindio.edu.co.inmobiliaria.models.dto.InmuebleRequest;
 import uniquindio.edu.co.inmobiliaria.models.dto.InmuebleResponse;
-import uniquindio.edu.co.inmobiliaria.repositories.InmuebleRepository;
-import uniquindio.edu.co.inmobiliaria.repositories.AsesorRepository;
-import uniquindio.edu.co.inmobiliaria.repositories.VisitasRepository;
-import uniquindio.edu.co.inmobiliaria.comportamiento.ComportamientoService;
-import uniquindio.edu.co.inmobiliaria.models.entities.Inmueble;
-import uniquindio.edu.co.inmobiliaria.models.entities.Ciudad;
-import uniquindio.edu.co.inmobiliaria.models.entities.Barrio;
 import uniquindio.edu.co.inmobiliaria.models.entities.Asesor;
+import uniquindio.edu.co.inmobiliaria.models.entities.Barrio;
+import uniquindio.edu.co.inmobiliaria.models.entities.Ciudad;
+import uniquindio.edu.co.inmobiliaria.models.entities.Inmueble;
 import uniquindio.edu.co.inmobiliaria.models.enums.Estado;
 import uniquindio.edu.co.inmobiliaria.models.enums.Finalidad;
 import uniquindio.edu.co.inmobiliaria.models.enums.TipoInmueble;
 import uniquindio.edu.co.inmobiliaria.models.enums.Zona;
+import uniquindio.edu.co.inmobiliaria.repositories.AsesorRepository;
+import uniquindio.edu.co.inmobiliaria.repositories.InmuebleRepository;
+import uniquindio.edu.co.inmobiliaria.repositories.VisitasRepository;
 import uniquindio.edu.co.inmobiliaria.structures.DynamicArrayList;
 import uniquindio.edu.co.inmobiliaria.structures.SinglyLinkedList;
 
@@ -30,16 +29,20 @@ public class InmuebleService {
     private final VisitasRepository visitasRepository;
     private final ComportamientoService comportamientoService;
 
-    @Autowired
-    public InmuebleService(InmuebleRepository inmuebleRepository, AsesorRepository asesorRepository) {
-    public InmuebleService(InmuebleRepository inmuebleRepository, VisitasRepository visitasRepository, ComportamientoService comportamientoService) {
+    public InmuebleService(InmuebleRepository inmuebleRepository,
+                           AsesorRepository asesorRepository,
+                           VisitasRepository visitasRepository,
+                           ComportamientoService comportamientoService) {
         this.inmuebleRepository = inmuebleRepository;
         this.asesorRepository = asesorRepository;
+        this.visitasRepository = visitasRepository;
+        this.comportamientoService = comportamientoService;
     }
+
 
     public List<InmuebleResponse> listarInmuebles() {
         List<InmuebleResponse> respuesta = new ArrayList<>();
-        DynamicArrayList<Inmueble> inmuebles = inmuebleRepository.findAll();
+        List<Inmueble> inmuebles = inmuebleRepository.findAllConAsesor();
         for (int i = 0; i < inmuebles.size(); i++) {
             respuesta.add(mapear(inmuebles.get(i)));
         }
@@ -68,100 +71,53 @@ public class InmuebleService {
             throw new IllegalArgumentException("El código del inmueble es obligatorio");
         }
         validarInmueble(request, false);
-        if (!inmuebleRepository.existsById(codigo)) {
-            throw new IllegalArgumentException("No se encontró un inmueble con el código: " + codigo);
-        }
 
-        Inmueble inmueble = construirInmueble(request, codigo);
-        inmuebleRepository.update(inmueble);
-        return mapear(inmueble);
-        this.visitasRepository = visitasRepository;
-        this.comportamientoService = comportamientoService;
+        Inmueble inmuebleExistente = inmuebleRepository.findById(codigo)
+                .orElseThrow(() -> new IllegalArgumentException("No se encontró un inmueble con el código: " + codigo));
+        double precioAnterior = inmuebleExistente.getPrecio();
+
+        Inmueble inmuebleActualizado = construirInmueble(request, codigo);
+        inmuebleRepository.update(inmuebleActualizado);
+        registrarCambioPrecioSiAplica(codigo, precioAnterior, inmuebleActualizado.getPrecio());
+        return mapear(inmuebleActualizado);
     }
 
-    public void registrarInmueble(String codigo, String direccion, Ciudad ciudad, Barrio barriro , TipoInmueble tipo, Finalidad finalidad, double precio, double area, int numeroHabitaciones, int numeroBanios, Estado estado, Asesor asesor, String imagen) {
-        if (codigo == null || codigo.isBlank()) {
-            throw new IllegalArgumentException("El código del inmueble no puede estar vacío");
+    public void registrarInmueble(String codigo, String direccion, Ciudad ciudad, Barrio barrio,
+                                  TipoInmueble tipo, Finalidad finalidad, double precio, double area,
+                                  int numeroHabitaciones, int numeroBanios, Estado estado, Asesor asesor,
+                                  String imagen) {
+        validarDatosInmueble(codigo, direccion, ciudad, barrio, tipo, finalidad, precio, area,
+                numeroHabitaciones, numeroBanios, estado, asesor);
+        if (inmuebleRepository.existsById(codigo)) {
+            throw new IllegalArgumentException("Ya existe un inmueble con el código: " + codigo);
         }
-        if (direccion == null || direccion.isBlank()) {
-            throw new IllegalArgumentException("La dirección del inmueble no puede estar vacía");
-        }
-        if (precio <= 0) {
-            throw new IllegalArgumentException("El precio del inmueble debe ser mayor a cero");
-        }
-        if (numeroHabitaciones <= 0) {
-            throw new IllegalArgumentException("El número de habitaciones debe ser mayor a cero");
-        }
-        if (numeroBanios <= 0) {
-            throw new IllegalArgumentException("El número de baños debe ser mayor a cero");
-        }
-        if (estado == null) {
-            throw new IllegalArgumentException("El estado del inmueble no puede ser nulo");
-        }
-        if (finalidad == null) {
-            throw new IllegalArgumentException("La finalidad del inmueble no puede ser nula");
-        }
-        if (tipo == null) {
-            throw new IllegalArgumentException("El tipo de inmueble no puede ser nulo");
-        }
-        if (ciudad == null) {
-            throw new IllegalArgumentException("La ciudad del inmueble no puede ser nula");
-        }
-        if (barriro == null) {
-            throw new IllegalArgumentException("El barrio del inmueble no puede ser nulo");
-        }
-        if (asesor == null) {
-            throw new IllegalArgumentException("El asesor del inmueble no puede ser nulo");
-        }
-        Inmueble inmueble = Inmueble.builder()
-                .codigo(codigo)
-                .direccion(direccion)
-                .ciudad(ciudad)
-                .barrio(barriro)
-                .tipoInmueble(tipo)
-                .finalidad(finalidad)
-                .precio(precio)
-                .area(area)
-                .numeroHabitaciones(numeroHabitaciones)
-                .numeroBanios(numeroBanios)
-                .estado(estado)
-                .asesor(asesor)
-                .imagen(imagen)
-                .build();
+
+        Inmueble inmueble = construirInmueble(codigo, direccion, ciudad, barrio, tipo, finalidad, precio, area,
+                numeroHabitaciones, numeroBanios, estado, asesor, imagen);
         inmuebleRepository.save(inmueble);
     }
-    //! Dudoso lo del codigo
-    public void actualizarInmueble(String codigo, String direccion, Ciudad ciudad, Barrio barriro , TipoInmueble tipo, Finalidad finalidad, double precio, double area, int numeroHabitaciones, int numeroBanios, Estado estado, Asesor asesor, String imagen) {
+
+    public void actualizarInmueble(String codigo, String direccion, Ciudad ciudad, Barrio barrio,
+                                   TipoInmueble tipo, Finalidad finalidad, double precio, double area,
+                                   int numeroHabitaciones, int numeroBanios, Estado estado, Asesor asesor,
+                                   String imagen) {
+        validarDatosInmueble(codigo, direccion, ciudad, barrio, tipo, finalidad, precio, area,
+                numeroHabitaciones, numeroBanios, estado, asesor);
+
         Inmueble inmuebleExistente = inmuebleRepository.findByCodigo(codigo);
         if (inmuebleExistente == null) {
             throw new IllegalArgumentException("No se encontró un inmueble con el código: " + codigo);
         }
-        Inmueble inmuebleActualizado = Inmueble.builder()
-                .codigo(codigo)
-                .direccion(direccion)
-                .ciudad(ciudad)
-                .barrio(barriro)
-                .tipoInmueble(tipo)
-                .finalidad(finalidad)
-                .precio(precio)
-                .area(area)
-                .numeroHabitaciones(numeroHabitaciones)
-                .numeroBanios(numeroBanios)
-                .estado(estado)
-                .asesor(asesor)
-                .imagen(imagen)
-                .build();
 
         double precioAnterior = inmuebleExistente.getPrecio();
+        Inmueble inmuebleActualizado = construirInmueble(codigo, direccion, ciudad, barrio, tipo, finalidad, precio,
+                area, numeroHabitaciones, numeroBanios, estado, asesor, imagen);
         inmuebleRepository.update(inmuebleActualizado);
-
-        if (Double.compare(precioAnterior, precio) != 0) {
-            comportamientoService.registrarCambioPrecio(codigo, precioAnterior, precio);
-        }
+        registrarCambioPrecioSiAplica(codigo, precioAnterior, precio);
     }
 
     public void eliminarInmueble(String codigo) {
-        if (codigo == null || codigo.isBlank()) {
+        if (estaVacio(codigo)) {
             throw new IllegalArgumentException("El código del inmueble no puede estar vacío");
         }
         if (inmuebleRepository.findByCodigo(codigo) == null) {
@@ -187,7 +143,7 @@ public class InmuebleService {
     }
 
     public Inmueble consultarInmuebleMayorDemanda() {
-        var inmuebles = inmuebleRepository.findAll();
+        DynamicArrayList<Inmueble> inmuebles = inmuebleRepository.findAll();
         Inmueble mayorDemanda = null;
         int maxVisitas = -1;
         for (int i = 0; i < inmuebles.size(); i++) {
@@ -210,7 +166,40 @@ public class InmuebleService {
             throw new IllegalArgumentException("El precio mínimo no puede ser mayor al precio máximo");
         }
         SinglyLinkedList<Inmueble> resultado = new SinglyLinkedList<>();
-        var inmuebles = inmuebleRepository.findInmueblesEnRangoPrecio(min, max);
+        DynamicArrayList<Inmueble> inmuebles = inmuebleRepository.findInmueblesEnRangoPrecio(min, max);
+        for (int i = 0; i < inmuebles.size(); i++) {
+            resultado.addLast(inmuebles.get(i));
+        }
+        return resultado;
+    }
+
+    public SinglyLinkedList<Inmueble> sortByPrice() {
+        SinglyLinkedList<Inmueble> resultado = new SinglyLinkedList<>();
+        DynamicArrayList<Inmueble> inmuebles = inmuebleRepository.findAll();
+        inmuebles.sort((i1, i2) -> Double.compare(i1.getPrecio(), i2.getPrecio()));
+        for (int i = 0; i < inmuebles.size(); i++) {
+            resultado.addLast(inmuebles.get(i));
+        }
+        return resultado;
+    }
+
+    public SinglyLinkedList<Inmueble> sortByArea() {
+        SinglyLinkedList<Inmueble> resultado = new SinglyLinkedList<>();
+        DynamicArrayList<Inmueble> inmuebles = inmuebleRepository.findAll();
+        inmuebles.sort((i1, i2) -> Double.compare(i1.getArea(), i2.getArea()));
+        for (int i = 0; i < inmuebles.size(); i++) {
+            resultado.addLast(inmuebles.get(i));
+        }
+        return resultado;
+    }
+
+    public SinglyLinkedList<Inmueble> sortByDemand() {
+        SinglyLinkedList<Inmueble> resultado = new SinglyLinkedList<>();
+        DynamicArrayList<Inmueble> inmuebles = inmuebleRepository.findAll();
+        inmuebles.sort((i1, i2) -> Integer.compare(
+                visitasRepository.findByInmuebleCodigo(i2.getCodigo()).size(),
+                visitasRepository.findByInmuebleCodigo(i1.getCodigo()).size()
+        ));
         for (int i = 0; i < inmuebles.size(); i++) {
             resultado.addLast(inmuebles.get(i));
         }
@@ -222,20 +211,41 @@ public class InmuebleService {
         Barrio barrio = new Barrio(Zona.CENTRO, request.barrio().trim(), ciudad);
         Asesor asesor = resolverAsesor(request.asesorResponsable());
 
+        return construirInmueble(
+                codigo,
+                request.direccion().trim(),
+                ciudad,
+                barrio,
+                parseEnum(TipoInmueble.class, request.tipoInmueble(), "tipo de inmueble"),
+                parseFinalidad(request.finalidad()),
+                request.precio(),
+                request.area(),
+                request.habitaciones(),
+                request.banos(),
+                parseEstado(request.disponibilidad(), request.estadoInmueble()),
+                asesor,
+                request.imagen()
+        );
+    }
+
+    private Inmueble construirInmueble(String codigo, String direccion, Ciudad ciudad, Barrio barrio,
+                                       TipoInmueble tipo, Finalidad finalidad, double precio, double area,
+                                       int numeroHabitaciones, int numeroBanios, Estado estado, Asesor asesor,
+                                       String imagen) {
         return Inmueble.builder()
                 .codigo(codigo)
-                .direccion(request.direccion().trim())
+                .direccion(direccion)
                 .ciudad(ciudad)
                 .barrio(barrio)
-                .tipoInmueble(parseEnum(TipoInmueble.class, request.tipoInmueble(), "tipo de inmueble"))
-                .finalidad(parseFinalidad(request.finalidad()))
-                .precio(request.precio())
-                .area(request.area())
-                .numeroHabitaciones(request.habitaciones())
-                .numeroBanios(request.banos())
-                .estado(parseEstado(request.disponibilidad(), request.estadoInmueble()))
+                .tipoInmueble(tipo)
+                .finalidad(finalidad)
+                .precio(precio)
+                .area(area)
+                .numeroHabitaciones(numeroHabitaciones)
+                .numeroBanios(numeroBanios)
+                .estado(estado)
                 .asesor(asesor)
-                .imagen(request.imagen())
+                .imagen(imagen)
                 .build();
     }
 
@@ -309,6 +319,53 @@ public class InmuebleService {
         parseEstado(request.disponibilidad(), request.estadoInmueble());
     }
 
+    private void validarDatosInmueble(String codigo, String direccion, Ciudad ciudad, Barrio barrio,
+                                      TipoInmueble tipo, Finalidad finalidad, double precio, double area,
+                                      int numeroHabitaciones, int numeroBanios, Estado estado, Asesor asesor) {
+        if (estaVacio(codigo)) {
+            throw new IllegalArgumentException("El código del inmueble no puede estar vacío");
+        }
+        if (estaVacio(direccion)) {
+            throw new IllegalArgumentException("La dirección del inmueble no puede estar vacía");
+        }
+        if (precio <= 0) {
+            throw new IllegalArgumentException("El precio del inmueble debe ser mayor a cero");
+        }
+        if (area <= 0) {
+            throw new IllegalArgumentException("El área del inmueble debe ser mayor a cero");
+        }
+        if (numeroHabitaciones < 0) {
+            throw new IllegalArgumentException("El número de habitaciones no puede ser negativo");
+        }
+        if (numeroBanios < 0) {
+            throw new IllegalArgumentException("El número de baños no puede ser negativo");
+        }
+        if (estado == null) {
+            throw new IllegalArgumentException("El estado del inmueble no puede ser nulo");
+        }
+        if (finalidad == null) {
+            throw new IllegalArgumentException("La finalidad del inmueble no puede ser nula");
+        }
+        if (tipo == null) {
+            throw new IllegalArgumentException("El tipo de inmueble no puede ser nulo");
+        }
+        if (ciudad == null) {
+            throw new IllegalArgumentException("La ciudad del inmueble no puede ser nula");
+        }
+        if (barrio == null) {
+            throw new IllegalArgumentException("El barrio del inmueble no puede ser nulo");
+        }
+        if (asesor == null) {
+            throw new IllegalArgumentException("El asesor del inmueble no puede ser nulo");
+        }
+    }
+
+    private void registrarCambioPrecioSiAplica(String codigo, double precioAnterior, double precioNuevo) {
+        if (Double.compare(precioAnterior, precioNuevo) != 0) {
+            comportamientoService.registrarCambioPrecio(codigo, precioAnterior, precioNuevo);
+        }
+    }
+
     private Finalidad parseFinalidad(String valor) {
         if ("ARRIENDO".equalsIgnoreCase(valor)) {
             return Finalidad.ARRENDAMIENTO;
@@ -343,38 +400,5 @@ public class InmuebleService {
 
     private boolean estaVacio(String valor) {
         return valor == null || valor.isBlank();
-    }
-
-    public SinglyLinkedList<Inmueble> sortByPrice() {
-        SinglyLinkedList<Inmueble> resultado = new SinglyLinkedList<>();
-        var inmuebles = inmuebleRepository.findAll();
-        inmuebles.sort((i1, i2) -> Double.compare(i1.getPrecio(), i2.getPrecio()));
-        for (int i = 0; i < inmuebles.size(); i++) {
-            resultado.addLast(inmuebles.get(i));
-        }
-        return resultado;
-    }
-
-    public SinglyLinkedList<Inmueble> sortByArea() {
-        SinglyLinkedList<Inmueble> resultado = new SinglyLinkedList<>();
-        var inmuebles = inmuebleRepository.findAll();
-        inmuebles.sort((i1, i2) -> Double.compare(i1.getArea(), i2.getArea()));
-        for (int i = 0; i < inmuebles.size(); i++) {
-            resultado.addLast(inmuebles.get(i));
-        }
-        return resultado;
-    }
-
-    public SinglyLinkedList<Inmueble> sortByDemand() {
-        SinglyLinkedList<Inmueble> resultado = new SinglyLinkedList<>();
-        var inmuebles = inmuebleRepository.findAll();
-        inmuebles.sort((i1, i2) -> Integer.compare(
-                visitasRepository.findByInmuebleCodigo(i2.getCodigo()).size(),
-                visitasRepository.findByInmuebleCodigo(i1.getCodigo()).size()
-        ));
-        for (int i = 0; i < inmuebles.size(); i++) {
-            resultado.addLast(inmuebles.get(i));
-        }
-        return resultado;
     }
 }

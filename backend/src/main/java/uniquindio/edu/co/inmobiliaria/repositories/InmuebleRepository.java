@@ -13,6 +13,7 @@ import uniquindio.edu.co.inmobiliaria.structures.Stack;
 import uniquindio.edu.co.inmobiliaria.structures.SinglyLinkedList;
 import uniquindio.edu.co.inmobiliaria.structures.Tree;
 
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -140,6 +141,10 @@ public class InmuebleRepository {
 
     public DynamicArrayList<Inmueble> findAll() {
         return inmueblesPorCodigo.values();
+    }
+
+    public List<Inmueble> findAllConAsesor() {
+        return inmuebleJpaRepository.findAllConAsesor();
     }
 
     public DynamicArrayList<Inmueble> findInmueblesEnRangoPrecio(double min, double max) {

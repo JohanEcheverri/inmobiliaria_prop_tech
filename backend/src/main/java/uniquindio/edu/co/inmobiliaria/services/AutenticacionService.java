@@ -1,7 +1,7 @@
 package uniquindio.edu.co.inmobiliaria.services;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import uniquindio.edu.co.inmobiliaria.models.dto.LoginRequest;
 import uniquindio.edu.co.inmobiliaria.models.dto.SesionDTO;
@@ -13,7 +13,7 @@ import uniquindio.edu.co.inmobiliaria.repositories.UsuarioRepository;
 public class AutenticacionService {
 
     private final UsuarioRepository usuarioRepository;
-    private final BCryptPasswordEncoder passwordEncoder;
+    private final PasswordEncoder passwordEncoder;
 
     public SesionDTO login(LoginRequest request) throws Exception {
         // 1. Buscar al usuario por id de forma global en la tabla de usuarios

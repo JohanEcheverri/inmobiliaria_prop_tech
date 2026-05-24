@@ -28,6 +28,7 @@ public class Asesor extends Usuario {
     @Enumerated(EnumType.STRING)
     public TipoInmueble especialidad;
     /** */
+    @Builder.Default
     @Column(name = "numero_de_cierres")
     private Integer numeroDeCierres = 0;
 

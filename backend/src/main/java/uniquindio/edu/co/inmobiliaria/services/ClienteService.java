@@ -12,7 +12,7 @@ import uniquindio.edu.co.inmobiliaria.repositories.ClienteRepository;
 import uniquindio.edu.co.inmobiliaria.repositories.EventoHistorialRepository;
 import uniquindio.edu.co.inmobiliaria.repositories.InmuebleRepository;
 import uniquindio.edu.co.inmobiliaria.structures.DynamicArrayList;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -25,12 +25,12 @@ public class ClienteService {
     private final ClienteRepository clienteRepository;
     private final InmuebleRepository inmuebleRepository;
     private final EventoHistorialRepository eventoHistorialRepository;
-    private final BCryptPasswordEncoder passwordEncoder;
+    private final PasswordEncoder passwordEncoder;
 
     public ClienteService(ClienteRepository clienteRepository,
                           InmuebleRepository inmuebleRepository,
                           EventoHistorialRepository eventoHistorialRepository,
-                          BCryptPasswordEncoder passwordEncoder) {
+                          PasswordEncoder passwordEncoder) {
         this.clienteRepository = clienteRepository;
         this.inmuebleRepository = inmuebleRepository;
         this.eventoHistorialRepository = eventoHistorialRepository;
