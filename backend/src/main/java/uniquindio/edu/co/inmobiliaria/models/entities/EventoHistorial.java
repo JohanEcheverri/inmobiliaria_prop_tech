@@ -28,7 +28,7 @@ public class EventoHistorial {
     private Long id;
 
     /** Inmueble al que refiere el evento. */
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     private Inmueble inmueble;
     /** Clasificación del evento. */
     @Enumerated(EnumType.STRING)
@@ -36,7 +36,7 @@ public class EventoHistorial {
     /** Momento en que ocurrió el evento. */
     private LocalDateTime fechaEvento;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     private Cliente cliente;
 
     /**

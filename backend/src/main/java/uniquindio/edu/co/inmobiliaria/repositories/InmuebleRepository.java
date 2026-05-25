@@ -177,9 +177,15 @@ public class InmuebleRepository {
     private void agregarAIndices(Inmueble inmueble) {
         inmueblesPorPrecio.insert(inmueble);
         inmueblesPorCodigo.put(inmueble.getCodigo(), inmueble);
-        inmueblesPorCiudad.computeIfAbsent(inmueble.getCiudad(), k -> new SinglyLinkedList<>()).addLast(inmueble);
-        inmueblesPorTipo.computeIfAbsent(inmueble.getTipoInmueble(), k -> new SinglyLinkedList<>()).addLast(inmueble);
-        inmueblesPorEstado.computeIfAbsent(inmueble.getEstado(), k -> new SinglyLinkedList<>()).addLast(inmueble);
+        if (inmueble.getCiudad() != null) {
+            inmueblesPorCiudad.computeIfAbsent(inmueble.getCiudad(), k -> new SinglyLinkedList<>()).addLast(inmueble);
+        }
+        if (inmueble.getTipoInmueble() != null) {
+            inmueblesPorTipo.computeIfAbsent(inmueble.getTipoInmueble(), k -> new SinglyLinkedList<>()).addLast(inmueble);
+        }
+        if (inmueble.getEstado() != null) {
+            inmueblesPorEstado.computeIfAbsent(inmueble.getEstado(), k -> new SinglyLinkedList<>()).addLast(inmueble);
+        }
         inmueblesMayorDemanda.enqueue(inmueble);
     }
 

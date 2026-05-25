@@ -185,6 +185,26 @@
     font-size: 0.95rem;
 }
 
+.table-property-image {
+    width: 74px;
+    height: 52px;
+    border-radius: 6px;
+    overflow: hidden;
+    background: #f3e5f5;
+    color: #7b1fa2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    font-weight: 700;
+}
+
+.table-property-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
 /* Badges de Estados, Finalidades y Especialidades */
 .badge-type {
     padding: 4px 8px;
@@ -351,6 +371,25 @@
     width: 100%;
     height: 100%;
     object-fit: cover;
+}
+
+.property-images-group {
+    grid-column: 1 / -1;
+}
+
+.property-images-preview {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(86px, 1fr));
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.property-images-preview img {
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+    border-radius: 6px;
+    border: 1px solid #e0e0e0;
 }
 
 .avatar-plus-icon {

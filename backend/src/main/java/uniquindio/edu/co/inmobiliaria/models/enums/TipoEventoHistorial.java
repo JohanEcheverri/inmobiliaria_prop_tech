@@ -15,5 +15,7 @@ public enum TipoEventoHistorial {
     /** Inició o mantiene negociación. */
     NEGOCIANDO,
 
-    FAVORITO
+    FAVORITO,
+
+    DESMARCADO
 }

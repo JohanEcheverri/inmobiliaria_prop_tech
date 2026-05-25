@@ -92,8 +92,8 @@ public class InmuebleService {
             throw new IllegalArgumentException("Ya existe un inmueble con el código: " + codigo);
         }
 
-        Inmueble inmueble = construirInmueble(codigo, direccion, ciudad, barrio, tipo, finalidad, precio, area,
-                numeroHabitaciones, numeroBanios, estado, asesor, imagen);
+        Inmueble inmueble = construirInmueble(codigo, direccion, ciudad, barrio.getZona(), tipo, finalidad, precio, area,
+                numeroHabitaciones, numeroBanios, estado, asesor, normalizarImagenes(List.of(imagen)));
         inmuebleRepository.save(inmueble);
     }
 
@@ -110,10 +110,29 @@ public class InmuebleService {
         }
 
         double precioAnterior = inmuebleExistente.getPrecio();
-        Inmueble inmuebleActualizado = construirInmueble(codigo, direccion, ciudad, barrio, tipo, finalidad, precio,
-                area, numeroHabitaciones, numeroBanios, estado, asesor, imagen);
+        Inmueble inmuebleActualizado = construirInmueble(codigo, direccion, ciudad, barrio.getZona(), tipo, finalidad, precio,
+                area, numeroHabitaciones, numeroBanios, estado, asesor, normalizarImagenes(List.of(imagen)));
         inmuebleRepository.update(inmuebleActualizado);
         registrarCambioPrecioSiAplica(codigo, precioAnterior, precio);
+    }
+
+    public InmuebleResponse actualizarEstadoInmueble(String codigo, Estado estado) {
+        if (estado == null) {
+            throw new IllegalArgumentException("El estado del inmueble es obligatorio");
+        }
+        Inmueble inmueble = inmuebleRepository.findById(codigo)
+                .orElseThrow(() -> new IllegalArgumentException("No se encontró un inmueble con el código: " + codigo));
+        Estado estadoAnterior = inmueble.getEstado();
+        inmueble.setEstado(estado);
+        inmuebleRepository.update(inmueble);
+
+        if (esCierre(estadoAnterior, estado) && inmueble.getAsesor() != null) {
+            Asesor asesor = inmueble.getAsesor();
+            asesor.setNumeroDeCierres((asesor.getNumeroDeCierres() != null ? asesor.getNumeroDeCierres() : 0) + 1);
+            asesorRepository.update(asesor);
+        }
+
+        return mapear(inmueble);
     }
 
     public void eliminarInmueble(String codigo) {
@@ -207,15 +226,16 @@ public class InmuebleService {
     }
 
     private Inmueble construirInmueble(InmuebleRequest request, String codigo) {
-        Ciudad ciudad = new Ciudad(request.ciudad().trim(), "");
-        Barrio barrio = new Barrio(Zona.CENTRO, request.barrio().trim(), ciudad);
+        Ciudad ciudad = new Ciudad(request.ciudad().trim(), !estaVacio(request.departamento()) ? request.departamento().trim() : "");
+        String direccionBarrio = obtenerDireccionBarrio(request);
+        Zona zona = parseEnum(Zona.class, request.zona(), "zona");
         Asesor asesor = resolverAsesor(request.asesorResponsable());
 
         return construirInmueble(
                 codigo,
-                request.direccion().trim(),
+                direccionBarrio,
                 ciudad,
-                barrio,
+                zona,
                 parseEnum(TipoInmueble.class, request.tipoInmueble(), "tipo de inmueble"),
                 parseFinalidad(request.finalidad()),
                 request.precio(),
@@ -224,19 +244,19 @@ public class InmuebleService {
                 request.banos(),
                 parseEstado(request.disponibilidad(), request.estadoInmueble()),
                 asesor,
-                request.imagen()
+                normalizarImagenes(request.imagenes() != null ? request.imagenes() : List.of(request.imagen()))
         );
     }
 
-    private Inmueble construirInmueble(String codigo, String direccion, Ciudad ciudad, Barrio barrio,
+    private Inmueble construirInmueble(String codigo, String direccionBarrio, Ciudad ciudad, Zona zona,
                                        TipoInmueble tipo, Finalidad finalidad, double precio, double area,
                                        int numeroHabitaciones, int numeroBanios, Estado estado, Asesor asesor,
-                                       String imagen) {
+                                       List<String> imagenes) {
         return Inmueble.builder()
                 .codigo(codigo)
-                .direccion(direccion)
+                .direccionBarrio(direccionBarrio)
                 .ciudad(ciudad)
-                .barrio(barrio)
+                .zona(zona)
                 .tipoInmueble(tipo)
                 .finalidad(finalidad)
                 .precio(precio)
@@ -245,7 +265,7 @@ public class InmuebleService {
                 .numeroBanios(numeroBanios)
                 .estado(estado)
                 .asesor(asesor)
-                .imagen(imagen)
+                .imagen(imagenes)
                 .build();
     }
 
@@ -260,7 +280,10 @@ public class InmuebleService {
 
     private InmuebleResponse mapear(Inmueble inmueble) {
         String ciudad = inmueble.getCiudad() != null ? inmueble.getCiudad().getNombre() : "";
-        String barrio = inmueble.getBarrio() != null ? inmueble.getBarrio().getNombre() : "";
+        String departamento = inmueble.getCiudad() != null ? inmueble.getCiudad().getDepartamento() : "";
+        String direccionBarrio = inmueble.getDireccionBarrio();
+        List<String> imagenes = inmueble.getImagen() != null ? inmueble.getImagen() : new ArrayList<>();
+        String imagenPrincipal = imagenes.isEmpty() ? null : imagenes.get(0);
         Asesor asesor = inmueble.getAsesor();
         String asesorNombre = asesor != null ? asesor.getNombre() : null;
         String asesorId = asesor != null ? asesor.getId() : null;
@@ -268,9 +291,12 @@ public class InmuebleService {
 
         return new InmuebleResponse(
                 inmueble.getCodigo(),
-                inmueble.getDireccion(),
+                direccionBarrio,
+                direccionBarrio,
                 ciudad,
-                barrio,
+                departamento,
+                direccionBarrio,
+                inmueble.getZona(),
                 inmueble.getTipoInmueble(),
                 inmueble.getFinalidad(),
                 inmueble.getPrecio(),
@@ -281,7 +307,8 @@ public class InmuebleService {
                 disponibilidad,
                 asesorNombre,
                 asesorId,
-                inmueble.getImagen(),
+                imagenPrincipal,
+                imagenes,
                 inmueble.getEstado()
         );
     }
@@ -293,15 +320,13 @@ public class InmuebleService {
         if (validarCodigo && estaVacio(request.codigo())) {
             throw new IllegalArgumentException("El código del inmueble no puede estar vacío");
         }
-        if (estaVacio(request.direccion())) {
-            throw new IllegalArgumentException("La dirección del inmueble no puede estar vacía");
+        if (estaVacio(obtenerDireccionBarrio(request))) {
+            throw new IllegalArgumentException("La dirección o barrio del inmueble no puede estar vacío");
         }
         if (estaVacio(request.ciudad())) {
             throw new IllegalArgumentException("La ciudad del inmueble no puede estar vacía");
         }
-        if (estaVacio(request.barrio())) {
-            throw new IllegalArgumentException("El barrio del inmueble no puede estar vacío");
-        }
+        parseEnum(Zona.class, request.zona(), "zona");
         if (request.precio() == null || request.precio() <= 0) {
             throw new IllegalArgumentException("El precio del inmueble debe ser mayor a cero");
         }
@@ -317,6 +342,7 @@ public class InmuebleService {
         parseEnum(TipoInmueble.class, request.tipoInmueble(), "tipo de inmueble");
         parseFinalidad(request.finalidad());
         parseEstado(request.disponibilidad(), request.estadoInmueble());
+        validarImagenes(request.imagenes() != null ? request.imagenes() : List.of(request.imagen()));
     }
 
     private void validarDatosInmueble(String codigo, String direccion, Ciudad ciudad, Barrio barrio,
@@ -363,6 +389,51 @@ public class InmuebleService {
     private void registrarCambioPrecioSiAplica(String codigo, double precioAnterior, double precioNuevo) {
         if (Double.compare(precioAnterior, precioNuevo) != 0) {
             comportamientoService.registrarCambioPrecio(codigo, precioAnterior, precioNuevo);
+        }
+    }
+
+    private boolean esCierre(Estado anterior, Estado nuevo) {
+        boolean antesCerrado = anterior == Estado.VENDIDO || anterior == Estado.ARRENDADO;
+        boolean ahoraCerrado = nuevo == Estado.VENDIDO || nuevo == Estado.ARRENDADO;
+        return !antesCerrado && ahoraCerrado;
+    }
+
+    private String obtenerDireccionBarrio(InmuebleRequest request) {
+        if (request == null) {
+            return null;
+        }
+        if (!estaVacio(request.direccionBarrio())) {
+            return request.direccionBarrio().trim();
+        }
+        if (!estaVacio(request.direccion())) {
+            return request.direccion().trim();
+        }
+        if (!estaVacio(request.barrio())) {
+            return request.barrio().trim();
+        }
+        return null;
+    }
+
+    private List<String> normalizarImagenes(List<String> imagenes) {
+        List<String> resultado = new ArrayList<>();
+        if (imagenes == null) {
+            return resultado;
+        }
+        for (String imagen : imagenes) {
+            if (!estaVacio(imagen)) {
+                resultado.add(imagen.trim());
+            }
+        }
+        return resultado;
+    }
+
+    private void validarImagenes(List<String> imagenes) {
+        List<String> normalizadas = normalizarImagenes(imagenes);
+        if (normalizadas.isEmpty()) {
+            return;
+        }
+        if (normalizadas.size() < 3 || normalizadas.size() > 6) {
+            throw new IllegalArgumentException("El inmueble debe tener entre 3 y 6 imágenes cuando se adjuntan imágenes");
         }
     }
 

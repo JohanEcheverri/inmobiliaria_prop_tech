@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import uniquindio.edu.co.inmobiliaria.models.dto.EstadoInmuebleRequest;
 import uniquindio.edu.co.inmobiliaria.models.dto.InmuebleRequest;
 import uniquindio.edu.co.inmobiliaria.models.dto.InmuebleResponse;
 import uniquindio.edu.co.inmobiliaria.services.InmuebleService;
@@ -47,6 +48,11 @@ public class InmuebleController {
     @PutMapping("/{codigo}")
     public InmuebleResponse actualizarInmueble(@PathVariable String codigo, @RequestBody InmuebleRequest request) {
         return inmuebleService.actualizarInmueble(codigo, request);
+    }
+
+    @PutMapping("/{codigo}/estado")
+    public InmuebleResponse actualizarEstado(@PathVariable String codigo, @RequestBody EstadoInmuebleRequest request) {
+        return inmuebleService.actualizarEstadoInmueble(codigo, request.estado());
     }
 
     @DeleteMapping("/{codigo}")

@@ -147,6 +147,7 @@ public class ClienteService {
             case NEGOCIANDO -> 30;
             case CONSULTA -> 10;
             case DESCARTADO -> -25;
+            case DESMARCADO -> 0;
         };
     }
 
