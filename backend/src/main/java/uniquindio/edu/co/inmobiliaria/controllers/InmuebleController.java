@@ -42,9 +42,10 @@ public class InmuebleController {
             @org.springframework.web.bind.annotation.RequestParam(required = false) Double maxPrecio,
             @org.springframework.web.bind.annotation.RequestParam(required = false) Integer minHabitaciones,
             @org.springframework.web.bind.annotation.RequestParam(required = false) Integer maxHabitaciones,
+            @org.springframework.web.bind.annotation.RequestParam(required = false) String finalidad,
             @org.springframework.web.bind.annotation.RequestParam(required = false) String clienteId
     ) {
-        return inmuebleService.buscarPorPreferencias(zona, tipo, minPrecio, maxPrecio, minHabitaciones, maxHabitaciones, null, clienteId);
+        return inmuebleService.buscarPorPreferencias(zona, tipo, minPrecio, maxPrecio, minHabitaciones, maxHabitaciones, finalidad, null, clienteId);
     }
 
     @GetMapping("/{codigo}")

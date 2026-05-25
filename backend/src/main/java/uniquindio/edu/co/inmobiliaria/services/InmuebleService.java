@@ -73,10 +73,12 @@ public class InmuebleService {
                                                         Double maxPrecio,
                                                         Integer minHabitaciones,
                                                         Integer maxHabitaciones,
+                                                        String finalidadStr,
                                                         Double presupuesto,
                                                         String clienteId) {
         Zona zona = null;
         TipoInmueble tipo = null;
+        Finalidad finalidad = null;
 
         if (!estaVacio(zonaStr)) {
             try {
@@ -90,7 +92,12 @@ public class InmuebleService {
             } catch (IllegalArgumentException ignored) {
             }
         }
-
+        if (!estaVacio(finalidadStr)) {
+            try {
+                finalidad = parseEnum(Finalidad.class, finalidadStr, "finalidad");
+            } catch (IllegalArgumentException ignored) {
+            }
+        }
 
         // Because of lambda limitation, re-fetch client outside
         if ((zona == null || tipo == null || (presupuesto == null && (minPrecio == null && maxPrecio == null))) && !estaVacio(clienteId)) {
@@ -126,6 +133,9 @@ public class InmuebleService {
                 continue;
             }
             if (tipo != null && inmueble.getTipoInmueble() != null && !tipo.equals(inmueble.getTipoInmueble())) {
+                continue;
+            }
+            if (finalidad != null && inmueble.getFinalidad() != null && !finalidad.equals(inmueble.getFinalidad())) {
                 continue;
             }
             if (minPrecio != null && inmueble.getPrecio() < minPrecio) {

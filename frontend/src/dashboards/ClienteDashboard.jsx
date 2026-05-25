@@ -41,6 +41,7 @@ function ClienteDashboard() {
                 if (filters.tipo) params.append('tipo', filters.tipo);
                 if (filters.minPrecio) params.append('minPrecio', filters.minPrecio);
                 if (filters.maxPrecio) params.append('maxPrecio', filters.maxPrecio);
+                if (filters.finalidad) params.append('finalidad', filters.finalidad);
                 if (filters.minHabitaciones) params.append('minHabitaciones', filters.minHabitaciones);
                 if (filters.maxHabitaciones) params.append('maxHabitaciones', filters.maxHabitaciones);
                 if (filters.clienteId) params.append('clienteId', filters.clienteId);
@@ -50,7 +51,12 @@ function ClienteDashboard() {
             }
             const response = await fetch(url);
             if (!response.ok) throw new Error('No se pudo cargar el catalogo');
-            setInmuebles(await response.json());
+            let data = await response.json();
+            // Fallback client-side filter for finalidad in case backend doesn't support it yet
+            if (filters.finalidad && !url.includes('finalidad=')) {
+                data = data.filter(i => String(i.finalidad) === String(filters.finalidad));
+            }
+            setInmuebles(data);
         } catch (error) {
             throw error;
         }
@@ -83,7 +89,7 @@ function ClienteDashboard() {
 
     const cargarDatos = useCallback(async (clienteId) => {
         try {
-            await Promise.all([fetchInmuebles({ clienteId }), fetchVisitas(clienteId), fetchHistorial(clienteId), fetchPropiedades(clienteId)]);
+            await Promise.all([fetchInmuebles(), fetchVisitas(clienteId), fetchHistorial(clienteId), fetchPropiedades(clienteId)]);
             // Si es el primer inicio, mostrar modal
             const resp = await fetch(`${API_BASE_URL}/clientes/${clienteId}`);
             if (resp.ok) {
@@ -165,28 +171,18 @@ function ClienteDashboard() {
         // Optimistic update of localFavorites so both buttons reflect change immediately
         setLocalFavorites(prev => {
             const next = new Set(prev);
+            const isNowFavorito = !next.has(inmuebleCodigo);
             if (next.has(inmuebleCodigo)) next.delete(inmuebleCodigo); else next.add(inmuebleCodigo);
+            // Send explicit event type based on the new optimistic state
+            registrarEvento(inmuebleCodigo, isNowFavorito ? 'FAVORITO' : 'DESMARCADO', isNowFavorito ? 'Inmueble marcado como favorito' : 'Inmueble quitado de favoritos');
             return next;
         });
-        registrarEvento(inmuebleCodigo, 'FAVORITO', 'Favorito actualizado');
     };
 
     const registrarEvento = async (inmuebleCodigo, tipoEvento, mensaje) => {
         try {
-            let eventoFinal = tipoEvento;
-            let mensajeFinal = mensaje;
-
-            if (tipoEvento === 'FAVORITO') {
-                const esYaFavorito = favoriteCodes.has(inmuebleCodigo);
-
-                if (esYaFavorito) {
-                    eventoFinal = 'DESMARCADO';
-                    mensajeFinal = 'Inmueble quitado de favoritos';
-                } else {
-                    eventoFinal = 'FAVORITO';
-                    mensajeFinal = 'Inmueble marcado como favorito';
-                }
-            }
+            const eventoFinal = tipoEvento; // now explicit from caller
+            const mensajeFinal = mensaje || (eventoFinal === 'FAVORITO' ? 'Inmueble marcado como favorito' : eventoFinal === 'DESMARCADO' ? 'Inmueble quitado de favoritos' : 'Interacción registrada');
 
             const response = await fetch(`${API_BASE_URL}/historial`, {
                 method: 'POST',
@@ -194,7 +190,7 @@ function ClienteDashboard() {
                 body: JSON.stringify({
                     clienteId: session.id,
                     inmuebleCodigo,
-                    tipoEvento: eventoFinal // Enviamos el evento calculado
+                    tipoEvento: eventoFinal
                 })
             });
 

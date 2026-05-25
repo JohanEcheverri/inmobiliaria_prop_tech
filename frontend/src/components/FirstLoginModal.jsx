@@ -75,6 +75,10 @@ export default function FirstLoginModal({ clienteId, onClose, onSaved }) {
                             <option value="">--Seleccionar--</option>
                             <option value="APARTAMENTO">Apartamento</option>
                             <option value="CASA">Casa</option>
+                            <option value="BODEGA">Bodega</option>
+                            <option value="LOTE">Lote</option>
+                            <option value="LOCAL_COMERCIAL">Local Comercial</option>
+                            <option value="OFICINA">Oficina</option>
                         </select>
                     </label>
                     <label>Habitaciones deseadas
@@ -83,8 +87,9 @@ export default function FirstLoginModal({ clienteId, onClose, onSaved }) {
                     <label>Estado de búsqueda
                         <select name="estadoBusqueda" value={form.estadoBusqueda} onChange={handleChange}>
                             <option value="">--Seleccionar--</option>
-                            <option value="ACTIVA">Activa</option>
-                            <option value="PENDIENTE">Pendiente</option>
+                            <option value="BUSCANDO">Buscando</option>
+                            <option value="CERRADO">Cerrado</option>
+                            <option value="NEGOCIANDO">Negociando</option>
                         </select>
                     </label>
 

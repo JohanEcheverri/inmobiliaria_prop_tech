@@ -15,6 +15,7 @@ import java.util.List;
 @CrossOrigin(origins = {"http://localhost:5173", "http://localhost:5174", "http://127.0.0.1:5173", "http://127.0.0.1:5174", "http://localhost:3000"})
 @RestController
 @RequestMapping("/api/operaciones")
+@Transactional(readOnly = true) // <-- SOLUCIÓN: Mantiene viva la sesión de Hibernate para toda la clase, incluyendo métodos privados
 public class OperacionController {
 
     private final OperacionService operacionService;
@@ -25,7 +26,7 @@ public class OperacionController {
 
     @PostMapping("/ventas")
     @ResponseStatus(HttpStatus.CREATED)
-    @Transactional
+    @Transactional // <-- Sobrescribe el readOnly de la clase para permitir inserciones/escritura en la DB
     public void registrarVenta(@RequestBody VentaRequest request) {
         operacionService.registrarVentaCompleta(
                 request.inmuebleCodigo(),
@@ -37,7 +38,7 @@ public class OperacionController {
     }
 
     @GetMapping("/cliente/{clienteId}/propiedades")
-    @Transactional(readOnly = true)
+    // Ya no necesita la anotación aquí porque la hereda de la clase
     public List<PropiedadAdquiridaResponse> obtenerPropiedadesAdquiridas(@PathVariable String clienteId) {
         return mapearPropiedades(operacionService.obtenerPropiedadesAdquiridasCliente(clienteId));
     }
@@ -53,6 +54,9 @@ public class OperacionController {
                 continue;
             }
             Venta venta = (Venta) obj;
+
+            // Al acceder a getInmueble().getDireccion() u otras propiedades Lazy,
+            // la sesión seguirá abierta gracias al @Transactional de la clase.
             String codigo = venta.getInmueble() != null ? venta.getInmueble().getCodigo() : null;
             String direccion = venta.getInmueble() != null ? venta.getInmueble().getDireccion() : null;
             String ciudad = venta.getInmueble() != null && venta.getInmueble().getCiudad() != null ? venta.getInmueble().getCiudad().getNombre() : null;
@@ -87,5 +91,4 @@ public class OperacionController {
         }
         return respuesta;
     }
-
 }
