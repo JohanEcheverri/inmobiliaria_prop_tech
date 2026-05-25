@@ -89,7 +89,17 @@ function ClienteDashboard() {
 
     const cargarDatos = useCallback(async (clienteId) => {
         try {
-            await Promise.all([fetchInmuebles(), fetchVisitas(clienteId), fetchHistorial(clienteId), fetchPropiedades(clienteId)]);
+            // Load catalog first so UI shows something even if other calls fail
+            await fetchInmuebles();
+
+            // Run other background loads but don't let one failure block catalog
+            const others = [
+                fetchVisitas(clienteId).catch(e => { console.warn('fetchVisitas failed', e); setVisitas([]); }),
+                fetchHistorial(clienteId).catch(e => { console.warn('fetchHistorial failed', e); setHistorial([]); }),
+                fetchPropiedades(clienteId).catch(e => { console.warn('fetchPropiedades failed', e); setPropiedades([]); })
+            ];
+            await Promise.all(others);
+
             // Si es el primer inicio, mostrar modal
             const resp = await fetch(`${API_BASE_URL}/clientes/${clienteId}`);
             if (resp.ok) {
