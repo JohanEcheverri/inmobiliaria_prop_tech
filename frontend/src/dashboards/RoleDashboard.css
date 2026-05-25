@@ -424,3 +424,41 @@
         align-items: flex-start;
     }
 }
+
+/* Modals */
+.modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(2,6,23,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+}
+
+.modal-card {
+    width: min(720px, calc(100% - 32px));
+    background: #fff;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 20px 60px rgba(16,24,40,0.4);
+}
+
+.modal-card h3 { margin: 0 0 12px; }
+
+.modal-form { display: grid; gap: 10px; }
+.modal-form label { display: grid; gap: 6px; font-weight:700; color:#333; }
+.modal-form input, .modal-form select, .modal-form textarea { padding:10px 12px; border-radius:8px; border:1px solid #e5e7eb; }
+
+.modal-actions { display:flex; justify-content:flex-end; gap:10px; margin-top:8px; }
+.modal-error { color: #c62828; font-weight:700; }
+
+/* Search bar */
+.catalog-search-bar {
+    display:flex; gap:8px; align-items:center; flex-wrap:wrap;
+}
+.catalog-search-bar input, .catalog-search-bar select { padding:8px 10px; border-radius:8px; border:1px solid #d1d5db; }
+.catalog-search-bar .btn.small { padding:8px 12px; }
+
+/* Acquired badge */
+.acquired-badge { position:absolute; top:10px; left:10px; background:#2e7d32; color:#fff; padding:6px 8px; font-weight:700; border-radius:6px; z-index:3; }
