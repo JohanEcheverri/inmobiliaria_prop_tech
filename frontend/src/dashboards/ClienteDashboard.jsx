@@ -2,6 +2,9 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout';
 import './RoleDashboard.css';
+import SearchBar from '../components/SearchBar';
+import FirstLoginModal from '../components/FirstLoginModal';
+import MisProperties from '../components/MisProperties';
 
 const API_BASE_URL = 'http://localhost:8080/api';
 
@@ -17,7 +20,8 @@ function ClienteDashboard() {
     const navigate = useNavigate();
     const [session, setSession] = useState(null);
     const [seccionActiva, setSeccionActiva] = useState('catalogo');
-    const [inmuebles, setInmuebles] = useState([]);
+    const [propiedades, setPropiedades] = useState([]);
+    const [showFirstLoginModal, setShowFirstLoginModal] = useState(false);    const [inmuebles, setInmuebles] = useState([]);
     const [visitas, setVisitas] = useState([]);
     const [historial, setHistorial] = useState([]);
     const [selectedInmueble, setSelectedInmueble] = useState(null);
@@ -26,16 +30,49 @@ function ClienteDashboard() {
     const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
     const [carouselIndex, setCarouselIndex] = useState(0);
 
-    const fetchInmuebles = useCallback(async () => {
-        const response = await fetch(`${API_BASE_URL}/inmuebles`);
-        if (!response.ok) throw new Error('No se pudo cargar el catalogo');
-        setInmuebles(await response.json());
+    const fetchInmuebles = useCallback(async (filters = {}) => {
+        // If filters provided, call search endpoint
+        try {
+            let url = `${API_BASE_URL}/inmuebles`;
+            const hasFilters = Object.keys(filters).some(k => filters[k] !== undefined && filters[k] !== null && filters[k] !== '');
+            if (hasFilters) {
+                const params = new URLSearchParams();
+                if (filters.zona) params.append('zona', filters.zona);
+                if (filters.tipo) params.append('tipo', filters.tipo);
+                if (filters.minPrecio) params.append('minPrecio', filters.minPrecio);
+                if (filters.maxPrecio) params.append('maxPrecio', filters.maxPrecio);
+                if (filters.minHabitaciones) params.append('minHabitaciones', filters.minHabitaciones);
+                if (filters.maxHabitaciones) params.append('maxHabitaciones', filters.maxHabitaciones);
+                if (filters.clienteId) params.append('clienteId', filters.clienteId);
+                url = `${API_BASE_URL}/inmuebles/search?${params.toString()}`;
+            } else {
+                url = `${API_BASE_URL}/inmuebles`;
+            }
+            const response = await fetch(url);
+            if (!response.ok) throw new Error('No se pudo cargar el catalogo');
+            setInmuebles(await response.json());
+        } catch (error) {
+            throw error;
+        }
     }, []);
 
     const fetchVisitas = useCallback(async (clienteId) => {
         const response = await fetch(`${API_BASE_URL}/visitas/cliente/${clienteId}`);
         if (!response.ok) throw new Error('No se pudieron cargar las visitas');
         setVisitas(await response.json());
+    }, []);
+
+    const fetchPropiedades = useCallback(async (clienteId) => {
+        try {
+            const response = await fetch(`${API_BASE_URL}/operaciones/cliente/${clienteId}/propiedades`);
+            if (!response.ok) {
+                setPropiedades([]);
+                return;
+            }
+            setPropiedades(await response.json());
+        } catch (e) {
+            setPropiedades([]);
+        }
     }, []);
 
     const fetchHistorial = useCallback(async (clienteId) => {
@@ -46,7 +83,15 @@ function ClienteDashboard() {
 
     const cargarDatos = useCallback(async (clienteId) => {
         try {
-            await Promise.all([fetchInmuebles(), fetchVisitas(clienteId), fetchHistorial(clienteId)]);
+            await Promise.all([fetchInmuebles({ clienteId }), fetchVisitas(clienteId), fetchHistorial(clienteId), fetchPropiedades(clienteId)]);
+            // Si es el primer inicio, mostrar modal
+            const resp = await fetch(`${API_BASE_URL}/clientes/${clienteId}`);
+            if (resp.ok) {
+                const cliente = await resp.json();
+                if (cliente && cliente.primerInicioCompletado === false) {
+                    setShowFirstLoginModal(true);
+                }
+            }
         } catch (error) {
             setStatusMessage(error.message);
         }
@@ -196,6 +241,7 @@ function ClienteDashboard() {
     const renderCatalogo = () => (
         <>
         <div className="catalog-filter-bar">
+            <SearchBar onSearch={(filters) => fetchInmuebles(filters)} initialClienteId={session?.id} />
             <button className={showFavoritesOnly ? 'active' : ''} onClick={() => setShowFavoritesOnly(prev => !prev)}>
                 {showFavoritesOnly ? 'Ver todo el catalogo' : 'Filtrar favoritos'}
             </button>
@@ -324,7 +370,7 @@ function ClienteDashboard() {
                     <nav className="sidebar-nav">
                         <button className={`nav-item ${seccionActiva === 'catalogo' ? 'active' : ''}`} onClick={() => setSeccionActiva('catalogo')}>Catalogo completo</button>
                         <button className={`nav-item ${seccionActiva === 'visitas' ? 'active' : ''}`} onClick={() => setSeccionActiva('visitas')}>Mis visitas</button>
-                        <button className={`nav-item ${seccionActiva === 'favoritos' ? 'active' : ''}`} onClick={() => setSeccionActiva('favoritos')}>Favoritos</button>
+                        <button className={`nav-item ${seccionActiva === 'mispropiedades' ? 'active' : ''}`} onClick={() => setSeccionActiva('mispropiedades')}>Mis propiedades</button>
                         <button className={`nav-item ${seccionActiva === 'historial' ? 'active' : ''}`} onClick={() => setSeccionActiva('historial')}>Historial</button>
                     </nav>
                 </aside>
@@ -332,7 +378,7 @@ function ClienteDashboard() {
                 <main className="dashboard-content">
                     <div className="content-view-header">
                         <div>
-                            <h1>{seccionActiva === 'catalogo' ? 'Catalogo de inmuebles' : seccionActiva === 'detalle' ? 'Detalle del inmueble' : seccionActiva === 'visitas' ? 'Visitas agendadas' : seccionActiva === 'favoritos' ? 'Inmuebles favoritos' : 'Historial de interacciones'}</h1>
+                            <h1>{seccionActiva === 'catalogo' ? 'Catalogo de inmuebles' : seccionActiva === 'detalle' ? 'Detalle del inmueble' : seccionActiva === 'visitas' ? 'Visitas agendadas' : seccionActiva === 'mispropiedades' ? 'Mis propiedades' : 'Historial de interacciones'}</h1>
                             <p>{session?.nombre}, gestiona tu busqueda inmobiliaria desde un solo lugar.</p>
                         </div>
                     </div>
@@ -340,6 +386,10 @@ function ClienteDashboard() {
                     {seccionActiva === 'catalogo' && renderCatalogo()}
                     {seccionActiva === 'detalle' && renderDetalle()}
                     {seccionActiva === 'visitas' && renderVisitas()}
+                    {seccionActiva === 'mispropiedades' && <MisProperties propiedades={propiedades} onVerDetalle={(codigo) => {
+                        const found = inmuebles.find(i => i.codigo === codigo);
+                        if (found) abrirDetalle(found);
+                    }} />}
                     {seccionActiva === 'favoritos' && (favoritos.length ? <div className="property-grid">{favoritos.map(inmueble => <article className="property-card" key={inmueble.codigo}><button className={`favorite-star active`} onClick={() => toggleFavorito(inmueble.codigo)} aria-label="Quitar de favoritos">★</button><div className="property-thumb">{getImages(inmueble)[0] ? <img src={getImages(inmueble)[0]} alt={inmueble.direccionBarrio || inmueble.direccion} /> : <span>{inmueble.tipoInmueble}</span>}</div><div className="property-body"><h3>{inmueble.direccionBarrio || inmueble.direccion}</h3><p>{inmueble.ciudad} · {inmueble.zona}</p><strong>{formatCurrency(inmueble.precio)}</strong></div><div className="card-actions"><button onClick={() => abrirDetalle(inmueble)}>Ver detalle</button></div></article>)}</div> : <p className="empty-text">No tienes favoritos registrados.</p>)}
                     {seccionActiva === 'historial' && renderHistorial()}
                 </main>

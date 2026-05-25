@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout';
 import './RoleDashboard.css';
+import VentaModal from '../components/VentaModal';
 
 const API_BASE_URL = 'http://localhost:8080/api';
 
@@ -94,8 +95,16 @@ function AsesorDashboard() {
 
     const getImages = (inmueble) => inmueble?.imagenes?.length ? inmueble.imagenes : (inmueble?.imagen ? [inmueble.imagen] : []);
 
-    const actualizarEstadoInmueble = async (codigo, estado) => {
+    const [ventaModal, setVentaModal] = useState({ open: false, codigo: null });
+
+    const actualizarEstadoInmueble = async (codigo, estado, inmueble) => {
         try {
+            // Si se trata de cerrar venta, abrir modal para detalles de venta
+            if (estado === 'VENDIDO') {
+                setVentaModal({ open: true, codigo });
+                return;
+            }
+
             const response = await fetch(`${API_BASE_URL}/inmuebles/${codigo}/estado`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
@@ -219,6 +228,7 @@ function AsesorDashboard() {
                     {seccionActiva === 'cierres' && <section className="dashboard-panel"><h2>Cierres realizados</h2><div className="metric-hero">{asesor?.numeroDeCierres ?? 0}</div><p>Este contador proviene del perfil del asesor registrado en el sistema.</p></section>}
                 </main>
             </div>
+            {ventaModal.open && <VentaModal inmuebleCodigo={ventaModal.codigo} asesorId={session?.id} onClose={() => setVentaModal({ open: false, codigo: null })} onCompleted={() => { fetchInmuebles(); fetchAsesor(session.id); setStatusMessage('Venta registrada correctamente'); }} />}
         </Layout>
     );
 }
