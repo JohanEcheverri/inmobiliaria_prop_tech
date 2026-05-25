@@ -147,6 +147,7 @@ public class ClienteService {
             case NEGOCIANDO -> 30;
             case CONSULTA -> 10;
             case DESCARTADO -> -25;
+            case DESMARCADO -> 0;
         };
     }
 
@@ -168,35 +169,56 @@ public class ClienteService {
         }
     }
 
+
     public ClienteResponse actualizarCliente(String id, ClienteRequest request) {
         if (estaVacio(id)) {
             throw new IllegalArgumentException("El id del cliente es obligatorio");
         }
-        validarCliente(request, false);
+
+        // 1. Buscamos el cliente existente primero
         Cliente clienteExistente = clienteRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("No se encontró un cliente con el id: " + id));
 
-        clienteRepository.findByEmail(request.email())
-                .filter(cliente -> !cliente.getId().equals(id))
-                .ifPresent(cliente -> {
-                    throw new IllegalArgumentException("Ya existe un cliente con el email: " + request.email());
-                });
+        // 2. Quitamos o adaptamos la validación estricta para actualizaciones parciales
+        if (request.presupuesto() != null && request.presupuesto() < 0) {
+            throw new IllegalArgumentException("El presupuesto no puede ser negativo");
+        }
+        if (request.numeroHabitacionesDeseadas() < 0) {
+            throw new IllegalArgumentException("El número de habitaciones no puede ser negativo");
+        }
 
+        if (!estaVacio(request.email())) {
+            clienteRepository.findByEmail(request.email())
+                    .filter(cliente -> !cliente.getId().equals(id))
+                    .ifPresent(cliente -> {
+                        throw new IllegalArgumentException("Ya existe un cliente con el email: " + request.email());
+                    });
+        }
+
+        boolean primerCompletado = clienteExistente.getPrimerInicioCompletado() != null && clienteExistente.getPrimerInicioCompletado();
+        if (!primerCompletado) {
+            if (request.tipoCliente() != null || request.zonaInteres() != null || request.presupuesto() != null
+                    || request.tipoInmuebleDeseado() != null || request.numeroHabitacionesDeseadas() > 0
+                    || request.estadoBusqueda() != null) {
+                primerCompletado = true;
+            }
+        }
+
+        // 3. Si el request no trae el dato, mantenemos el que ya existía en 'clienteExistente'
         Cliente clienteActualizado = Cliente.builder()
                 .id(id)
-                .nombre(request.nombre())
-                .email(request.email())
-                .telefono(request.telefono())
-
+                .nombre(!estaVacio(request.nombre()) ? request.nombre() : clienteExistente.getNombre())
+                .email(!estaVacio(request.email()) ? request.email() : clienteExistente.getEmail())
+                .telefono(!estaVacio(request.telefono()) ? request.telefono() : clienteExistente.getTelefono())
                 .contrasenia(!estaVacio(request.password()) ? passwordEncoder.encode(request.password()) : clienteExistente.getContrasenia())
-
-                .fotoPerfil(request.fotoPerfil())
-                .tipoCliente(request.tipoCliente())
-                .zonaInteres(request.zonaInteres())
-                .presupuesto(request.presupuesto())
-                .tipoInmuebleDeseado(request.tipoInmuebleDeseado())
-                .numeroHabitacionesDeseadas(request.numeroHabitacionesDeseadas())
-                .estadoBusqueda(request.estadoBusqueda())
+                .fotoPerfil(request.fotoPerfil() != null ? request.fotoPerfil() : clienteExistente.getFotoPerfil())
+                .tipoCliente(request.tipoCliente() != null ? request.tipoCliente() : clienteExistente.getTipoCliente())
+                .zonaInteres(request.zonaInteres() != null ? request.zonaInteres() : clienteExistente.getZonaInteres())
+                .presupuesto(request.presupuesto() != null ? request.presupuesto() : clienteExistente.getPresupuesto())
+                .tipoInmuebleDeseado(request.tipoInmuebleDeseado() != null ? request.tipoInmuebleDeseado() : clienteExistente.getTipoInmuebleDeseado())
+                .numeroHabitacionesDeseadas(request.numeroHabitacionesDeseadas() > 0 ? request.numeroHabitacionesDeseadas() : clienteExistente.getNumeroHabitacionesDeseadas())
+                .estadoBusqueda(request.estadoBusqueda() != null ? request.estadoBusqueda() : clienteExistente.getEstadoBusqueda())
+                .primerInicioCompletado(primerCompletado)
                 .build();
 
         clienteRepository.update(clienteActualizado);
@@ -259,7 +281,8 @@ public class ClienteService {
                 cliente.getPresupuesto(),
                 cliente.getTipoInmuebleDeseado(),
                 cliente.getNumeroHabitacionesDeseadas(),
-                cliente.getEstadoBusqueda()
+                cliente.getEstadoBusqueda(),
+                cliente.getPrimerInicioCompletado()
         );
     }
 

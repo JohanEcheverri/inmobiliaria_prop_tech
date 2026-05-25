@@ -294,3 +294,80 @@
 .auth-link-button:hover {
   color: var(--accent-orange);
 }
+
+/* Modal styles used by FirstLoginModal and VentaModal */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1200;
+}
+
+.modal-card {
+  width: 100%;
+  max-width: 780px;
+  background: var(--white);
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 20px 45px rgba(18, 18, 18, 0.2);
+  border-top: 6px solid var(--primary-purple);
+}
+
+.modal-form {
+  display: grid;
+  gap: 12px;
+}
+
+.modal-card h3 {
+  margin: 0 0 6px;
+  color: var(--primary-purple);
+}
+
+.modal-error {
+  background: #fff6f0;
+  color: #9d3f12;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(209,107,39,0.25);
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.btn {
+  border: none;
+  padding: 9px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.btn.primary {
+  background: var(--primary-purple);
+  color: #fff;
+}
+
+.btn.ghost {
+  background: transparent;
+  border: 1px solid #ddd;
+}
+
+/* Improve search bar inputs to match app style */
+.catalog-search-bar input {
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+  margin-right: 8px;
+}
+
+.catalog-search-bar .btn.small {
+  padding: 8px 10px;
+  border-radius: 8px;
+}

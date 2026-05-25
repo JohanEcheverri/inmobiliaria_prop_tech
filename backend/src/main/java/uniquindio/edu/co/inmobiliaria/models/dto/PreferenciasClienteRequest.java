@@ -5,18 +5,12 @@ import uniquindio.edu.co.inmobiliaria.models.enums.TipoCliente;
 import uniquindio.edu.co.inmobiliaria.models.enums.TipoInmueble;
 import uniquindio.edu.co.inmobiliaria.models.enums.Zona;
 
-public record ClienteResponse(
-        String id,
-        String nombre,
-        String email,
-        String telefono,
-        String fotoPerfil,
+public record PreferenciasClienteRequest(
         TipoCliente tipoCliente,
         Zona zonaInteres,
         Double presupuesto,
         TipoInmueble tipoInmuebleDeseado,
         int numeroHabitacionesDeseadas,
-        EstadoBusquedaCliente estadoBusqueda,
-        Boolean primerInicioCompletado
+        EstadoBusquedaCliente estadoBusqueda
 ) {
 }

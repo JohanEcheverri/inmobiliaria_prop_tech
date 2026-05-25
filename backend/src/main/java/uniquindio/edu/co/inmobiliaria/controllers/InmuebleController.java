@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import uniquindio.edu.co.inmobiliaria.models.dto.EstadoInmuebleRequest;
 import uniquindio.edu.co.inmobiliaria.models.dto.InmuebleRequest;
 import uniquindio.edu.co.inmobiliaria.models.dto.InmuebleResponse;
 import uniquindio.edu.co.inmobiliaria.services.InmuebleService;
@@ -33,6 +34,20 @@ public class InmuebleController {
         return inmuebleService.listarInmuebles();
     }
 
+    @GetMapping("/search")
+    public List<InmuebleResponse> buscarInmuebles(
+            @org.springframework.web.bind.annotation.RequestParam(required = false) String zona,
+            @org.springframework.web.bind.annotation.RequestParam(required = false) String tipo,
+            @org.springframework.web.bind.annotation.RequestParam(required = false) Double minPrecio,
+            @org.springframework.web.bind.annotation.RequestParam(required = false) Double maxPrecio,
+            @org.springframework.web.bind.annotation.RequestParam(required = false) Integer minHabitaciones,
+            @org.springframework.web.bind.annotation.RequestParam(required = false) Integer maxHabitaciones,
+            @org.springframework.web.bind.annotation.RequestParam(required = false) String finalidad,
+            @org.springframework.web.bind.annotation.RequestParam(required = false) String clienteId
+    ) {
+        return inmuebleService.buscarPorPreferencias(zona, tipo, minPrecio, maxPrecio, minHabitaciones, maxHabitaciones, finalidad, null, clienteId);
+    }
+
     @GetMapping("/{codigo}")
     public InmuebleResponse obtenerInmueble(@PathVariable String codigo) {
         return inmuebleService.obtenerInmueble(codigo);
@@ -47,6 +62,11 @@ public class InmuebleController {
     @PutMapping("/{codigo}")
     public InmuebleResponse actualizarInmueble(@PathVariable String codigo, @RequestBody InmuebleRequest request) {
         return inmuebleService.actualizarInmueble(codigo, request);
+    }
+
+    @PutMapping("/{codigo}/estado")
+    public InmuebleResponse actualizarEstado(@PathVariable String codigo, @RequestBody EstadoInmuebleRequest request) {
+        return inmuebleService.actualizarEstadoInmueble(codigo, request);
     }
 
     @DeleteMapping("/{codigo}")

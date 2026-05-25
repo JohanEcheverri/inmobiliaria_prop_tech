@@ -153,22 +153,27 @@ public class VisitaService {
         return visitasRepository.findByCodigo(codigoVisita);
     }
 
+    @Transactional(readOnly = true)
     public DynamicArrayList<Visita> listVisits() {
         return visitasRepository.findAll();
     }
 
+    @Transactional(readOnly = true)
     public DynamicArrayList<Visita> listVisitsByClient(String clienteId) {
         return visitasRepository.findByClienteId(clienteId);
     }
 
+    @Transactional(readOnly = true)
     public DynamicArrayList<Visita> listVisitsByProperty(String inmuebleCodigo) {
         return visitasRepository.findByInmuebleCodigo(inmuebleCodigo);
     }
 
+    @Transactional(readOnly = true)
     public DynamicArrayList<Visita> listVisitsByAdvisor(String asesorId) {
         return visitasRepository.findByAsesorId(asesorId);
     }
 
+    @Transactional(readOnly = true)
     public DynamicArrayList<Visita> listVisitsByStatus(EstadoVisita estado) {
         return visitasRepository.findByEstado(estado);
     }

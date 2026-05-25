@@ -7,6 +7,7 @@ function InmueblesTable({ data, onEdit, onDelete }) {
             <thead>
             <tr>
                 <th>Código</th>
+                <th>Imagen</th>
                 <th>Tipo / Finalidad</th>
                 <th>Ubicación</th>
                 <th>Precio</th>
@@ -19,18 +20,27 @@ function InmueblesTable({ data, onEdit, onDelete }) {
             <tbody>
             {data.length === 0 ? (
                 <tr>
-                    <td colSpan="8" className="table-empty-row">No hay inmuebles registrados.</td>
+                    <td colSpan="9" className="table-empty-row">No hay inmuebles registrados.</td>
                 </tr>
             ) : (
                 data.map((inm) => (
                     <tr key={inm.codigo}>
                         <td><strong>{inm.codigo}</strong></td>
                         <td>
+                            <div className="table-property-image">
+                                {(inm.imagenes?.[0] || inm.imagen) ? (
+                                    <img src={inm.imagenes?.[0] || inm.imagen} alt={inm.direccionBarrio || inm.direccion} />
+                                ) : (
+                                    <span>Sin imagen</span>
+                                )}
+                            </div>
+                        </td>
+                        <td>
                                 <span className={`badge-type ${inm.finalidad?.toLowerCase()}`}>
                                     {inm.tipoInmueble} ({inm.finalidad})
                                 </span>
                         </td>
-                        <td>{inm.direccion}, {inm.barrio} ({inm.ciudad})</td>
+                        <td>{inm.direccionBarrio || inm.direccion}, {inm.ciudad} {inm.departamento ? `(${inm.departamento})` : ''}<br /><small>{inm.zona}</small></td>
                         <td>${Number(inm.precio).toLocaleString()}</td>
                         <td>{inm.area}m² | {inm.habitaciones} Hab | {inm.banos} Baños</td>
                         <td>{inm.estadoInmueble} / <span className="status-active">{inm.disponibilidad}</span></td>
