@@ -52,7 +52,7 @@ public class InmuebleController {
 
     @PutMapping("/{codigo}/estado")
     public InmuebleResponse actualizarEstado(@PathVariable String codigo, @RequestBody EstadoInmuebleRequest request) {
-        return inmuebleService.actualizarEstadoInmueble(codigo, request.estado());
+        return inmuebleService.actualizarEstadoInmueble(codigo, request);
     }
 
     @DeleteMapping("/{codigo}")

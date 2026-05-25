@@ -183,6 +183,15 @@ public class ClienteService {
                     throw new IllegalArgumentException("Ya existe un cliente con el email: " + request.email());
                 });
 
+        boolean primerCompletado = clienteExistente.getPrimerInicioCompletado() != null && clienteExistente.getPrimerInicioCompletado();
+        if (!primerCompletado) {
+            if (request.tipoCliente() != null || request.zonaInteres() != null || request.presupuesto() != null
+                    || request.tipoInmuebleDeseado() != null || request.numeroHabitacionesDeseadas() > 0
+                    || request.estadoBusqueda() != null) {
+                primerCompletado = true;
+            }
+        }
+
         Cliente clienteActualizado = Cliente.builder()
                 .id(id)
                 .nombre(request.nombre())
@@ -198,6 +207,7 @@ public class ClienteService {
                 .tipoInmuebleDeseado(request.tipoInmuebleDeseado())
                 .numeroHabitacionesDeseadas(request.numeroHabitacionesDeseadas())
                 .estadoBusqueda(request.estadoBusqueda())
+                .primerInicioCompletado(primerCompletado)
                 .build();
 
         clienteRepository.update(clienteActualizado);
@@ -260,7 +270,8 @@ public class ClienteService {
                 cliente.getPresupuesto(),
                 cliente.getTipoInmuebleDeseado(),
                 cliente.getNumeroHabitacionesDeseadas(),
-                cliente.getEstadoBusqueda()
+                cliente.getEstadoBusqueda(),
+                cliente.getPrimerInicioCompletado()
         );
     }
 

@@ -15,6 +15,9 @@ import uniquindio.edu.co.inmobiliaria.models.enums.Zona;
 import uniquindio.edu.co.inmobiliaria.repositories.AsesorRepository;
 import uniquindio.edu.co.inmobiliaria.repositories.InmuebleRepository;
 import uniquindio.edu.co.inmobiliaria.repositories.VisitasRepository;
+import uniquindio.edu.co.inmobiliaria.services.OperacionService;
+import uniquindio.edu.co.inmobiliaria.repositories.ClienteRepository;
+import uniquindio.edu.co.inmobiliaria.models.entities.Venta;
 import uniquindio.edu.co.inmobiliaria.structures.DynamicArrayList;
 import uniquindio.edu.co.inmobiliaria.structures.SinglyLinkedList;
 
@@ -28,15 +31,21 @@ public class InmuebleService {
     private final AsesorRepository asesorRepository;
     private final VisitasRepository visitasRepository;
     private final ComportamientoService comportamientoService;
+    private final OperacionService operacionService;
+    private final ClienteRepository clienteRepository;
 
     public InmuebleService(InmuebleRepository inmuebleRepository,
                            AsesorRepository asesorRepository,
                            VisitasRepository visitasRepository,
-                           ComportamientoService comportamientoService) {
+                           ComportamientoService comportamientoService,
+                           OperacionService operacionService,
+                           ClienteRepository clienteRepository) {
         this.inmuebleRepository = inmuebleRepository;
         this.asesorRepository = asesorRepository;
         this.visitasRepository = visitasRepository;
         this.comportamientoService = comportamientoService;
+        this.operacionService = operacionService;
+        this.clienteRepository = clienteRepository;
     }
 
 
@@ -44,7 +53,12 @@ public class InmuebleService {
         List<InmuebleResponse> respuesta = new ArrayList<>();
         List<Inmueble> inmuebles = inmuebleRepository.findAllConAsesor();
         for (int i = 0; i < inmuebles.size(); i++) {
-            respuesta.add(mapear(inmuebles.get(i)));
+            Inmueble inmueble = inmuebles.get(i);
+            // No mostrar inmuebles vendidos en el catálogo público
+            if (inmueble.getEstado() == Estado.VENDIDO) {
+                continue;
+            }
+            respuesta.add(mapear(inmueble));
         }
         return respuesta;
     }
@@ -74,6 +88,12 @@ public class InmuebleService {
 
         Inmueble inmuebleExistente = inmuebleRepository.findById(codigo)
                 .orElseThrow(() -> new IllegalArgumentException("No se encontró un inmueble con el código: " + codigo));
+
+        // No permitir modificaciones si ya fue vendido
+        if (inmuebleExistente.getEstado() == Estado.VENDIDO) {
+            throw new IllegalArgumentException("No se puede modificar un inmueble que ya fue vendido");
+        }
+
         double precioAnterior = inmuebleExistente.getPrecio();
 
         Inmueble inmuebleActualizado = construirInmueble(request, codigo);
@@ -116,20 +136,52 @@ public class InmuebleService {
         registrarCambioPrecioSiAplica(codigo, precioAnterior, precio);
     }
 
-    public InmuebleResponse actualizarEstadoInmueble(String codigo, Estado estado) {
-        if (estado == null) {
+    public InmuebleResponse actualizarEstadoInmueble(String codigo, uniquindio.edu.co.inmobiliaria.models.dto.EstadoInmuebleRequest request) {
+        if (request == null || request.estado() == null) {
             throw new IllegalArgumentException("El estado del inmueble es obligatorio");
         }
+        Estado estado = request.estado();
         Inmueble inmueble = inmuebleRepository.findById(codigo)
                 .orElseThrow(() -> new IllegalArgumentException("No se encontró un inmueble con el código: " + codigo));
+
+        // Si ya está vendido, no permitir cambios
+        if (inmueble.getEstado() == Estado.VENDIDO) {
+            throw new IllegalArgumentException("No se puede cambiar el estado de un inmueble ya vendido");
+        }
+
         Estado estadoAnterior = inmueble.getEstado();
         inmueble.setEstado(estado);
         inmuebleRepository.update(inmueble);
 
+        // Registrar cierre en asesor
         if (esCierre(estadoAnterior, estado) && inmueble.getAsesor() != null) {
             Asesor asesor = inmueble.getAsesor();
             asesor.setNumeroDeCierres((asesor.getNumeroDeCierres() != null ? asesor.getNumeroDeCierres() : 0) + 1);
             asesorRepository.update(asesor);
+        }
+
+        // Si el nuevo estado es VENDIDO y se enviaron detalles de la venta, crear la operación de venta
+        if (estado == Estado.VENDIDO && request.venta() != null) {
+            uniquindio.edu.co.inmobiliaria.models.dto.VentaRequest ventaReq = request.venta();
+            // Buscar comprador
+            var compradorOpt = clienteRepository.findById(ventaReq.clienteId());
+            if (compradorOpt.isEmpty()) {
+                throw new IllegalArgumentException("No se encontró el cliente comprador con id: " + ventaReq.clienteId());
+            }
+            var comprador = compradorOpt.get();
+
+            // Construir objeto Venta (subclase de Operacion)
+            Venta venta = Venta.builder()
+                    .codigo("VENTA-" + inmueble.getCodigo() + "-" + System.currentTimeMillis())
+                    .inmueble(inmueble)
+                    .cliente(comprador)
+                    .asesor(inmueble.getAsesor())
+                    .fecha(java.time.LocalDateTime.now())
+                    .valorAcordado(ventaReq.valorAcordado())
+                    .comision(ventaReq.comision())
+                    .build();
+
+            operacionService.registerSale(venta);
         }
 
         return mapear(inmueble);

@@ -16,6 +16,7 @@ public record ClienteResponse(
         Double presupuesto,
         TipoInmueble tipoInmuebleDeseado,
         int numeroHabitacionesDeseadas,
-        EstadoBusquedaCliente estadoBusqueda
+        EstadoBusquedaCliente estadoBusqueda,
+        Boolean primerInicioCompletado
 ) {
 }
