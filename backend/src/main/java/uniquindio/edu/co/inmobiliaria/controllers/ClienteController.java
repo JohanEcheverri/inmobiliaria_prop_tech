@@ -24,9 +24,11 @@ import java.util.List;
 public class ClienteController {
 
     private final ClienteService clienteService;
+    private final uniquindio.edu.co.inmobiliaria.services.InmuebleService inmuebleService;
 
-    public ClienteController(ClienteService clienteService) {
+    public ClienteController(ClienteService clienteService, uniquindio.edu.co.inmobiliaria.services.InmuebleService inmuebleService) {
         this.clienteService = clienteService;
+        this.inmuebleService = inmuebleService;
     }
 
     @GetMapping
@@ -53,6 +55,16 @@ public class ClienteController {
     @PutMapping("/{id}")
     public ClienteResponse actualizarCliente(@PathVariable String id, @RequestBody ClienteRequest request) {
         return clienteService.actualizarCliente(id, request);
+    }
+
+    @GetMapping("/{id}/recomendados")
+    public List<uniquindio.edu.co.inmobiliaria.models.dto.InmuebleResponse> recomendaciones(@PathVariable String id) {
+        var inmuebles = clienteService.recomendarInmueblesPorPreferencias(id);
+        List<uniquindio.edu.co.inmobiliaria.models.dto.InmuebleResponse> respuesta = new java.util.ArrayList<>();
+        for (int i = 0; i < inmuebles.size(); i++) {
+            respuesta.add(inmuebleService.mapear(inmuebles.get(i)));
+        }
+        return respuesta;
     }
 
     @DeleteMapping("/{id}")

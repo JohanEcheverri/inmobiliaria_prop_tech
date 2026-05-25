@@ -330,7 +330,7 @@ public class InmuebleService {
                 .orElseThrow(() -> new IllegalArgumentException("No se encontró un asesor con el id o email: " + asesorResponsable));
     }
 
-    private InmuebleResponse mapear(Inmueble inmueble) {
+    public InmuebleResponse mapear(Inmueble inmueble) {
         String ciudad = inmueble.getCiudad() != null ? inmueble.getCiudad().getNombre() : "";
         String departamento = inmueble.getCiudad() != null ? inmueble.getCiudad().getDepartamento() : "";
         String direccionBarrio = inmueble.getDireccionBarrio();

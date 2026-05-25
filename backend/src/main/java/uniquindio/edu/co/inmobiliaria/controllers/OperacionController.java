@@ -44,7 +44,47 @@ public class OperacionController {
 
     private List<PropiedadAdquiridaResponse> mapearPropiedades(DynamicArrayList<?> operaciones) {
         List<PropiedadAdquiridaResponse> respuesta = new ArrayList<>();
-        // Implementación de mapeo - será llenado según las necesidades
+        if (operaciones == null) {
+            return respuesta;
+        }
+        for (int i = 0; i < operaciones.size(); i++) {
+            Object obj = operaciones.get(i);
+            if (!(obj instanceof Venta)) {
+                continue;
+            }
+            Venta venta = (Venta) obj;
+            String codigo = venta.getInmueble() != null ? venta.getInmueble().getCodigo() : null;
+            String direccion = venta.getInmueble() != null ? venta.getInmueble().getDireccion() : null;
+            String ciudad = venta.getInmueble() != null && venta.getInmueble().getCiudad() != null ? venta.getInmueble().getCiudad().getNombre() : null;
+            String zona = venta.getInmueble() != null && venta.getInmueble().getBarrio() != null ? venta.getInmueble().getBarrio().getZona().name() : null;
+            String tipoInmueble = venta.getInmueble() != null && venta.getInmueble().getTipoInmueble() != null ? venta.getInmueble().getTipoInmueble().name() : null;
+            String finalidad = venta.getInmueble() != null && venta.getInmueble().getFinalidad() != null ? venta.getInmueble().getFinalidad().name() : null;
+            double precio = venta.getInmueble() != null ? venta.getInmueble().getPrecio() : 0;
+            double area = venta.getInmueble() != null ? venta.getInmueble().getArea() : 0;
+            int habitaciones = venta.getInmueble() != null ? venta.getInmueble().getNumeroHabitaciones() : 0;
+            int banios = venta.getInmueble() != null ? venta.getInmueble().getNumeroBanios() : 0;
+            String asesorNombre = venta.getAsesor() != null ? venta.getAsesor().getNombre() : null;
+            double comision = venta.getComision();
+            double valorAcordado = venta.getValorAcordado();
+            java.time.LocalDateTime fechaCompra = venta.getFecha();
+
+            respuesta.add(new PropiedadAdquiridaResponse(
+                    codigo,
+                    direccion,
+                    ciudad,
+                    zona,
+                    tipoInmueble,
+                    finalidad,
+                    precio,
+                    area,
+                    habitaciones,
+                    banios,
+                    asesorNombre,
+                    comision,
+                    valorAcordado,
+                    fechaCompra
+            ));
+        }
         return respuesta;
     }
 }
