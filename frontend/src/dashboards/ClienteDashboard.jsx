@@ -179,9 +179,11 @@ function ClienteDashboard() {
         });
     };
 
-    const registrarEvento = async (inmuebleCodigo, tipoEvento, mensaje) => {
+    // registrarEvento acepta un cuarto argumento opcional `shouldFetchHistorial` (default true).
+    // Cuando se abre detalle justo después de un toggle, pasar false para evitar sobrescribir el estado optimista.
+    const registrarEvento = async (inmuebleCodigo, tipoEvento, mensaje, shouldFetchHistorial = true) => {
         try {
-            const eventoFinal = tipoEvento; // now explicit from caller
+            const eventoFinal = tipoEvento; // explicit from caller
             const mensajeFinal = mensaje || (eventoFinal === 'FAVORITO' ? 'Inmueble marcado como favorito' : eventoFinal === 'DESMARCADO' ? 'Inmueble quitado de favoritos' : 'Interacción registrada');
 
             const response = await fetch(`${API_BASE_URL}/historial`, {
@@ -196,7 +198,9 @@ function ClienteDashboard() {
 
             if (!response.ok) throw new Error('No se pudo registrar la interaccion');
 
-            await fetchHistorial(session.id);
+            if (shouldFetchHistorial) {
+                await fetchHistorial(session.id);
+            }
             setStatusMessage(mensajeFinal);
 
         } catch (error) {
@@ -208,7 +212,8 @@ function ClienteDashboard() {
         setSelectedInmueble(inmueble);
         setCarouselIndex(0);
         setSeccionActiva('detalle');
-        await registrarEvento(inmueble.codigo, 'CONSULTA', `Consulta registrada para ${inmueble.codigo}`);
+        // No refrescar historial aquí para no sobrescribir estado optimista de favoritos
+        registrarEvento(inmueble.codigo, 'CONSULTA', `Consulta registrada para ${inmueble.codigo}`, false);
     };
 
     const agendarVisita = async (event) => {
