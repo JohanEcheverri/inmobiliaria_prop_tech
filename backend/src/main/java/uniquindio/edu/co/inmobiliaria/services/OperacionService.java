@@ -138,19 +138,6 @@ public class OperacionService {
         return operacionRepository.findByCodigo(codigo);
     }
 
-    // Admin helper to delete operaciones relacionadas con un inmueble (used for tests/cleanup)
-    public void eliminarOperacionesPorInmueble(String codigoInmueble) {
-        if (codigoInmueble == null || codigoInmueble.isBlank()) {
-            return;
-        }
-        var operaciones = operacionRepository.findByCodigoInmueble(codigoInmueble);
-        for (int i = 0; i < operaciones.size(); i++) {
-            var op = operaciones.get(i);
-            if (op != null && op.getCodigo() != null) {
-                operacionRepository.deleteByCodigo(op.getCodigo());
-            }
-        }
-    }
 
     public DynamicArrayList<Operacion> listarOperacionesCliente(String clienteId) {
         if (clienteId == null || clienteId.isBlank()) {
