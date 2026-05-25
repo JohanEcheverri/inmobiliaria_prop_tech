@@ -145,6 +145,24 @@ public class OperacionService {
         return operacionRepository.findByIdCliente(clienteId);
     }
 
+    /**
+     * Obtener ventas (propiedades adquiridas) por cliente.
+     */
+    public DynamicArrayList<Venta> obtenerPropiedadesAdquiridasCliente(String clienteId) {
+        DynamicArrayList<Venta> resultado = new DynamicArrayList<>();
+        if (clienteId == null || clienteId.isBlank()) {
+            return resultado;
+        }
+        DynamicArrayList<Venta> ventas = operacionRepository.findVentas();
+        for (int i = 0; i < ventas.size(); i++) {
+            Venta v = ventas.get(i);
+            if (v.getCliente() != null && clienteId.equals(v.getCliente().getId())) {
+                resultado.add(v);
+            }
+        }
+        return resultado;
+    }
+
     public DynamicArrayList<Operacion> consultarOperacionesPorZona(Zona zona) {
         DynamicArrayList<Operacion> resultado = new DynamicArrayList<>();
         if (zona == null) {
