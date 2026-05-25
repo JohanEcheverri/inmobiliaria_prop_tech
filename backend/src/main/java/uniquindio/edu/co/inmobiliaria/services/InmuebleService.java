@@ -63,6 +63,97 @@ public class InmuebleService {
         return respuesta;
     }
 
+    /**
+     * Buscar inmuebles por preferencias o filtros simples. Si se pasa clienteId se usan
+     * las preferencias del cliente como valores por defecto cuando los parámetros son nulos.
+     */
+    public List<InmuebleResponse> buscarPorPreferencias(String zonaStr,
+                                                        String tipoStr,
+                                                        Double minPrecio,
+                                                        Double maxPrecio,
+                                                        Integer minHabitaciones,
+                                                        Integer maxHabitaciones,
+                                                        Double presupuesto,
+                                                        String clienteId) {
+        Zona zona = null;
+        TipoInmueble tipo = null;
+
+        if (!estaVacio(zonaStr)) {
+            try {
+                zona = parseEnum(Zona.class, zonaStr, "zona");
+            } catch (IllegalArgumentException ignored) {
+            }
+        }
+        if (!estaVacio(tipoStr)) {
+            try {
+                tipo = parseEnum(TipoInmueble.class, tipoStr, "tipo");
+            } catch (IllegalArgumentException ignored) {
+            }
+        }
+
+        if (!estaVacio(clienteId)) {
+            clienteRepository.findById(clienteId).ifPresent(cliente -> {
+                if (zona == null && cliente.getZonaInteres() != null) {
+                    // use cliente zona
+                    // we cannot assign to outer variable from lambda, so handle below
+                }
+            });
+        }
+
+        // Because of lambda limitation, re-fetch client outside
+        if ((zona == null || tipo == null || (presupuesto == null && (minPrecio == null && maxPrecio == null))) && !estaVacio(clienteId)) {
+            var clienteOpt = clienteRepository.findById(clienteId);
+            if (clienteOpt.isPresent()) {
+                var cliente = clienteOpt.get();
+                if (zona == null) {
+                    zona = cliente.getZonaInteres();
+                }
+                if (tipo == null) {
+                    tipo = cliente.getTipoInmuebleDeseado();
+                }
+                if (presupuesto == null && cliente.getPresupuesto() != null && cliente.getPresupuesto() > 0) {
+                    // Use presupuesto as an upper bound if min/max not provided
+                    if (maxPrecio == null) {
+                        maxPrecio = cliente.getPresupuesto();
+                    }
+                }
+                if (minHabitaciones == null && cliente.getNumeroHabitacionesDeseadas() > 0) {
+                    minHabitaciones = cliente.getNumeroHabitacionesDeseadas();
+                }
+            }
+        }
+
+        List<InmuebleResponse> respuesta = new ArrayList<>();
+        List<Inmueble> inmuebles = inmuebleRepository.findAllConAsesor();
+        for (int i = 0; i < inmuebles.size(); i++) {
+            Inmueble inmueble = inmuebles.get(i);
+            if (inmueble.getEstado() == Estado.VENDIDO) {
+                continue;
+            }
+            if (zona != null && inmueble.getZona() != null && !zona.equals(inmueble.getZona())) {
+                continue;
+            }
+            if (tipo != null && inmueble.getTipoInmueble() != null && !tipo.equals(inmueble.getTipoInmueble())) {
+                continue;
+            }
+            if (minPrecio != null && inmueble.getPrecio() < minPrecio) {
+                continue;
+            }
+            if (maxPrecio != null && inmueble.getPrecio() > maxPrecio) {
+                continue;
+            }
+            if (minHabitaciones != null && inmueble.getNumeroHabitaciones() < minHabitaciones) {
+                continue;
+            }
+            if (maxHabitaciones != null && inmueble.getNumeroHabitaciones() > maxHabitaciones) {
+                continue;
+            }
+            respuesta.add(mapear(inmueble));
+        }
+
+        return respuesta;
+    }
+
     public InmuebleResponse obtenerInmueble(String codigo) {
         Inmueble inmueble = inmuebleRepository.findById(codigo)
                 .orElseThrow(() -> new IllegalArgumentException("No se encontró un inmueble con el código: " + codigo));

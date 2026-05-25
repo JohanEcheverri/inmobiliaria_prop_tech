@@ -34,6 +34,19 @@ public class InmuebleController {
         return inmuebleService.listarInmuebles();
     }
 
+    @GetMapping("/search")
+    public List<InmuebleResponse> buscarInmuebles(
+            @org.springframework.web.bind.annotation.RequestParam(required = false) String zona,
+            @org.springframework.web.bind.annotation.RequestParam(required = false) String tipo,
+            @org.springframework.web.bind.annotation.RequestParam(required = false) Double minPrecio,
+            @org.springframework.web.bind.annotation.RequestParam(required = false) Double maxPrecio,
+            @org.springframework.web.bind.annotation.RequestParam(required = false) Integer minHabitaciones,
+            @org.springframework.web.bind.annotation.RequestParam(required = false) Integer maxHabitaciones,
+            @org.springframework.web.bind.annotation.RequestParam(required = false) String clienteId
+    ) {
+        return inmuebleService.buscarPorPreferencias(zona, tipo, minPrecio, maxPrecio, minHabitaciones, maxHabitaciones, null, clienteId);
+    }
+
     @GetMapping("/{codigo}")
     public InmuebleResponse obtenerInmueble(@PathVariable String codigo) {
         return inmuebleService.obtenerInmueble(codigo);
