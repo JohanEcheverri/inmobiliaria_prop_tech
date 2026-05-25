@@ -5,12 +5,15 @@ export default function SearchBar({ onSearch, initialClienteId }) {
 
     const handleChange = (e) => {
         const { name, value } = e.target;
-        setFilters(prev => ({ ...prev, [name]: value }));
+        const next = { ...filters, [name]: value };
+        setFilters(next);
+        // Apply filter immediately on change
+        if (onSearch) onSearch({ ...next, clienteId: initialClienteId });
     };
 
     const submit = (e) => {
         e.preventDefault();
-        onSearch({ ...filters, clienteId: initialClienteId });
+        if (onSearch) onSearch({ ...filters, clienteId: initialClienteId });
     };
 
     return (

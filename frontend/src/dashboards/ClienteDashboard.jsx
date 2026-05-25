@@ -145,6 +145,15 @@ function ClienteDashboard() {
     }, [historial, inmuebles]);
 
     const favoriteCodes = useMemo(() => new Set(favoritos.map(inmueble => inmueble.codigo)), [favoritos]);
+
+    // localFavorites mantiene estado optimista y sincroniza con historial
+    const [localFavorites, setLocalFavorites] = useState(new Set());
+
+    // Mantener localFavorites sincronizado cuando cambie el historial o favoritos reales
+    useEffect(() => {
+        setLocalFavorites(new Set(favoritos.map(inm => inm.codigo)));
+    }, [favoritos]);
+
     const catalogoVisible = useMemo(
         () => showFavoritesOnly ? inmuebles.filter(inmueble => favoriteCodes.has(inmueble.codigo)) : inmuebles,
         [favoriteCodes, inmuebles, showFavoritesOnly]
@@ -153,6 +162,12 @@ function ClienteDashboard() {
     const getImages = (inmueble) => inmueble?.imagenes?.length ? inmueble.imagenes : (inmueble?.imagen ? [inmueble.imagen] : []);
 
     const toggleFavorito = (inmuebleCodigo) => {
+        // Optimistic update of localFavorites so both buttons reflect change immediately
+        setLocalFavorites(prev => {
+            const next = new Set(prev);
+            if (next.has(inmuebleCodigo)) next.delete(inmuebleCodigo); else next.add(inmuebleCodigo);
+            return next;
+        });
         registrarEvento(inmuebleCodigo, 'FAVORITO', 'Favorito actualizado');
     };
 
@@ -259,9 +274,9 @@ function ClienteDashboard() {
             {catalogoVisible.map(inmueble => (
                 <article className="property-card" key={inmueble.codigo}>
                     <button
-                        className={`favorite-star ${favoriteCodes.has(inmueble.codigo) ? 'active' : ''}`}
+                        className={`favorite-star ${localFavorites.has(inmueble.codigo) ? 'active' : ''}`}
                         onClick={() => toggleFavorito(inmueble.codigo)}
-                        aria-label={favoriteCodes.has(inmueble.codigo) ? "Quitar de favoritos" : "Marcar favorito"}
+                        aria-label={localFavorites.has(inmueble.codigo) ? "Quitar de favoritos" : "Marcar favorito"}
                     >
                         ★
                     </button>
@@ -322,7 +337,7 @@ function ClienteDashboard() {
                 </div>
                 <div className="inline-actions">
                     <button onClick={() => toggleFavorito(selectedInmueble.codigo)}>
-                        {favoriteCodes.has(selectedInmueble.codigo) ? 'Quitar de favoritos' : 'Marcar favorito'}
+                        {localFavorites.has(selectedInmueble.codigo) ? 'Quitar de favoritos' : 'Marcar favorito'}
                     </button>
                     <button onClick={() => registrarEvento(selectedInmueble.codigo, 'NEGOCIANDO', 'Intencion de compra/arriendo registrada')}>Registrar intención</button>
                 </div>
