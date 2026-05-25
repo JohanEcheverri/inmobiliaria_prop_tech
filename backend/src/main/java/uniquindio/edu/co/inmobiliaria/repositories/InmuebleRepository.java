@@ -171,7 +171,8 @@ public class InmuebleRepository {
     }
 
     private void cargarDesdeBaseDeDatos() {
-        inmuebleJpaRepository.findAll().forEach(this::agregarAIndices);
+        // Use join-fetch to initialize asesor and avoid LazyInitializationException on detached entities
+        inmuebleJpaRepository.findAllConAsesor().forEach(this::agregarAIndices);
     }
 
     private void agregarAIndices(Inmueble inmueble) {
