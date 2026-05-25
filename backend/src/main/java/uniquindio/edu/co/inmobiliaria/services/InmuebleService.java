@@ -91,14 +91,6 @@ public class InmuebleService {
             }
         }
 
-        if (!estaVacio(clienteId)) {
-            clienteRepository.findById(clienteId).ifPresent(cliente -> {
-                if (zona == null && cliente.getZonaInteres() != null) {
-                    // use cliente zona
-                    // we cannot assign to outer variable from lambda, so handle below
-                }
-            });
-        }
 
         // Because of lambda limitation, re-fetch client outside
         if ((zona == null || tipo == null || (presupuesto == null && (minPrecio == null && maxPrecio == null))) && !estaVacio(clienteId)) {
