@@ -4,6 +4,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import uniquindio.edu.co.inmobiliaria.structures.DynamicArrayList;
+
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -38,24 +41,35 @@ public class ComportamientoController {
      * Consulta el historial completo de comportamientos atípicos detectados.
      */
     @GetMapping("/registro")
-    public ResponseEntity<DynamicArrayList<RegistroComportamientoAtipico>> obtenerTodos() {
-        return ResponseEntity.ok(comportamientoService.obtenerTodosRegistros());
+    public ResponseEntity<List<RegistroComportamientoAtipico>> obtenerTodos() {
+        DynamicArrayList<RegistroComportamientoAtipico> registros = comportamientoService.obtenerTodosRegistros();
+        return ResponseEntity.ok(convertirALista(registros));
     }
 
     /**
      * Filtra los comportamientos atípicos por su nivel de atención.
      */
     @GetMapping("/registro/nivel/{nivel}")
-    public ResponseEntity<DynamicArrayList<RegistroComportamientoAtipico>> obtenerPorNivel(@PathVariable NivelAtencion nivel) {
-        return ResponseEntity.ok(comportamientoService.obtenerRegistrosPorNivel(nivel));
+    public ResponseEntity<List<RegistroComportamientoAtipico>> obtenerPorNivel(@PathVariable NivelAtencion nivel) {
+        DynamicArrayList<RegistroComportamientoAtipico> registros = comportamientoService.obtenerRegistrosPorNivel(nivel);
+        return ResponseEntity.ok(convertirALista(registros));
     }
 
     /**
      * Consulta los eventos de comportamiento atípico asociados a un inmueble en específico.
      */
     @GetMapping("/registro/inmueble/{codigo}")
-    public ResponseEntity<DynamicArrayList<RegistroComportamientoAtipico>> obtenerPorInmueble(@PathVariable String codigo) {
-        return ResponseEntity.ok(comportamientoService.obtenerRegistrosPorInmueble(codigo));
+    public ResponseEntity<List<RegistroComportamientoAtipico>> obtenerPorInmueble(@PathVariable String codigo) {
+        DynamicArrayList<RegistroComportamientoAtipico> registros = comportamientoService.obtenerRegistrosPorInmueble(codigo);
+        return ResponseEntity.ok(convertirALista(registros));
+    }
+
+    private List<RegistroComportamientoAtipico> convertirALista(DynamicArrayList<RegistroComportamientoAtipico> registros) {
+        List<RegistroComportamientoAtipico> lista = new ArrayList<>();
+        for (int i = 0; i < registros.size(); i++) {
+            lista.add(registros.get(i));
+        }
+        return lista;
     }
 
     /**

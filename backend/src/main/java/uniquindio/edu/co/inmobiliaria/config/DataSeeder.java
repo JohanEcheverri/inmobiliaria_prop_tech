@@ -3,6 +3,7 @@ package uniquindio.edu.co.inmobiliaria.config;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import uniquindio.edu.co.inmobiliaria.models.dto.ClienteRequest;
 import uniquindio.edu.co.inmobiliaria.models.entities.Administrador;
 import uniquindio.edu.co.inmobiliaria.models.entities.Asesor;
@@ -13,14 +14,19 @@ import uniquindio.edu.co.inmobiliaria.models.enums.Zona;
 import uniquindio.edu.co.inmobiliaria.repositories.AdministradorRepository;
 import uniquindio.edu.co.inmobiliaria.repositories.AsesorRepository;
 import uniquindio.edu.co.inmobiliaria.repositories.ClienteRepository;
+import uniquindio.edu.co.inmobiliaria.services.AsesorService;
 import uniquindio.edu.co.inmobiliaria.services.ClienteService;
-/**
+
 @Configuration
 public class DataSeeder {
 
     @Bean
-    CommandLineRunner seedLoginUsers(ClienteRepository clienteRepository, ClienteService clienteService,
-            AsesorRepository asesorRepository, AdministradorRepository administradorRepository) {
+    CommandLineRunner seedLoginUsers(ClienteRepository clienteRepository,
+                                     ClienteService clienteService,
+                                     AsesorRepository asesorRepository,
+                                     AsesorService asesorService,
+                                     AdministradorRepository administradorRepository,
+                                     PasswordEncoder passwordEncoder) {
         return args -> {
             if (clienteRepository.findById("3030789").isEmpty()) {
                 clienteService.registrarCliente(new ClienteRequest(
@@ -39,8 +45,8 @@ public class DataSeeder {
                 ));
             }
 
-            if (asesorRepository.findById("10949001") == null) {
-                asesorRepository.save(new Asesor(
+            if (asesorRepository.findById("10949001").isEmpty()) {
+                asesorService.registrarAsesor(new Asesor(
                         "Ana Asesora",
                         "10949001",
                         "ana.asesora@inmobiliaria.local",
@@ -52,18 +58,16 @@ public class DataSeeder {
                 ));
             }
 
-            if (administradorRepository.findById("10000001") == null) {
+            if (administradorRepository.findById("10000001").isEmpty()) {
                 administradorRepository.save(new Administrador(
                         "Admin DomusTech",
                         "10000001",
                         "admin@inmobiliaria.local",
                         "3000000000",
-                        "admin123",
+                        passwordEncoder.encode("admin123"),
                         null
                 ));
             }
         };
     }
 }
-
- */

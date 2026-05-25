@@ -5,6 +5,7 @@ import Register from './Register';
 import AdminDashboard from './dashboards/AdminDashboard';
 import AsesorDashboard from './dashboards/AsesorDashboard';
 import ClienteDashboard from './dashboards/ClienteDashboard';
+import ConfiguracionCuenta from './ConfiguracionCuenta';
 
 function App() {
     return (
@@ -23,6 +24,7 @@ function App() {
             <Route path="/admin-dashboard" element={<AdminDashboard />} />
             <Route path="/asesor-dashboard" element={<AsesorDashboard />} />
             <Route path="/asesor-panel" element={<AsesorDashboard />} />
+            <Route path="/configuracion-cuenta" element={<ConfiguracionCuenta />} />
             <Route path="/catalogo" element={<ClienteDashboard />} />
         </Routes>
     );

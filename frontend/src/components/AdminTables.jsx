@@ -26,9 +26,9 @@ function InmueblesTable({ data, onEdit, onDelete }) {
                     <tr key={inm.codigo}>
                         <td><strong>{inm.codigo}</strong></td>
                         <td>
-                                <span className={`badge-type ${inm.finalidad?.toLowerCase()}`}>
-                                    {inm.tipoInmueble} ({inm.finalidad})
-                                </span>
+                            <span className={`badge-type ${inm.finalidad?.toLowerCase()}`}>
+                                {inm.tipoInmueble} ({inm.finalidad})
+                            </span>
                         </td>
                         <td>{inm.direccion}, {inm.barrio} ({inm.ciudad})</td>
                         <td>${Number(inm.precio).toLocaleString()}</td>
@@ -74,7 +74,6 @@ function ClientesTable({ data, onEdit, onDelete }) {
                 </tr>
             ) : (
                 data.map((item) => (
-                    /* 1. SE CAMBIA item.identificacion POR item.id */
                     <tr key={item.id}>
                         <td>
                             <div className="table-avatar-preview">
@@ -85,17 +84,14 @@ function ClientesTable({ data, onEdit, onDelete }) {
                                 )}
                             </div>
                         </td>
-                        {/* 2. SE CAMBIA item.identificacion POR item.id */}
                         <td>{item.id}</td>
                         <td><strong>{item.nombre}</strong></td>
-                        {/* 3. SE CAMBIA item.correo POR item.email */}
                         <td>{item.email}</td>
                         <td>{item.telefono}</td>
                         <td>
                             <button className="btn-action-svg-edit" onClick={() => onEdit(item)} title="Editar Cliente">
                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="table-icon-svg"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                             </button>
-                            {/* 4. SE ENVÍA item.id EN LUGAR DE item.identificacion */}
                             <button className="btn-action-svg-delete" onClick={() => onDelete(item.id, 'clientes')} title="Eliminar Cliente">
                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="table-icon-svg"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
                             </button>
@@ -147,11 +143,9 @@ function AsesoresTable({ data, onEdit, onDelete }) {
                         <td>{item.email}</td>
                         <td>{item.telefono}</td>
                         <td>
-                            <div className="flex flex-col gap-1">
-                                <span className="badge-specialty-zone">
-                                    {item.especialidad} / {item.zonaAsignada}
-                                </span>
-                            </div>
+                            <span className="badge-specialty-zone">
+                                {item.especialidad} / {item.zonaAsignada}
+                            </span>
                         </td>
                         <td>
                             <button className="btn-action-svg-edit" onClick={() => onEdit(item)} title="Editar Asesor">
@@ -170,9 +164,251 @@ function AsesoresTable({ data, onEdit, onDelete }) {
 }
 
 // ==========================================================================
-// 4. ENRUTADOR PRINCIPAL (AdminTables)
+// 4. COMPONENTE: TABLA DE ALERTAS
 // ==========================================================================
-function AdminTables({ seccion, data = [], onEdit, onDelete }) {
+function AlertasTable({ data, onAtender, onDelete }) {
+    const getPriorityClass = (prioridad) => {
+        if (prioridad === 'ALTA') return 'badge-priority-alta';
+        if (prioridad === 'MEDIA') return 'badge-priority-media';
+        return 'badge-priority-baja';
+    };
+
+    return (
+        <table className="domustech-admin-table">
+            <thead>
+            <tr>
+                <th>Prioridad</th>
+                <th>Tipo</th>
+                <th>Título</th>
+                <th>Descripción</th>
+                <th>Referencia</th>
+                <th>Generada</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+            </tr>
+            </thead>
+            <tbody>
+            {data.length === 0 ? (
+                <tr>
+                    <td colSpan="8" className="table-empty-row">No hay alertas para mostrar.</td>
+                </tr>
+            ) : (
+                data.map((alerta) => (
+                    <tr key={alerta.codigo}>
+                        <td>
+                            <span className={`badge-priority ${getPriorityClass(alerta.prioridad)}`}>
+                                {alerta.prioridad}
+                            </span>
+                        </td>
+                        <td>{alerta.tipo}</td>
+                        <td><strong>{alerta.titulo}</strong></td>
+                        <td>{alerta.descripcion}</td>
+                        <td>{alerta.referenciaId || 'N/A'}</td>
+                        <td>{new Date(alerta.fechaGeneracion).toLocaleString()}</td>
+                        <td>{alerta.atendida ? 'Atendida' : 'Pendiente'}</td>
+                        <td className="table-action-group">
+                            {!alerta.atendida && (
+                                <button className="btn-action-svg-edit" onClick={() => onAtender(alerta.codigo)} title="Atender Alerta">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="table-icon-svg"><path d="M20 6L9 17l-5-5"></path></svg>
+                                </button>
+                            )}
+                            <button className="btn-action-svg-delete" onClick={() => onDelete(alerta.codigo, 'alertas')} title="Eliminar Alerta">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="table-icon-svg"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                            </button>
+                        </td>
+                    </tr>
+                ))
+            )}
+            </tbody>
+        </table>
+    );
+}
+
+// ==========================================================================
+// 5. COMPONENTE: TABLA DE COMPORTAMIENTO
+// ==========================================================================
+function ComportamientoTable({ data, onResolver }) {
+    const getNivelClass = (nivel) => {
+        if (nivel === 'CRITICO') return 'badge-level-critico';
+        if (nivel === 'ALTO') return 'badge-level-alto';
+        if (nivel === 'MEDIO') return 'badge-level-medio';
+        return 'badge-level-bajo';
+    };
+
+    return (
+        <table className="domustech-admin-table">
+            <thead>
+            <tr>
+                <th>ID</th>
+                <th>Tipo</th>
+                <th>Nivel</th>
+                <th>Descripción</th>
+                <th>Referencia</th>
+                <th>Detectado</th>
+                <th>Resuelto</th>
+                <th>Acciones</th>
+            </tr>
+            </thead>
+            <tbody>
+            {data.length === 0 ? (
+                <tr>
+                    <td colSpan="8" className="table-empty-row">No hay registros de comportamiento.</td>
+                </tr>
+            ) : (
+                data.map((item) => (
+                    <tr key={item.id}>
+                        <td>{item.id}</td>
+                        <td>{item.tipoComportamiento}</td>
+                        <td><span className={`badge-level ${getNivelClass(item.nivelAtencion)}`}>{item.nivelAtencion}</span></td>
+                        <td>{item.descripcion}</td>
+                        <td>{item.referenciaId || 'N/A'}</td>
+                        <td>{new Date(item.fechaDeteccion).toLocaleString()}</td>
+                        <td>{item.resuelto ? 'Sí' : 'No'}</td>
+                        <td className="table-action-group">
+                            {!item.resuelto && (
+                                <button className="btn-action-svg-edit" onClick={() => onResolver(item.id)} title="Resolver Registro">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="table-icon-svg"><path d="M12 19l-7-7 7-7"></path><path d="M5 12h14"></path></svg>
+                                </button>
+                            )}
+                        </td>
+                    </tr>
+                ))
+            )}
+            </tbody>
+        </table>
+    );
+}
+
+// ==========================================================================
+// 6. COMPONENTE: TABLA DE OPERACIONES (REPORTES)
+// ==========================================================================
+function OperacionesTable({ data, isLoading }) {
+    const getEstadoClass = (estado) => {
+        if (estado === 'COMPLETADA') return 'badge-level-bajo';
+        if (estado === 'EN_PROCESO') return 'badge-level-medio';
+        return 'badge-level-critico';
+    };
+
+    if (isLoading) {
+        return (
+            <table className="domustech-admin-table">
+                <tbody>
+                    <tr><td className="table-empty-row">Cargando datos del reporte...</td></tr>
+                </tbody>
+            </table>
+        );
+    }
+
+    return (
+        <table className="domustech-admin-table">
+            <thead>
+            <tr>
+                <th>Código</th>
+                <th>Inmueble</th>
+                <th>Cliente</th>
+                <th>Asesor</th>
+                <th>Valor Acordado</th>
+                <th>Comisión</th>
+                <th>Estado</th>
+                <th>Fecha</th>
+            </tr>
+            </thead>
+            <tbody>
+            {data.length === 0 ? (
+                <tr>
+                    <td colSpan="8" className="table-empty-row">No se encontraron operaciones con los filtros aplicados.</td>
+                </tr>
+            ) : (
+                data.map((op) => (
+                    <tr key={op.codigo}>
+                        <td><strong>{op.codigo}</strong></td>
+                        <td>{op.inmueble ? `${op.inmueble.tipoInmueble || ''} - ${op.inmueble.direccion || ''}` : 'N/A'}</td>
+                        <td>{op.cliente ? op.cliente.nombre : 'N/A'}</td>
+                        <td>{op.asesor ? op.asesor.nombre : 'N/A'}</td>
+                        <td>${Number(op.valorAcordado || 0).toLocaleString()}</td>
+                        <td>${Number(op.comision || 0).toLocaleString()}</td>
+                        <td>
+                            <span className={`badge-level ${getEstadoClass(op.estado)}`}>
+                                {op.estado}
+                            </span>
+                        </td>
+                        <td>{op.fecha ? new Date(op.fecha).toLocaleString() : 'N/A'}</td>
+                    </tr>
+                ))
+            )}
+            </tbody>
+        </table>
+    );
+}
+
+// ==========================================================================
+// 7. COMPONENTE: TABLA DE VISITAS (REPORTES)
+// ==========================================================================
+function VisitasTable({ data, isLoading }) {
+    const getEstadoVisitaClass = (estado) => {
+        if (estado === 'REALIZADA') return 'badge-level-bajo';
+        if (estado === 'CONFIRMADA') return 'badge-level-medio';
+        if (estado === 'PENDIENTE') return 'badge-priority-media';
+        if (estado === 'REPROGRAMADA') return 'badge-level-alto';
+        return 'badge-level-critico';
+    };
+
+    if (isLoading) {
+        return (
+            <table className="domustech-admin-table">
+                <tbody>
+                    <tr><td className="table-empty-row">Cargando datos del reporte...</td></tr>
+                </tbody>
+            </table>
+        );
+    }
+
+    return (
+        <table className="domustech-admin-table">
+            <thead>
+            <tr>
+                <th>Código</th>
+                <th>Inmueble</th>
+                <th>Cliente</th>
+                <th>Asesor</th>
+                <th>Fecha</th>
+                <th>Hora</th>
+                <th>Estado</th>
+                <th>Observaciones</th>
+            </tr>
+            </thead>
+            <tbody>
+            {data.length === 0 ? (
+                <tr>
+                    <td colSpan="8" className="table-empty-row">No se encontraron visitas con los filtros aplicados.</td>
+                </tr>
+            ) : (
+                data.map((visita) => (
+                    <tr key={visita.codigo}>
+                        <td><strong>{visita.codigo}</strong></td>
+                        <td>{visita.inmueble ? `${visita.inmueble.tipoInmueble || ''} - ${visita.inmueble.direccion || ''}` : 'N/A'}</td>
+                        <td>{visita.cliente ? visita.cliente.nombre : 'N/A'}</td>
+                        <td>{visita.asesotAsignado ? visita.asesotAsignado.nombre : 'N/A'}</td>
+                        <td>{visita.fecha || 'N/A'}</td>
+                        <td>{visita.hora || 'N/A'}</td>
+                        <td>
+                            <span className={`badge-level ${getEstadoVisitaClass(visita.estado)}`}>
+                                {visita.estado}
+                            </span>
+                        </td>
+                        <td>{visita.observaciones || '—'}</td>
+                    </tr>
+                ))
+            )}
+            </tbody>
+        </table>
+    );
+}
+
+// ==========================================================================
+// 8. ENRUTADOR PRINCIPAL (AdminTables)
+// ==========================================================================
+function AdminTables({ seccion, data = [], onEdit, onDelete, onAtender, onResolver, reporteSubView, isLoadingReporte }) {
     switch (seccion) {
         case 'inmuebles':
             return <InmueblesTable data={data} onEdit={onEdit} onDelete={onDelete} />;
@@ -180,9 +416,19 @@ function AdminTables({ seccion, data = [], onEdit, onDelete }) {
             return <ClientesTable data={data} onEdit={onEdit} onDelete={onDelete} />;
         case 'asesores':
             return <AsesoresTable data={data} onEdit={onEdit} onDelete={onDelete} />;
+        case 'alertas':
+            return <AlertasTable data={data} onAtender={onAtender} onDelete={onDelete} />;
+        case 'comportamiento':
+            return <ComportamientoTable data={data} onResolver={onResolver} />;
+        case 'reportes':
+            if (reporteSubView === 'visitas') {
+                return <VisitasTable data={data} isLoading={isLoadingReporte} />;
+            }
+            return <OperacionesTable data={data} isLoading={isLoadingReporte} />;
         default:
             return <div className="table-empty-row">Sección no válida</div>;
     }
 }
 
 export default AdminTables;
+

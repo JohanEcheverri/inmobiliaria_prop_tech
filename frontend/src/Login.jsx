@@ -3,6 +3,7 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import './App.css';
 import Layout from './components/Layout';
+import { apiUrl } from './api';
 
 function Login() {
     const [identificacion, setIdentificacion] = useState('');
@@ -16,7 +17,7 @@ function Login() {
         setError('');
 
         try {
-            const response = await axios.post('http://localhost:8080/api/auth/login', {
+            const response = await axios.post(apiUrl('/auth/login'), {
                 identificacion,
                 contrasenia
             });
@@ -35,7 +36,12 @@ function Login() {
             }
 
         } catch (err) {
-            setError(err.response?.data?.error || "Credenciales incorrectas");
+            if (!err.response) {
+                setError("No se pudo conectar con el servidor backend. Por favor, asegúrate de que el backend esté ejecutándose.");
+            } else {
+                const errorData = err.response?.data;
+                setError(errorData?.mensaje || errorData?.error || errorData || "Credenciales incorrectas");
+            }
         }
     };
 
