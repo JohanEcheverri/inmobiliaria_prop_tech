@@ -20,6 +20,7 @@ import uniquindio.edu.co.inmobiliaria.models.entities.Asesor;
 import uniquindio.edu.co.inmobiliaria.models.entities.Venta;
 import uniquindio.edu.co.inmobiliaria.models.enums.EstadoOperacion;
 import uniquindio.edu.co.inmobiliaria.structures.DynamicArrayList;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
