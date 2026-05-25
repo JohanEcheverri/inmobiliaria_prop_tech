@@ -1,10 +1,15 @@
 package uniquindio.edu.co.inmobiliaria.models.dto;
 
+import java.util.List;
+
 public record InmuebleRequest(
         String codigo,
         String direccion,
+        String direccionBarrio,
         String ciudad,
+        String departamento,
         String barrio,
+        String zona,
         String tipoInmueble,
         String finalidad,
         Double precio,
@@ -14,6 +19,7 @@ public record InmuebleRequest(
         String estadoInmueble,
         String disponibilidad,
         String asesorResponsable,
-        String imagen
+        String imagen,
+        List<String> imagenes
 ) {
 }

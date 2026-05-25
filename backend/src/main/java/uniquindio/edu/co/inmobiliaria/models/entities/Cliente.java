@@ -22,6 +22,10 @@ import lombok.experimental.SuperBuilder;
 
 public class Cliente extends Usuario{
 
+    /** Indica si el cliente ya completó el formulario de preferencias en su primer inicio */
+    @lombok.Builder.Default
+    private Boolean primerInicioCompletado = false;
+
     /** Si busca comprar o arrendar. */
     @Enumerated(EnumType.STRING)
     private TipoCliente tipoCliente;

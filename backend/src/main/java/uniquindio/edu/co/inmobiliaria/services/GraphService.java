@@ -299,6 +299,7 @@ public class GraphService {
             case NEGOCIANDO -> 2.8;
             case CONSULTA -> 1.2;
             case DESCARTADO -> 0.0;
+            case DESMARCADO -> 1.0;
         };
     }
 

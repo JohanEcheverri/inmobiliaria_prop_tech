@@ -1,6 +1,7 @@
 package uniquindio.edu.co.inmobiliaria.services;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import uniquindio.edu.co.inmobiliaria.models.entities.Cliente;
 import uniquindio.edu.co.inmobiliaria.models.entities.EventoHistorial;
 import uniquindio.edu.co.inmobiliaria.models.entities.Inmueble;
@@ -11,6 +12,7 @@ import uniquindio.edu.co.inmobiliaria.repositories.InmuebleRepository;
 import uniquindio.edu.co.inmobiliaria.structures.DynamicArrayList;
 
 @Service
+@Transactional(readOnly = true)
 public class EventoHistorialService {
 
     private final EventoHistorialRepository eventoHistorialRepository;
@@ -25,6 +27,7 @@ public class EventoHistorialService {
         this.inmuebleRepository = inmuebleRepository;
     }
 
+    @Transactional
     public EventoHistorial registrarEvento(EventoHistorial evento) {
         if (evento == null) {
             throw new IllegalArgumentException("El evento de historial no puede ser nulo");
@@ -38,12 +41,14 @@ public class EventoHistorialService {
         return eventoHistorialRepository.save(evento);
     }
 
+    @Transactional
     public EventoHistorial registerEvent(String clienteId, String inmuebleCodigo, TipoEventoHistorial tipoEvento) {
         Cliente cliente = obtenerCliente(clienteId);
         Inmueble inmueble = obtenerInmueble(inmuebleCodigo);
         return registrarEvento(cliente, inmueble, tipoEvento);
     }
 
+    @Transactional
     public EventoHistorial registrarEvento(Cliente cliente, Inmueble inmueble, TipoEventoHistorial tipoEvento) {
         if (cliente == null) {
             throw new IllegalArgumentException("El cliente del evento es obligatorio");

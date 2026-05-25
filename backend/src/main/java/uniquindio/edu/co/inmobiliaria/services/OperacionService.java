@@ -11,8 +11,18 @@ import uniquindio.edu.co.inmobiliaria.models.enums.EstadoOperacion;
 import uniquindio.edu.co.inmobiliaria.models.enums.Zona;
 import uniquindio.edu.co.inmobiliaria.repositories.OperacionRepository;
 import uniquindio.edu.co.inmobiliaria.repositories.VisitasRepository;
+import uniquindio.edu.co.inmobiliaria.repositories.ClienteRepository;
+import uniquindio.edu.co.inmobiliaria.repositories.InmuebleRepository;
+import uniquindio.edu.co.inmobiliaria.repositories.AsesorRepository;
+import uniquindio.edu.co.inmobiliaria.models.entities.Cliente;
+import uniquindio.edu.co.inmobiliaria.models.entities.Inmueble;
+import uniquindio.edu.co.inmobiliaria.models.entities.Asesor;
+import uniquindio.edu.co.inmobiliaria.models.entities.Venta;
+import uniquindio.edu.co.inmobiliaria.models.enums.EstadoOperacion;
 import uniquindio.edu.co.inmobiliaria.structures.DynamicArrayList;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 @Service
@@ -20,11 +30,20 @@ public class OperacionService {
 
     private final OperacionRepository operacionRepository;
     private final VisitasRepository visitasRepository;
+    private final ClienteRepository clienteRepository;
+    private final InmuebleRepository inmuebleRepository;
+    private final AsesorRepository asesorRepository;
 
     public OperacionService(OperacionRepository operacionRepository,
-                            VisitasRepository visitasRepository) {
+                            VisitasRepository visitasRepository,
+                            ClienteRepository clienteRepository,
+                            InmuebleRepository inmuebleRepository,
+                            AsesorRepository asesorRepository) {
         this.operacionRepository = operacionRepository;
         this.visitasRepository = visitasRepository;
+        this.clienteRepository = clienteRepository;
+        this.inmuebleRepository = inmuebleRepository;
+        this.asesorRepository = asesorRepository;
     }
 
     public Arriendo registerRental(Arriendo arriendo) {
@@ -47,6 +66,48 @@ public class OperacionService {
         }
         operacionRepository.save(venta);
         return venta;
+    }
+
+    /**
+     * Helper usado por controladores para registrar una venta completa a partir de ids y valores.
+     */
+    public void registrarVentaCompleta(String inmuebleCodigo, String clienteId, String asesorId, double valorAcordado, double comision) {
+        if (inmuebleCodigo == null || inmuebleCodigo.isBlank()) {
+            throw new IllegalArgumentException("El código del inmueble es obligatorio");
+        }
+        if (clienteId == null || clienteId.isBlank()) {
+            throw new IllegalArgumentException("El id del cliente comprador es obligatorio");
+        }
+
+        Inmueble inmueble = inmuebleRepository.findByCodigo(inmuebleCodigo);
+        if (inmueble == null) {
+            throw new IllegalArgumentException("No se encontró un inmueble con el código: " + inmuebleCodigo);
+        }
+
+        Cliente comprador = clienteRepository.findById(clienteId)
+                .orElseThrow(() -> new IllegalArgumentException("No se encontró un cliente con el id: " + clienteId));
+
+        Asesor asesor = null;
+        if (asesorId != null && !asesorId.isBlank()) {
+            asesor = asesorRepository.findById(asesorId)
+                    .orElse(null);
+        }
+        if (asesor == null) {
+            asesor = inmueble.getAsesor();
+        }
+
+        Venta venta = Venta.builder()
+                .codigo("VENTA-" + inmuebleCodigo + "-" + System.currentTimeMillis())
+                .inmueble(inmueble)
+                .cliente(comprador)
+                .asesor(asesor)
+                .fecha(LocalDateTime.now())
+                .valorAcordado(valorAcordado)
+                .comision(comision)
+                .estado(EstadoOperacion.COMPLETADA)
+                .build();
+
+        operacionRepository.save(venta);
     }
 
     public Renovacion registerRenewal(Renovacion renovacion) {
@@ -78,11 +139,32 @@ public class OperacionService {
         return operacionRepository.findByCodigo(codigo);
     }
 
+
+    @Transactional(readOnly = true)
     public DynamicArrayList<Operacion> listarOperacionesCliente(String clienteId) {
         if (clienteId == null || clienteId.isBlank()) {
             return new DynamicArrayList<>();
         }
         return operacionRepository.findByIdCliente(clienteId);
+    }
+
+    /**
+     * Obtener ventas (propiedades adquiridas) por cliente.
+     */
+    @Transactional(readOnly = true)
+    public DynamicArrayList<Venta> obtenerPropiedadesAdquiridasCliente(String clienteId) {
+        DynamicArrayList<Venta> resultado = new DynamicArrayList<>();
+        if (clienteId == null || clienteId.isBlank()) {
+            return resultado;
+        }
+        DynamicArrayList<Venta> ventas = operacionRepository.findVentas();
+        for (int i = 0; i < ventas.size(); i++) {
+            Venta v = ventas.get(i);
+            if (v.getCliente() != null && clienteId.equals(v.getCliente().getId())) {
+                resultado.add(v);
+            }
+        }
+        return resultado;
     }
 
     public DynamicArrayList<Operacion> consultarOperacionesPorZona(Zona zona) {

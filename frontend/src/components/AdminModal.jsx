@@ -4,9 +4,9 @@ import { apiUrl } from '../api';
 
 const formDataBase = {
     // Inmuebles
-    codigo: '', direccion: '', ciudad: '', barrio: '', tipoInmueble: 'CASA',
+    codigo: '', direccionBarrio: '', direccion: '', ciudad: '', departamento: '', barrio: '', zona: 'CENTRO', tipoInmueble: 'CASA',
     finalidad: 'VENTA', precio: '', area: '', habitaciones: '', banos: '',
-    estadoInmueble: 'DISPONIBLE', disponibilidad: 'DISPONIBLE', asesorResponsable: '',
+    estadoInmueble: 'DISPONIBLE', disponibilidad: 'DISPONIBLE', asesorResponsable: '', imagenes: [],
 
     // Usuarios comunes
     identificacion: '',
@@ -27,6 +27,10 @@ const crearFormDataInicial = (datos) => ({
     identificacion: datos?.id || datos?.identificacion || '',
     email: datos?.email || datos?.correo || '',
     zonaAsignada: datos?.zonaAsignada || 'CENTRO',
+    zona: datos?.zona || 'CENTRO',
+    direccionBarrio: datos?.direccionBarrio || datos?.direccion || datos?.barrio || '',
+    departamento: datos?.departamento || '',
+    imagenes: datos?.imagenes || (datos?.imagen ? [datos.imagen] : []),
     especialidad: datos?.especialidad || 'CASA',
     estadoInmueble: datos?.estadoInmueble || datos?.estado || 'DISPONIBLE',
     disponibilidad: datos?.disponibilidad || datos?.estado || 'DISPONIBLE',
@@ -56,6 +60,24 @@ function AdminModal({ seccion, datos, onClose, onSuccess }) {
         }
     };
 
+    const handlePropertyImagesChange = (e) => {
+        const files = Array.from(e.target.files || []).slice(0, 6);
+        if (files.length === 0) {
+            return;
+        }
+
+        Promise.all(files.map(file => new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result);
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+        }))).then(images => {
+            setFormData(prev => ({ ...prev, imagenes: images }));
+        }).catch(() => {
+            setError('No se pudieron cargar las imágenes del inmueble');
+        });
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
@@ -67,9 +89,12 @@ function AdminModal({ seccion, datos, onClose, onSuccess }) {
             if (seccion === 'inmuebles') {
                 payload = {
                     codigo: formData.codigo,
-                    direccion: formData.direccion,
+                    direccion: formData.direccionBarrio,
+                    direccionBarrio: formData.direccionBarrio,
                     ciudad: formData.ciudad,
-                    barrio: formData.barrio,
+                    departamento: formData.departamento,
+                    barrio: formData.direccionBarrio,
+                    zona: formData.zona,
                     tipoInmueble: formData.tipoInmueble,
                     finalidad: formData.finalidad,
                     precio: formData.precio,
@@ -78,7 +103,8 @@ function AdminModal({ seccion, datos, onClose, onSuccess }) {
                     banos: formData.banos,
                     estadoInmueble: formData.estadoInmueble,
                     disponibilidad: formData.disponibilidad,
-                    asesorResponsable: formData.asesorResponsable
+                    asesorResponsable: formData.asesorResponsable,
+                    imagenes: formData.imagenes
                 };
             } else if (seccion === 'clientes') {
                 payload = {
@@ -148,16 +174,26 @@ function AdminModal({ seccion, datos, onClose, onSuccess }) {
                                 <input type="text" name="codigo" value={formData.codigo} onChange={handleInputChange} disabled={isEdit} required />
                             </div>
                             <div className="modal-group">
-                                <label>Dirección</label>
-                                <input type="text" name="direccion" value={formData.direccion} onChange={handleInputChange} required />
+                                <label>Dirección / Barrio</label>
+                                <input type="text" name="direccionBarrio" value={formData.direccionBarrio} onChange={handleInputChange} required />
                             </div>
                             <div className="modal-group">
                                 <label>Ciudad</label>
                                 <input type="text" name="ciudad" value={formData.ciudad} onChange={handleInputChange} required />
                             </div>
                             <div className="modal-group">
-                                <label>Barrio o Zona</label>
-                                <input type="text" name="barrio" value={formData.barrio} onChange={handleInputChange} required />
+                                <label>Departamento</label>
+                                <input type="text" name="departamento" value={formData.departamento} onChange={handleInputChange} />
+                            </div>
+                            <div className="modal-group">
+                                <label>Zona</label>
+                                <select name="zona" value={formData.zona} onChange={handleInputChange}>
+                                    <option value="NORTE">Norte</option>
+                                    <option value="SUR">Sur</option>
+                                    <option value="ESTE">Este</option>
+                                    <option value="OESTE">Oeste</option>
+                                    <option value="CENTRO">Centro</option>
+                                </select>
                             </div>
                             <div className="modal-group">
                                 <label>Tipo de Inmueble</label>
@@ -217,6 +253,15 @@ function AdminModal({ seccion, datos, onClose, onSuccess }) {
                             <div className="modal-group">
                                 <label>ID o Email del Asesor</label>
                                 <input type="text" name="asesorResponsable" value={formData.asesorResponsable} onChange={handleInputChange} placeholder="Opcional" />
+                            </div>
+                            <div className="modal-group property-images-group">
+                                <label>Imágenes del Inmueble (3 a 6)</label>
+                                <input type="file" accept="image/*" multiple onChange={handlePropertyImagesChange} />
+                                <div className="property-images-preview">
+                                    {formData.imagenes?.map((imagen, index) => (
+                                        <img key={`${imagen}-${index}`} src={imagen} alt={`Inmueble ${index + 1}`} />
+                                    ))}
+                                </div>
                             </div>
                         </div>
                     ) : (
