@@ -129,6 +129,11 @@ public class InmuebleService {
             throw new IllegalArgumentException("No se encontró un inmueble con el código: " + codigo);
         }
 
+        // No permitir modificaciones si ya fue vendido
+        if (inmuebleExistente.getEstado() == Estado.VENDIDO) {
+            throw new IllegalArgumentException("No se puede modificar un inmueble que ya fue vendido");
+        }
+
         double precioAnterior = inmuebleExistente.getPrecio();
         Inmueble inmuebleActualizado = construirInmueble(codigo, direccion, ciudad, barrio.getZona(), tipo, finalidad, precio,
                 area, numeroHabitaciones, numeroBanios, estado, asesor, normalizarImagenes(List.of(imagen)));
