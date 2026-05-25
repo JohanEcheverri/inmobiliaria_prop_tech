@@ -26,7 +26,7 @@ public class OperacionController {
 
     @PostMapping("/ventas")
     @ResponseStatus(HttpStatus.CREATED)
-    @Transactional // <-- Sobrescribe el readOnly de la clase para permitir inserciones/escritura en la DB
+    @Transactional
     public void registrarVenta(@RequestBody VentaRequest request) {
         operacionService.registrarVentaCompleta(
                 request.inmuebleCodigo(),

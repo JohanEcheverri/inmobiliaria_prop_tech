@@ -139,6 +139,7 @@ public class OperacionService {
     }
 
 
+    @Transactional(readOnly = true)
     public DynamicArrayList<Operacion> listarOperacionesCliente(String clienteId) {
         if (clienteId == null || clienteId.isBlank()) {
             return new DynamicArrayList<>();
@@ -149,6 +150,7 @@ public class OperacionService {
     /**
      * Obtener ventas (propiedades adquiridas) por cliente.
      */
+    @Transactional(readOnly = true)
     public DynamicArrayList<Venta> obtenerPropiedadesAdquiridasCliente(String clienteId) {
         DynamicArrayList<Venta> resultado = new DynamicArrayList<>();
         if (clienteId == null || clienteId.isBlank()) {
