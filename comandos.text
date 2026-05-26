@@ -9,6 +9,3 @@ npm run dev
 //Verificar base de datos//
 docker compose up -d
 sudo systemctl start docker
-
-//Token IA//
-export GEMINI_API_KEY=AIzaSyCwpZtIegoJrqxhK4Lc9PDSV2AxmkY-sAc
