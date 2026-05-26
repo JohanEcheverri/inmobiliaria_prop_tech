@@ -358,16 +358,3 @@
   background: transparent;
   border: 1px solid #ddd;
 }
-
-/* Improve search bar inputs to match app style */
-.catalog-search-bar input {
-  padding: 10px 12px;
-  border-radius: 8px;
-  border: 1px solid #d1d5db;
-  margin-right: 8px;
-}
-
-.catalog-search-bar .btn.small {
-  padding: 8px 10px;
-  border-radius: 8px;
-}

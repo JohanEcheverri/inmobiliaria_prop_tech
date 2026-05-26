@@ -91,26 +91,89 @@
     color: #f5b301;
 }
 
+
 .catalog-filter-bar {
     display: flex;
-    justify-content: flex-end;
-    margin-bottom: 14px;
+    flex-wrap: wrap;
+    gap: 12px;
 }
 
-.catalog-filter-bar button {
+
+.catalog-search-bar {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 12px;
+    background-color: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 24px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+
+.catalog-search-bar select,
+.catalog-search-bar input[type="number"] {
+    padding: 10px 14px;
+    border-radius: 8px;
+    border: 1px solid #cbd5e1;
+    background-color: #ffffff;
+    color: #334155;
+    font-size: 14px;
+    outline: none;
+    transition: all 0.2s ease;
+    min-width: 150px;
+}
+
+/* Efecto Focus al hacer clic en los filtros */
+.catalog-search-bar select:focus,
+.catalog-search-bar input[type="number"]:focus {
+    border-color: #9370db;     /* El morado característico de tus botones */
+    box-shadow: 0 0 0 2px rgba(147, 112, 219, 0.15);
+}
+
+/* Ajuste compacto para el input de "Min hab" */
+.catalog-search-bar input[type="number"] {
+    width: 100px;
+    min-width: 100px;
+}
+
+/* Estilo para el botón (Filtrar favoritos) */
+.catalog-search-bar button,
+.catalog-search-bar .btn-filter-favs {
     border: 1px solid #9370db;
     color: #9370db;
     background: #ffffff;
-    border-radius: 6px;
-    padding: 9px 13px;
+    border-radius: 8px;
+    padding: 10px 16px;
     cursor: pointer;
-    font-weight: 700;
+    font-weight: 600;
+    font-size: 14px;
+    transition: all 0.2s ease;
+    margin-left: auto;         /* ¡Magia! Empuja mágicamente el botón al extremo derecho de la barra */
 }
 
-.catalog-filter-bar button.active {
+/* Efecto Hover para el botón */
+.catalog-search-bar button:hover,
+.catalog-search-bar .btn-filter-favs:hover {
+    background-color: #9370db;
     color: #ffffff;
-    background: #9370db;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 .property-thumb {
     background: #f3e5f5;
