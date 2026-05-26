@@ -20,7 +20,11 @@ const Layout = ({ children, actions, contentClassName = '' }) => {
     ]);
     const [isChatLoading, setIsChatLoading] = useState(false);
 
-    // SOLUCIÓN AL PARPADEO: Inicializar directamente desde localStorage en lugar de empezar en null
+    // Estados para controlar el modal legal global
+    const [showLegalModal, setShowLegalModal] = useState(false);
+    const [legalTab, setLegalTab] = useState('terminos'); // 'terminos' o 'datos'
+
+    // Inicializar directamente desde localStorage
     const [user, setUser] = useState(() => {
         const savedSession = localStorage.getItem("user_session");
         return savedSession ? JSON.parse(savedSession) : null;
@@ -113,7 +117,11 @@ const Layout = ({ children, actions, contentClassName = '' }) => {
         }
     };
 
-    // SOLUCIÓN AL BOTÓN VISIBLE EN EL PANEL: Evalúa estrictamente que NO esté en la ruta del Dashboard
+    const openLegalModal = (tabName) => {
+        setLegalTab(tabName);
+        setShowLegalModal(true);
+    };
+
     const mostrarBotonDashboardExterior = user && (
         (user.rol === 'ADMINISTRADOR' && location.pathname !== '/admin-dashboard') ||
         (user.rol === 'ASESOR' && location.pathname !== '/asesor-dashboard') ||
@@ -134,8 +142,6 @@ const Layout = ({ children, actions, contentClassName = '' }) => {
                 <div className="layout-header-right">
                     {user ? (
                         <div className="user-nav-wrapper-global">
-
-                            {/* Botón exterior refinado con icono SVG */}
                             {mostrarBotonDashboardExterior && (
                                 <button className="btn-header-dashboard-shortcut" onClick={handleGoToDashboard}>
                                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="layout-svg-icon">
@@ -185,7 +191,6 @@ const Layout = ({ children, actions, contentClassName = '' }) => {
 
                                         <hr className="dropdown-divider" />
 
-                                        {/* Opción "Mi Cuenta" con icono SVG profesional */}
                                         <button className="dropdown-menu-item" onClick={() => { setIsMenuOpen(false); navigate('/configuracion-cuenta'); }}>
                                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="layout-svg-icon">
                                                 <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
@@ -194,7 +199,6 @@ const Layout = ({ children, actions, contentClassName = '' }) => {
                                             Mi Cuenta
                                         </button>
 
-                                        {/* Opción "Cerrar Sesión" con icono SVG profesional */}
                                         <button className="dropdown-menu-item btn-logout-action" onClick={handleLogout}>
                                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="layout-svg-icon">
                                                 <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
@@ -217,10 +221,68 @@ const Layout = ({ children, actions, contentClassName = '' }) => {
                 {children}
             </main>
 
+            {/* --- PIE DE PÁGINA CON ACOMODO VERTICAL EN BLOQUE --- */}
             <footer className="layout-footer">
-                <p>&copy; 2026 DomusTech - Ingeniería de Sistemas UQ</p>
+                <div className="footer-left">
+                    <p>&copy; 2026 DomusTech - Ingeniería de Sistemas UQ</p>
+                </div>
+                <div className="footer-right">
+                    <button type="button" className="footer-legal-link" onClick={() => openLegalModal('terminos')}>
+                        Términos y Condiciones
+                    </button>
+                    <span className="footer-legal-separator">•</span>
+                    <button type="button" className="footer-legal-link" onClick={() => openLegalModal('datos')}>
+                        Tratado de Datos Personales
+                    </button>
+                </div>
             </footer>
 
+            {/* --- MODAL GLOBAL INTERACTIVO (CORREGIDO Y TOTALMENTE ESTILIZADO) --- */}
+            {showLegalModal && (
+                <div className="layout-legal-overlay" onClick={() => setShowLegalModal(false)}>
+                    <div className="layout-legal-modal" onClick={(e) => e.stopPropagation()}>
+                        <div className="layout-legal-tabs">
+                            <button
+                                type="button"
+                                className={`layout-tab-btn ${legalTab === 'terminos' ? 'active' : ''}`}
+                                onClick={() => setLegalTab('terminos')}
+                            >
+                                Términos y Condiciones
+                            </button>
+                            <button
+                                type="button"
+                                className={`layout-tab-btn ${legalTab === 'datos' ? 'active' : ''}`}
+                                onClick={() => setLegalTab('datos')}
+                            >
+                                Tratado de Datos (Habeas Data)
+                            </button>
+                            <button type="button" className="layout-legal-close-x" onClick={() => setShowLegalModal(false)}>&times;</button>
+                        </div>
+
+                        <div className="layout-legal-body">
+                            {legalTab === 'terminos' ? (
+                                <>
+                                    <h3>1. Ámbito e Intermediación</h3>
+                                    <p>La infraestructura PropTech de DomusTech asiste en la organización de catálogos inmobiliarios, asignación de citas y monitoreo de transacciones. No constituye un fondo directo de corretaje financiero...</p>
+                                    <h3>2. Uso del Sistema</h3>
+                                    <p>El uso del software queda limitado a fines lícitos en el marco de la consulta y administración de propiedad raíz, protegiendo las credenciales otorgadas por la Universidad del Quindío.</p>
+                                </>
+                            ) : (
+                                <>
+                                    <h3>Política de Protección de Datos Personales</h3>
+                                    <p>De conformidad con la Ley 1581 de 2012, informamos que los datos capturados (nombres, correos, roles de usuario e historial de chats) se procesan con la única finalidad de optimizar la experiencia inmobiliaria en el departamento del Quindío.</p>
+                                    <p>Los titulares gozan de derechos de rectificación, actualización y supresión mediante los módulos configurados en "Mi Cuenta".</p>
+                                </>
+                            )}
+                        </div>
+                        <div className="layout-legal-footer">
+                            <button type="button" className="btn-layout-legal-close" onClick={() => setShowLegalModal(false)}>Cerrar</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* --- BOTÓN FLOTANTE CHAT IA --- */}
             <div className="ai-chat-widget" ref={chatRef}>
                 {isChatOpen && (
                     <section className="ai-chat-panel" aria-label="Chat IA DomusTech">
