@@ -11,6 +11,13 @@ import java.time.LocalDateTime;
 @RestControllerAdvice
 public class ApiExceptionHandler {
 
+    /**
+     * Mapea IllegalArgumentException a una respuesta HTTP 400 con un cuerpo ApiError.
+     * Centraliza el manejo de argumentos inválidos para la API.
+     *
+     * @param exception excepción capturada
+     * @return ResponseEntity con ApiError y código 400
+     */
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ApiError> manejarIllegalArgumentException(IllegalArgumentException exception) {
         return ResponseEntity

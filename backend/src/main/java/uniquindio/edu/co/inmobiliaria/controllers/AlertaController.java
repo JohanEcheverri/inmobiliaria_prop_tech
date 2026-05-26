@@ -121,6 +121,14 @@ public class AlertaController {
      * Ejecuta la verificación de todas las reglas de alertas.
      * Esta operación puede ser costosa en términos de rendimiento.
      */
+    /**
+     * Ejecuta de manera explícita la evaluación de todas las reglas de alerta.
+     *
+     * Nota: operación potencialmente costosa; debe usarse con precaución y preferiblemente
+     * desde tareas programadas o mediante control de acceso.
+     *
+     * @return mensaje indicando éxito o detalle del error
+     */
     @PostMapping("/verificar")
     public ResponseEntity<String> verificarTodo() {
         try {

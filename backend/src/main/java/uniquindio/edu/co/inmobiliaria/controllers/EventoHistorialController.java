@@ -33,18 +33,38 @@ public class EventoHistorialController {
         this.eventoHistorialService = eventoHistorialService;
     }
 
+    /**
+     * Devuelve el historial completo de eventos de un cliente (consultas, visitas, favoritos).
+     *
+     * @param clienteId id del cliente
+     * @return lista de EventoHistorialResponse
+     */
     @GetMapping("/cliente/{clienteId}")
     @Transactional(readOnly = true)
     public List<EventoHistorialResponse> historialCliente(@PathVariable String clienteId) {
         return mapearLista(eventoHistorialService.consultarHistorialCliente(clienteId));
     }
 
+    /**
+     * Devuelve los eventos marcados como favoritos por un cliente.
+     *
+     * @param clienteId id del cliente
+     * @return lista de EventoHistorialResponse correspondientes a favoritos
+     */
     @GetMapping("/cliente/{clienteId}/favoritos")
     @Transactional(readOnly = true)
     public List<EventoHistorialResponse> favoritosCliente(@PathVariable String clienteId) {
         return mapearLista(eventoHistorialService.consultarFavoritosCliente(clienteId));
     }
 
+    /**
+     * Registra un evento de historial para un cliente sobre un inmueble.
+     * Convierte el tipo de evento desde texto y valida su valor.
+     *
+     * @param request DTO con clienteId, inmuebleCodigo y tipoEvento (texto)
+     * @return EventoHistorialResponse con el evento creado
+     * @throws IllegalArgumentException si el tipo de evento no es válido
+     */
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     @Transactional
@@ -61,6 +81,12 @@ public class EventoHistorialController {
         }
     }
 
+    /**
+     * Mapea una colección dinámica de EventoHistorial a DTOs de respuesta.
+     *
+     * @param eventos lista dinámica de eventos
+     * @return lista de EventoHistorialResponse
+     */
     private List<EventoHistorialResponse> mapearLista(DynamicArrayList<EventoHistorial> eventos) {
         List<EventoHistorialResponse> respuesta = new ArrayList<>();
         for (int i = 0; i < eventos.size(); i++) {
@@ -69,6 +95,12 @@ public class EventoHistorialController {
         return respuesta;
     }
 
+    /**
+     * Mapea un EventoHistorial a su DTO de respuesta y maneja asociaciones nulas.
+     *
+     * @param evento entidad EventoHistorial
+     * @return EventoHistorialResponse con los datos del evento
+     */
     private EventoHistorialResponse mapear(EventoHistorial evento) {
         Cliente cliente = evento.getCliente();
         Inmueble inmueble = evento.getInmueble();

@@ -16,6 +16,12 @@ import java.util.Map;
 @RequestMapping("/api/catalogos")
 public class CatalogoController {
 
+    /**
+     * Devuelve catálogos estáticos usados por el frontend para formularios y filtros.
+     * Agrupa enums como tipos de cliente, zonas, tipos de inmueble y estados de búsqueda.
+     *
+     * @return mapa con arrays de valores enumerados
+     */
     @GetMapping("/clientes")
     public Map<String, Object> catalogosCliente() {
         return Map.of(

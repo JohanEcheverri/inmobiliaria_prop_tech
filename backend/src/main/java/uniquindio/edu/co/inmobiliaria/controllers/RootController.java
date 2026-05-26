@@ -8,6 +8,11 @@ import java.util.HashMap;
 @RestController
 public class RootController {
 
+    /**
+     * Endpoint raíz para verificar que el backend está activo. Devuelve un estado simple.
+     *
+     * @return mapa con estado y mensaje de información
+     */
     @GetMapping("/")
     public Map<String, Object> home() {
         Map<String, Object> response = new HashMap<>();

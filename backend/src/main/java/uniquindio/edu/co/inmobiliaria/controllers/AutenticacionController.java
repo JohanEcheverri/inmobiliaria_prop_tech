@@ -15,6 +15,12 @@ public class AutenticacionController {
 
     private final AutenticacionService autenticacionService;
 
+    /**
+     * Endpoint de autenticación que delega al servicio y devuelve los datos de sesión.
+     *
+     * @param request DTO con credenciales de login
+     * @return ResponseEntity con SesionDTO en caso de éxito o mensaje de error en fallo
+     */
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest request) {
         try {

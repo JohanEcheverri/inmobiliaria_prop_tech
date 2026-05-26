@@ -12,6 +12,13 @@ import uniquindio.edu.co.inmobiliaria.models.entities.Usuario;
 @RestController
 public class PruebaRestController {
 
+    /**
+     * Endpoint de prueba que devuelve un map con un objeto Usuario para verificar serialización.
+     * Usado únicamente en desarrollo.
+     *
+     * @param model (no usado para respuesta JSON, incluido por compatibilidad)
+     * @return mapa con la clave 'mensaje' apuntando a un Usuario de ejemplo
+     */
     @GetMapping("/prueba")
     public Map<String, Object> prueba1(Model model){
         Usuario usuario = new Usuario("Johan", "Johan", "123456789", "password123", "hola" ,"foto.jpg");        

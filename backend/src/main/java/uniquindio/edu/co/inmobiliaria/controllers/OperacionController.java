@@ -30,6 +30,12 @@ public class OperacionController {
 
     // --- Endpoints de Registro e Historial (origin/master) ---
 
+    /**
+     * Registra una operación de venta completa (crea operación, contrato y registros relacionados).
+     * Operación transaccional que persiste la información enviada en el request.
+     *
+     * @param request DTO con los datos de la venta (inmueble, cliente, asesor, valor y comisión)
+     */
     @PostMapping("/ventas")
     @ResponseStatus(HttpStatus.CREATED)
     @Transactional
@@ -43,6 +49,12 @@ public class OperacionController {
         );
     }
 
+    /**
+     * Obtiene las propiedades adquiridas por un cliente específico.
+     *
+     * @param clienteId id del cliente
+     * @return lista de PropiedadAdquiridaResponse con las compras del cliente
+     */
     @GetMapping("/cliente/{clienteId}/propiedades")
     public List<PropiedadAdquiridaResponse> obtenerPropiedadesAdquiridas(@PathVariable String clienteId) {
         return mapearPropiedades(operacionService.obtenerPropiedadesAdquiridasCliente(clienteId));
@@ -50,26 +62,56 @@ public class OperacionController {
 
     // --- Endpoints Analíticos y de Reportes (de tu commit local) ---
 
+    /**
+     * Endpoint analítico que devuelve operaciones filtradas por zona.
+     *
+     * @param zona zona a filtrar
+     * @return lista de ReporteOperacionResponse
+     */
     @GetMapping("/zona/{zona}")
     public ResponseEntity<List<ReporteOperacionResponse>> getOperacionesPorZona(@PathVariable Zona zona) {
         return ResponseEntity.ok(mapearOperaciones(operacionService.consultarOperacionesPorZona(zona)));
     }
 
+    /**
+     * Devuelve operaciones cuyo valor pactado se sitúe en el rango indicado.
+     *
+     * @param min valor mínimo
+     * @param max valor máximo
+     * @return lista de ReporteOperacionResponse filtradas por precio
+     */
     @GetMapping("/precio")
     public ResponseEntity<List<ReporteOperacionResponse>> getOperacionesPorPrecio(@RequestParam double min, @RequestParam double max) {
         return ResponseEntity.ok(mapearOperaciones(operacionService.consultarOperacionesPorPrecio(min, max)));
     }
 
+    /**
+     * Obtiene visitas filtradas por zona, útil para análisis de demanda.
+     *
+     * @param zona zona a filtrar
+     * @return lista de ReporteVisitaResponse
+     */
     @GetMapping("/visitas/zona/{zona}")
     public ResponseEntity<List<ReporteVisitaResponse>> getVisitasPorZona(@PathVariable Zona zona) {
         return ResponseEntity.ok(mapearVisitas(operacionService.consultarVisitasPorZona(zona)));
     }
 
+    /**
+     * Devuelve las operaciones que se encuentran en estado cerrado.
+     *
+     * @return lista de ReporteOperacionResponse para operaciones cerradas
+     */
     @GetMapping("/cerradas")
     public ResponseEntity<List<ReporteOperacionResponse>> getOperacionesCerradas() {
         return ResponseEntity.ok(mapearOperaciones(operacionService.consultarOperacionesCerradas()));
     }
 
+    /**
+     * Devuelve operaciones cerradas filtradas por zona.
+     *
+     * @param zona zona a filtrar
+     * @return lista de ReporteOperacionResponse
+     */
     @GetMapping("/cerradas/zona/{zona}")
     public ResponseEntity<List<ReporteOperacionResponse>> getOperacionesCerradasPorZona(@PathVariable Zona zona) {
         return ResponseEntity.ok(mapearOperaciones(operacionService.consultarOperacionesCerradasPorZona(zona)));
@@ -77,6 +119,13 @@ public class OperacionController {
 
     // --- Métodos Auxiliares ---
 
+    /**
+     * Mapea una lista dinámica de operaciones a DTOs PropiedadAdquiridaResponse filtrando
+     * solamente las instancias de Venta.
+     *
+     * @param operaciones lista dinámica que puede contener diferentes tipos de operaciones
+     * @return lista de PropiedadAdquiridaResponse para las ventas encontradas
+     */
     private List<PropiedadAdquiridaResponse> mapearPropiedades(DynamicArrayList<?> operaciones) {
         List<PropiedadAdquiridaResponse> respuesta = new ArrayList<>();
         if (operaciones == null) {
@@ -124,6 +173,13 @@ public class OperacionController {
         return respuesta;
     }
 
+    /**
+     * Convierte una DynamicArrayList genérica en una java.util.List estándar.
+     *
+     * @param dynamicList lista dinámica de entrada
+     * @param <T> tipo de elementos
+     * @return lista regular con los mismos elementos (vacía si la entrada es null)
+     */
     private <T> List<T> convertirALista(DynamicArrayList<T> dynamicList) {
         List<T> lista = new ArrayList<>();
         if (dynamicList != null) {
@@ -134,6 +190,12 @@ public class OperacionController {
         return lista;
     }
 
+    /**
+     * Mapea una colección dinámica de Operacion a DTOs ReporteOperacionResponse.
+     *
+     * @param operaciones lista dinámica de operaciones
+     * @return lista de ReporteOperacionResponse (vacía si la entrada es null)
+     */
     private List<ReporteOperacionResponse> mapearOperaciones(DynamicArrayList<Operacion> operaciones) {
         List<ReporteOperacionResponse> respuesta = new ArrayList<>();
         if (operaciones == null) {
@@ -146,6 +208,12 @@ public class OperacionController {
         return respuesta;
     }
 
+    /**
+     * Mapea una colección dinámica de Visita a DTOs ReporteVisitaResponse.
+     *
+     * @param visitas lista dinámica de visitas
+     * @return lista de ReporteVisitaResponse
+     */
     private List<ReporteVisitaResponse> mapearVisitas(DynamicArrayList<Visita> visitas) {
         List<ReporteVisitaResponse> respuesta = new ArrayList<>();
         if (visitas == null) {
@@ -158,6 +226,13 @@ public class OperacionController {
         return respuesta;
     }
 
+    /**
+     * Mapea una Operacion a su DTO de reporte, extrayendo cuidadosamente datos de
+     * asociaciones que pueden ser nulas para evitar NPEs.
+     *
+     * @param operacion entidad Operacion
+     * @return ReporteOperacionResponse con la información relevante de la operación
+     */
     private ReporteOperacionResponse mapearOperacion(Operacion operacion) {
         var inmueble = operacion.getInmueble();
         var cliente = operacion.getCliente();
@@ -181,6 +256,12 @@ public class OperacionController {
         );
     }
 
+    /**
+     * Mapea una entidad Visita a su DTO de reporte con campos seguros contra null.
+     *
+     * @param visita entidad Visita
+     * @return ReporteVisitaResponse con la información necesaria para reportes
+     */
     private ReporteVisitaResponse mapearVisita(Visita visita) {
         var inmueble = visita.getInmueble();
         var cliente = visita.getCliente();

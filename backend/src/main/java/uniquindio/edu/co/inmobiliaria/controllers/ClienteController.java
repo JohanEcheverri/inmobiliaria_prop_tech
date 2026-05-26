@@ -36,21 +36,44 @@ public class ClienteController {
         this.inmuebleService = inmuebleService;
     }
 
+    /**
+     * Lista todos los clientes registrados.
+     *
+     * @return lista de ClienteResponse con la información de cada cliente
+     */
     @GetMapping
     public List<ClienteResponse> listarClientes() {
         return clienteService.listarClientes();
     }
 
+    /**
+     * Obtiene un cliente por su identificador.
+     *
+     * @param id identificador del cliente
+     * @return DTO con los datos del cliente
+     */
     @GetMapping("/{id}")
     public ClienteResponse obtenerCliente(@PathVariable String id) {
         return clienteService.obtenerCliente(id);
     }
 
+    /**
+     * Busca un cliente por correo electrónico.
+     *
+     * @param email correo del cliente a buscar
+     * @return DTO del cliente si existe
+     */
     @GetMapping("/buscar")
     public ClienteResponse buscarPorEmail(@RequestParam String email) {
         return clienteService.obtenerClientePorEmail(email);
     }
 
+    /**
+     * Registra un nuevo cliente (operación transaccional).
+     *
+     * @param request DTO con los datos del cliente
+     * @return ClienteResponse con el cliente creado
+     */
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     @Transactional
@@ -58,12 +81,25 @@ public class ClienteController {
         return clienteService.registrarCliente(request);
     }
 
+    /**
+     * Actualiza los datos de un cliente existente.
+     *
+     * @param id identificador del cliente
+     * @param request DTO con los nuevos datos
+     * @return ClienteResponse con la información actualizada
+     */
     @PutMapping("/{id}")
     @Transactional
     public ClienteResponse actualizarCliente(@PathVariable String id, @RequestBody ClienteRequest request) {
         return clienteService.actualizarCliente(id, request);
     }
 
+    /**
+     * Devuelve una lista de inmuebles recomendados para un cliente según sus preferencias.
+     *
+     * @param id identificador del cliente
+     * @return lista de InmuebleResponse recomendados (vacía si no hay recomendaciones)
+     */
     @GetMapping("/{id}/recomendados")
     public List<InmuebleResponse> recomendaciones(@PathVariable String id) {
         var inmuebles = clienteService.recomendarInmueblesPorPreferencias(id);
@@ -77,6 +113,11 @@ public class ClienteController {
         return respuesta;
     }
 
+    /**
+     * Elimina un cliente del sistema. Operación transaccional que devuelve 204 No Content.
+     *
+     * @param id identificador del cliente a eliminar
+     */
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @Transactional

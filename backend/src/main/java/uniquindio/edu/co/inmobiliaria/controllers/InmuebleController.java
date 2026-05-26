@@ -29,11 +29,30 @@ public class InmuebleController {
         this.inmuebleService = inmuebleService;
     }
 
+    /**
+     * Devuelve todos los inmuebles registrados.
+     *
+     * @return lista de InmuebleResponse con los inmuebles existentes
+     */
     @GetMapping
     public List<InmuebleResponse> listarInmuebles() {
         return inmuebleService.listarInmuebles();
     }
 
+    /**
+     * Busca inmuebles por parámetros opcionales de filtrado (zona, tipo, rango de precio,
+     * número de habitaciones, finalidad y cliente para personalización).
+     *
+     * @param zona zona geográfica (opcional)
+     * @param tipo tipo de inmueble (opcional)
+     * @param minPrecio precio mínimo (opcional)
+     * @param maxPrecio precio máximo (opcional)
+     * @param minHabitaciones mínimo de habitaciones (opcional)
+     * @param maxHabitaciones máximo de habitaciones (opcional)
+     * @param finalidad finalidad (venta/arrendamiento) (opcional)
+     * @param clienteId id del cliente que busca (opcional)
+     * @return lista de InmuebleResponse que cumplen los filtros
+     */
     @GetMapping("/search")
     public List<InmuebleResponse> buscarInmuebles(
             @org.springframework.web.bind.annotation.RequestParam(required = false) String zona,
@@ -48,27 +67,58 @@ public class InmuebleController {
         return inmuebleService.buscarPorPreferencias(zona, tipo, minPrecio, maxPrecio, minHabitaciones, maxHabitaciones, finalidad, null, clienteId);
     }
 
+    /**
+     * Obtiene un inmueble por su código único.
+     *
+     * @param codigo código del inmueble
+     * @return InmuebleResponse con los datos del inmueble
+     */
     @GetMapping("/{codigo}")
     public InmuebleResponse obtenerInmueble(@PathVariable String codigo) {
         return inmuebleService.obtenerInmueble(codigo);
     }
 
+    /**
+     * Registra un nuevo inmueble en el sistema.
+     *
+     * @param request DTO con los datos del inmueble
+     * @return DTO con los datos guardados del inmueble
+     */
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public InmuebleResponse registrarInmueble(@RequestBody InmuebleRequest request) {
         return inmuebleService.registrarInmueble(request);
     }
 
+    /**
+     * Actualiza un inmueble existente identificado por su código.
+     *
+     * @param codigo código del inmueble a actualizar
+     * @param request DTO con los nuevos valores
+     * @return InmuebleResponse con los datos actualizados
+     */
     @PutMapping("/{codigo}")
     public InmuebleResponse actualizarInmueble(@PathVariable String codigo, @RequestBody InmuebleRequest request) {
         return inmuebleService.actualizarInmueble(codigo, request);
     }
 
+    /**
+     * Actualiza únicamente el estado comercial de un inmueble (p. ej. disponible, vendido).
+     *
+     * @param codigo código del inmueble
+     * @param request DTO con el nuevo estado
+     * @return InmuebleResponse con el estado actualizado
+     */
     @PutMapping("/{codigo}/estado")
     public InmuebleResponse actualizarEstado(@PathVariable String codigo, @RequestBody EstadoInmuebleRequest request) {
         return inmuebleService.actualizarEstadoInmueble(codigo, request);
     }
 
+    /**
+     * Elimina un inmueble por su código. Responde con 204 No Content cuando se elimina correctamente.
+     *
+     * @param codigo código del inmueble a eliminar
+     */
     @DeleteMapping("/{codigo}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void eliminarInmueble(@PathVariable String codigo) {

@@ -60,6 +60,14 @@ public class GraphController {
         }
     }
 
+    /**
+     * Convierte la representación interna del grafo en DTOs serializables para el cliente.
+     * Transforma vértices en NodeDTO y aristas en EdgeDTO evitando duplicados para grafos
+     * no dirigidos.
+     *
+     * @param graph grafo de entrada
+     * @return DTO conteniendo nodos y aristas listos para JSON
+     */
     private GraphDTO mapToGraphDTO(Graph<GraphVertex> graph) {
         List<NodeDTO> nodes = new ArrayList<>();
         List<EdgeDTO> edges = new ArrayList<>();
@@ -91,12 +99,23 @@ public class GraphController {
         return new GraphDTO(nodes, edges);
     }
 
+    /**
+     * Endpoint que devuelve el grafo de movilidad comercial construido por el servicio.
+     *
+     * @return grafo serializado en formato DTO listo para renderizar en UI de grafos
+     */
     @GetMapping("/movilidad")
     public ResponseEntity<GraphDTO> getMovilidadGraph() {
         Graph<GraphVertex> graph = graphService.construirGrafoDeMovilidadComercial();
         return ResponseEntity.ok(mapToGraphDTO(graph));
     }
 
+    /**
+     * Devuelve una lista de nodos que representan propiedades similares identificadas
+     * por el servicio (consultadas por múltiples clientes).
+     *
+     * @return lista de NodeDTO con propiedades similares
+     */
     @GetMapping("/similares")
     public ResponseEntity<List<NodeDTO>> getSimilares() {
         DynamicArrayList<GraphVertex> similares = graphService.detectarPropiedadesSimilaresConsultadasPorMultiplesClientes();
@@ -108,6 +127,12 @@ public class GraphController {
         return ResponseEntity.ok(nodes);
     }
 
+    /**
+     * Obtiene los nodos relacionados al cliente indicado (propiedades o entidades conectadas)
+     *
+     * @param clienteId identificador del cliente a consultar
+     * @return lista de NodeDTO relacionados con el cliente o 400 si el id es inválido
+     */
     @GetMapping("/relaciones/{clienteId}")
     public ResponseEntity<List<NodeDTO>> getRelacionesCliente(@PathVariable String clienteId) {
         try {
@@ -123,6 +148,13 @@ public class GraphController {
         }
     }
 
+    /**
+     * Calcula y devuelve una ruta en el grafo desde el cliente hasta un inmueble.
+     *
+     * @param clienteId identificador del cliente origen
+     * @param codigoInmueble código del inmueble destino
+     * @return lista de NodeDTO representando la ruta o 400 si alguno de los parámetros no es válido
+     */
     @GetMapping("/ruta")
     public ResponseEntity<List<NodeDTO>> getRutaClienteAInmueble(
             @RequestParam String clienteId,
@@ -140,6 +172,12 @@ public class GraphController {
         }
     }
 
+    /**
+     * Obtiene patrones de movilidad comercial asociados a un cliente (p. ej. zonas más visitadas).
+     *
+     * @param clienteId id del cliente
+     * @return lista de cadenas representando los patrones detectados
+     */
     @GetMapping("/patrones/{clienteId}")
     public ResponseEntity<List<String>> getPatronesMovilidad(@PathVariable String clienteId) {
         DynamicArrayList<String> patrones = graphService.obtenerPatronesDeMovilidadComercial(clienteId);
