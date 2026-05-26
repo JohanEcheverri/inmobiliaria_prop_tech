@@ -2,6 +2,7 @@ package uniquindio.edu.co.inmobiliaria.comportamiento;
 
 import org.springframework.stereotype.Service;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Transactional;
 import uniquindio.edu.co.inmobiliaria.alerts.AlertaService;
 import uniquindio.edu.co.inmobiliaria.models.entities.*;
 import uniquindio.edu.co.inmobiliaria.models.enums.*;
@@ -51,6 +52,7 @@ public class ComportamientoService {
     /**
      * Ejecuta el análisis completo y guarda registros/alertas de todo comportamiento atípico detectado.
      */
+    @Transactional
     public void analizarComportamientoAtipico() {
         detectarExcesoVisitasSinCierre();
         detectarClientesSinContinuidad();
@@ -163,7 +165,7 @@ public class ComportamientoService {
      * Regla 3: Asesores con sobrecarga excesiva de atención.
      */
     private void detectarAsesoresSobrecarga() {
-        DynamicArrayList<Asesor> asesores = asesorRepository.asesoresPorId.values();
+        DynamicArrayList<Asesor> asesores = asesorRepository.findAll();
         DynamicArrayList<Inmueble> inmuebles = inmuebleRepository.findAll();
         DynamicArrayList<Visita> visitas = visitasRepository.findAll();
 

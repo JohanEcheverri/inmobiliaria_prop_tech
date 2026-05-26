@@ -148,7 +148,7 @@ public class VisitasRepository {
     }
 
     private void cargarDesdeBaseDeDatos() {
-        visitaJpaRepository.findAll().forEach(this::agregarAIndices);
+        visitaJpaRepository.findAllConRelaciones().forEach(this::agregarAIndices);
     }
 
     private void agregarAIndices(Visita visita) {

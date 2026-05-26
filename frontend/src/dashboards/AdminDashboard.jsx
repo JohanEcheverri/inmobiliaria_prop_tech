@@ -542,67 +542,75 @@ function AdminDashboard() {
 
                     {seccionActiva === 'reportes' && (
                         <div className="reportes-panel">
-                            {/* Sub-navegación de reportes */}
-                            <div className="reportes-subnav">
-                                <button className={`reportes-subnav-btn ${reporteSubView === 'zona' ? 'active' : ''}`} onClick={() => handleReporteSubViewChange('zona')}>
+                            <div className="reportes-toolbar">
+                                <div className="reportes-subnav" aria-label="Tipo de reporte">
+                                    <button className={`reportes-subnav-btn ${reporteSubView === 'zona' ? 'active' : ''}`} onClick={() => handleReporteSubViewChange('zona')}>
                                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="reportes-subnav-icon"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
                                     Por Zona
-                                </button>
-                                <button className={`reportes-subnav-btn ${reporteSubView === 'precio' ? 'active' : ''}`} onClick={() => handleReporteSubViewChange('precio')}>
+                                    </button>
+                                    <button className={`reportes-subnav-btn ${reporteSubView === 'precio' ? 'active' : ''}`} onClick={() => handleReporteSubViewChange('precio')}>
                                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="reportes-subnav-icon"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
                                     Por Precio
-                                </button>
-                                <button className={`reportes-subnav-btn ${reporteSubView === 'visitas' ? 'active' : ''}`} onClick={() => handleReporteSubViewChange('visitas')}>
+                                    </button>
+                                    <button className={`reportes-subnav-btn ${reporteSubView === 'visitas' ? 'active' : ''}`} onClick={() => handleReporteSubViewChange('visitas')}>
                                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="reportes-subnav-icon"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
                                     Visitas
-                                </button>
-                                <button className={`reportes-subnav-btn ${reporteSubView === 'cierres' ? 'active' : ''}`} onClick={() => handleReporteSubViewChange('cierres')}>
+                                    </button>
+                                    <button className={`reportes-subnav-btn ${reporteSubView === 'cierres' ? 'active' : ''}`} onClick={() => handleReporteSubViewChange('cierres')}>
                                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="reportes-subnav-icon"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
                                     Cierres
-                                </button>
+                                    </button>
+                                </div>
                             </div>
 
-                            {/* Filtros según sub-vista */}
                             <div className="reportes-filters">
                                 {(reporteSubView === 'zona' || reporteSubView === 'visitas') && (
-                                    <div className="reportes-filter-group">
-                                        <label>Zona geográfica:</label>
-                                        <div className="reportes-zona-chips">
-                                            {ZONAS.map((z) => (
-                                                <button
-                                                    key={z}
-                                                    className={`zona-chip ${reporteZonaSeleccionada === z ? 'active' : ''}`}
-                                                    onClick={() => handleReporteZonaChange(z)}
-                                                >
-                                                    {z}
-                                                </button>
-                                            ))}
+                                    <div className="reportes-filter-card">
+                                        <div className="reportes-filter-copy">
+                                            <span className="reportes-filter-kicker">Filtro activo</span>
+                                            <strong>Zona geográfica</strong>
+                                        </div>
+                                        <div className="reportes-select-control">
+                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="reportes-select-icon"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                                            <select value={reporteZonaSeleccionada} onChange={(e) => handleReporteZonaChange(e.target.value)}>
+                                                {ZONAS.map((z) => (
+                                                    <option key={z} value={z}>{z}</option>
+                                                ))}
+                                            </select>
                                         </div>
                                     </div>
                                 )}
 
                                 {reporteSubView === 'precio' && (
-                                    <div className="reportes-filter-group reportes-price-filter">
-                                        <label>Rango de precio:</label>
+                                    <div className="reportes-filter-card reportes-filter-card-wide">
+                                        <div className="reportes-filter-copy">
+                                            <span className="reportes-filter-kicker">Filtro activo</span>
+                                            <strong>Rango de precio</strong>
+                                        </div>
                                         <div className="reportes-price-inputs">
-                                            <div className="price-input-wrapper">
-                                                <span className="price-currency">$</span>
-                                                <input
-                                                    type="number"
-                                                    placeholder="Mínimo"
-                                                    value={reportePrecioMin}
-                                                    onChange={(e) => setReportePrecioMin(e.target.value)}
-                                                />
+                                            <div className="reportes-price-field">
+                                                <span>Mínimo</span>
+                                                <div className="price-input-wrapper">
+                                                    <span className="price-currency">$</span>
+                                                    <input
+                                                        type="number"
+                                                        placeholder="0"
+                                                        value={reportePrecioMin}
+                                                        onChange={(e) => setReportePrecioMin(e.target.value)}
+                                                    />
+                                                </div>
                                             </div>
-                                            <span className="price-separator">—</span>
-                                            <div className="price-input-wrapper">
-                                                <span className="price-currency">$</span>
-                                                <input
-                                                    type="number"
-                                                    placeholder="Máximo"
-                                                    value={reportePrecioMax}
-                                                    onChange={(e) => setReportePrecioMax(e.target.value)}
-                                                />
+                                            <div className="reportes-price-field">
+                                                <span>Máximo</span>
+                                                <div className="price-input-wrapper">
+                                                    <span className="price-currency">$</span>
+                                                    <input
+                                                        type="number"
+                                                        placeholder="500000000"
+                                                        value={reportePrecioMax}
+                                                        onChange={(e) => setReportePrecioMax(e.target.value)}
+                                                    />
+                                                </div>
                                             </div>
                                             <button
                                                 className="btn-buscar-precio"
@@ -616,24 +624,19 @@ function AdminDashboard() {
                                 )}
 
                                 {reporteSubView === 'cierres' && (
-                                    <div className="reportes-filter-group">
-                                        <label>Filtrar cierres por zona:</label>
-                                        <div className="reportes-zona-chips">
-                                            <button
-                                                className={`zona-chip ${reporteCierresZona === 'TODOS' ? 'active' : ''}`}
-                                                onClick={() => handleCierresZonaChange('TODOS')}
-                                            >
-                                                Todos
-                                            </button>
-                                            {ZONAS.map((z) => (
-                                                <button
-                                                    key={z}
-                                                    className={`zona-chip ${reporteCierresZona === z ? 'active' : ''}`}
-                                                    onClick={() => handleCierresZonaChange(z)}
-                                                >
-                                                    {z}
-                                                </button>
-                                            ))}
+                                    <div className="reportes-filter-card">
+                                        <div className="reportes-filter-copy">
+                                            <span className="reportes-filter-kicker">Filtro activo</span>
+                                            <strong>Cierres por zona</strong>
+                                        </div>
+                                        <div className="reportes-select-control">
+                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="reportes-select-icon"><path d="M20 6 9 17l-5-5"></path></svg>
+                                            <select value={reporteCierresZona} onChange={(e) => handleCierresZonaChange(e.target.value)}>
+                                                <option value="TODOS">Todas las zonas</option>
+                                                {ZONAS.map((z) => (
+                                                    <option key={z} value={z}>{z}</option>
+                                                ))}
+                                            </select>
                                         </div>
                                     </div>
                                 )}

@@ -169,10 +169,192 @@ function AsesoresTable({ data, onEdit, onDelete }) {
     );
 }
 
+const formatCurrency = (value) => {
+    const amount = Number(value);
+    return Number.isFinite(amount) ? `$${amount.toLocaleString()}` : 'N/A';
+};
+
+const formatDate = (value) => {
+    if (!value) return 'N/A';
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? value : date.toLocaleString();
+};
+
+const getInmuebleZona = (item) => item.zona || item.inmuebleZona || item.inmueble?.zona || item.inmueble?.barrio?.zona || 'N/A';
+const getInmuebleCodigo = (item) => item.inmuebleCodigo || item.inmueble?.codigo || 'N/A';
+const getInmuebleDireccion = (item) => item.inmuebleDireccion || item.inmueble?.direccion || item.inmueble?.direccionBarrio || 'N/A';
+const getClienteNombre = (item) => item.clienteNombre || item.cliente?.nombre || 'N/A';
+const getAsesorNombre = (item) => item.asesorNombre || item.asesor?.nombre || item.asesotAsignado?.nombre || 'N/A';
+
+function AlertasTable({ data, onDelete, onAtender }) {
+    return (
+        <table className="domustech-admin-table">
+            <thead>
+            <tr>
+                <th>Prioridad</th>
+                <th>Tipo</th>
+                <th>Título</th>
+                <th>Referencia</th>
+                <th>Fecha</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+            </tr>
+            </thead>
+            <tbody>
+            {data.length === 0 ? (
+                <tr>
+                    <td colSpan="7" className="table-empty-row">No hay alertas para mostrar.</td>
+                </tr>
+            ) : (
+                data.map((alerta) => (
+                    <tr key={alerta.codigo}>
+                        <td><span className={`badge-specialty-zone ${alerta.prioridad?.toLowerCase()}`}>{alerta.prioridad}</span></td>
+                        <td>{alerta.tipo}</td>
+                        <td>
+                            <strong>{alerta.titulo}</strong>
+                            <div>{alerta.descripcion}</div>
+                        </td>
+                        <td>{alerta.referenciaId}</td>
+                        <td>{formatDate(alerta.fechaGeneracion)}</td>
+                        <td>{alerta.atendida ? 'Atendida' : 'Pendiente'}</td>
+                        <td>
+                            {!alerta.atendida && (
+                                <button className="btn-action-svg-edit" onClick={() => onAtender(alerta.codigo)} title="Atender alerta">
+                                    ✓
+                                </button>
+                            )}
+                            <button className="btn-action-svg-delete" onClick={() => onDelete(alerta.codigo, 'alertas')} title="Eliminar alerta">
+                                ×
+                            </button>
+                        </td>
+                    </tr>
+                ))
+            )}
+            </tbody>
+        </table>
+    );
+}
+
+function ComportamientoTable({ data, onResolver }) {
+    return (
+        <table className="domustech-admin-table">
+            <thead>
+            <tr>
+                <th>Nivel</th>
+                <th>Tipo</th>
+                <th>Descripción</th>
+                <th>Referencia</th>
+                <th>Fecha</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+            </tr>
+            </thead>
+            <tbody>
+            {data.length === 0 ? (
+                <tr>
+                    <td colSpan="7" className="table-empty-row">No hay registros de comportamiento.</td>
+                </tr>
+            ) : (
+                data.map((registro) => (
+                    <tr key={registro.id}>
+                        <td><span className={`badge-specialty-zone ${registro.nivelAtencion?.toLowerCase()}`}>{registro.nivelAtencion}</span></td>
+                        <td>{registro.tipoComportamiento}</td>
+                        <td>
+                            <strong>{registro.descripcion}</strong>
+                            {registro.observaciones && <div>{registro.observaciones}</div>}
+                        </td>
+                        <td>{registro.referenciaId}</td>
+                        <td>{formatDate(registro.fechaDeteccion)}</td>
+                        <td>{registro.resuelto ? 'Resuelto' : 'Activo'}</td>
+                        <td>
+                            {!registro.resuelto && (
+                                <button className="btn-action-svg-edit" onClick={() => onResolver(registro.id)} title="Resolver registro">
+                                    ✓
+                                </button>
+                            )}
+                        </td>
+                    </tr>
+                ))
+            )}
+            </tbody>
+        </table>
+    );
+}
+
+function ReportesTable({ data, reporteSubView, isLoadingReporte }) {
+    if (isLoadingReporte) {
+        return <div className="table-empty-row">Cargando reporte...</div>;
+    }
+
+    if (reporteSubView === 'visitas') {
+        return (
+            <table className="domustech-admin-table">
+                <thead>
+                <tr>
+                    <th>Código</th>
+                    <th>Cliente</th>
+                    <th>Inmueble</th>
+                    <th>Zona</th>
+                    <th>Fecha</th>
+                    <th>Estado</th>
+                    <th>Asesor</th>
+                </tr>
+                </thead>
+                <tbody>
+                {data.length === 0 ? (
+                    <tr><td colSpan="7" className="table-empty-row">No hay visitas para este reporte.</td></tr>
+                ) : data.map((visita) => (
+                    <tr key={visita.codigo}>
+                        <td><strong>{visita.codigo}</strong></td>
+                        <td>{getClienteNombre(visita)}</td>
+                        <td>{getInmuebleCodigo(visita)} · {getInmuebleDireccion(visita)}</td>
+                        <td>{getInmuebleZona(visita)}</td>
+                        <td>{visita.fecha} {visita.hora || ''}</td>
+                        <td>{visita.estado}</td>
+                        <td>{getAsesorNombre(visita)}</td>
+                    </tr>
+                ))}
+                </tbody>
+            </table>
+        );
+    }
+
+    return (
+        <table className="domustech-admin-table">
+            <thead>
+            <tr>
+                <th>Código</th>
+                <th>Estado</th>
+                <th>Inmueble</th>
+                <th>Zona</th>
+                <th>Cliente</th>
+                <th>Valor</th>
+                <th>Fecha</th>
+            </tr>
+            </thead>
+            <tbody>
+            {data.length === 0 ? (
+                <tr><td colSpan="7" className="table-empty-row">No hay operaciones para este reporte.</td></tr>
+            ) : data.map((operacion) => (
+                <tr key={operacion.codigo}>
+                    <td><strong>{operacion.codigo}</strong></td>
+                    <td>{operacion.estado}</td>
+                    <td>{getInmuebleCodigo(operacion)} · {getInmuebleDireccion(operacion)}</td>
+                    <td>{getInmuebleZona(operacion)}</td>
+                    <td>{getClienteNombre(operacion)}</td>
+                    <td>{formatCurrency(operacion.valorAcordado || operacion.inmueblePrecio)}</td>
+                    <td>{formatDate(operacion.fecha)}</td>
+                </tr>
+            ))}
+            </tbody>
+        </table>
+    );
+}
+
 // ==========================================================================
 // 4. ENRUTADOR PRINCIPAL (AdminTables)
 // ==========================================================================
-function AdminTables({ seccion, data = [], onEdit, onDelete }) {
+function AdminTables({ seccion, data = [], onEdit, onDelete, onAtender, onResolver, reporteSubView, isLoadingReporte }) {
     switch (seccion) {
         case 'inmuebles':
             return <InmueblesTable data={data} onEdit={onEdit} onDelete={onDelete} />;
@@ -180,6 +362,12 @@ function AdminTables({ seccion, data = [], onEdit, onDelete }) {
             return <ClientesTable data={data} onEdit={onEdit} onDelete={onDelete} />;
         case 'asesores':
             return <AsesoresTable data={data} onEdit={onEdit} onDelete={onDelete} />;
+        case 'alertas':
+            return <AlertasTable data={data} onDelete={onDelete} onAtender={onAtender} />;
+        case 'comportamiento':
+            return <ComportamientoTable data={data} onResolver={onResolver} />;
+        case 'reportes':
+            return <ReportesTable data={data} reporteSubView={reporteSubView} isLoadingReporte={isLoadingReporte} />;
         default:
             return <div className="table-empty-row">Sección no válida</div>;
     }

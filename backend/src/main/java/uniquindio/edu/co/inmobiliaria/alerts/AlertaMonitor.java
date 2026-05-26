@@ -2,6 +2,7 @@ package uniquindio.edu.co.inmobiliaria.alerts;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 import uniquindio.edu.co.inmobiliaria.models.entities.Cliente;
 import uniquindio.edu.co.inmobiliaria.models.entities.Contrato;
 import uniquindio.edu.co.inmobiliaria.models.entities.Inmueble;
@@ -59,6 +60,7 @@ public class AlertaMonitor {
         this.clienteJpaRepository = clienteJpaRepository;
     }
 
+    @Transactional
     public void verificarTodo() {
         verificarContratosPorVencer();
         verificarInmueblesSinVisitas();

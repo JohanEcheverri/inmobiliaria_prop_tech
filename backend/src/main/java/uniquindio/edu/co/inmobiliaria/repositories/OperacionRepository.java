@@ -159,7 +159,7 @@ public class OperacionRepository {
     }
 
     private void cargarDesdeBaseDeDatos() {
-        operacionJpaRepository.findAll().forEach(this::agregarAIndices);
+        operacionJpaRepository.findAllConRelaciones().forEach(this::agregarAIndices);
     }
 
     private void agregarAIndices(Operacion operacion) {

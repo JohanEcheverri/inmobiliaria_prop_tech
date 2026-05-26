@@ -1,6 +1,7 @@
 package uniquindio.edu.co.inmobiliaria.services;
 
 import org.springframework.stereotype.Service;
+import uniquindio.edu.co.inmobiliaria.alerts.AlertaMonitor;
 import uniquindio.edu.co.inmobiliaria.comportamiento.ComportamientoService;
 import uniquindio.edu.co.inmobiliaria.models.dto.InmuebleRequest;
 import uniquindio.edu.co.inmobiliaria.models.dto.InmuebleResponse;
@@ -33,19 +34,22 @@ public class InmuebleService {
     private final ComportamientoService comportamientoService;
     private final OperacionService operacionService;
     private final ClienteRepository clienteRepository;
+    private final AlertaMonitor alertaMonitor;
 
     public InmuebleService(InmuebleRepository inmuebleRepository,
                            AsesorRepository asesorRepository,
                            VisitasRepository visitasRepository,
                            ComportamientoService comportamientoService,
                            OperacionService operacionService,
-                           ClienteRepository clienteRepository) {
+                           ClienteRepository clienteRepository,
+                           AlertaMonitor alertaMonitor) {
         this.inmuebleRepository = inmuebleRepository;
         this.asesorRepository = asesorRepository;
         this.visitasRepository = visitasRepository;
         this.comportamientoService = comportamientoService;
         this.operacionService = operacionService;
         this.clienteRepository = clienteRepository;
+        this.alertaMonitor = alertaMonitor;
     }
 
 
@@ -170,6 +174,7 @@ public class InmuebleService {
 
         Inmueble inmueble = construirInmueble(request, request.codigo());
         inmuebleRepository.save(inmueble);
+        ejecutarMonitoresComerciales();
         return mapear(inmueble);
     }
 
@@ -192,6 +197,7 @@ public class InmuebleService {
         Inmueble inmuebleActualizado = construirInmueble(request, codigo);
         inmuebleRepository.update(inmuebleActualizado);
         registrarCambioPrecioSiAplica(codigo, precioAnterior, inmuebleActualizado.getPrecio());
+        ejecutarMonitoresComerciales();
         return mapear(inmuebleActualizado);
     }
 
@@ -208,6 +214,7 @@ public class InmuebleService {
         Inmueble inmueble = construirInmueble(codigo, direccion, ciudad, barrio.getZona(), tipo, finalidad, precio, area,
                 numeroHabitaciones, numeroBanios, estado, asesor, normalizarImagenes(List.of(imagen)));
         inmuebleRepository.save(inmueble);
+        ejecutarMonitoresComerciales();
     }
 
     public void actualizarInmueble(String codigo, String direccion, Ciudad ciudad, Barrio barrio,
@@ -232,6 +239,7 @@ public class InmuebleService {
                 area, numeroHabitaciones, numeroBanios, estado, asesor, normalizarImagenes(List.of(imagen)));
         inmuebleRepository.update(inmuebleActualizado);
         registrarCambioPrecioSiAplica(codigo, precioAnterior, precio);
+        ejecutarMonitoresComerciales();
     }
 
     public InmuebleResponse actualizarEstadoInmueble(String codigo, uniquindio.edu.co.inmobiliaria.models.dto.EstadoInmuebleRequest request) {
@@ -282,6 +290,7 @@ public class InmuebleService {
             operacionService.registerSale(venta);
         }
 
+        ejecutarMonitoresComerciales();
         return mapear(inmueble);
     }
 
@@ -293,6 +302,7 @@ public class InmuebleService {
             throw new IllegalArgumentException("No se encontró un inmueble con el código: " + codigo);
         }
         inmuebleRepository.deleteByCodigo(codigo);
+        ejecutarMonitoresComerciales();
     }
 
     public Inmueble consultarInmueblePorCodigo(String codigo) {
@@ -540,6 +550,11 @@ public class InmuebleService {
         if (Double.compare(precioAnterior, precioNuevo) != 0) {
             comportamientoService.registrarCambioPrecio(codigo, precioAnterior, precioNuevo);
         }
+    }
+
+    private void ejecutarMonitoresComerciales() {
+        comportamientoService.analizarComportamientoAtipico();
+        alertaMonitor.verificarTodo();
     }
 
     private boolean esCierre(Estado anterior, Estado nuevo) {
