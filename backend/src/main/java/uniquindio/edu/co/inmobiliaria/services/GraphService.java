@@ -55,6 +55,13 @@ public class GraphService {
         this.alertaService = alertaService;
     }
 
+    /**
+     * Construye un grafo representando la movilidad comercial entre clientes, inmuebles,
+     * zonas y operaciones a partir de datos persistidos. Las aristas contienen pesos que
+     * representan la intensidad de la relación (visitas, consultas, operaciones).
+     *
+     * @return grafo no dirigido con vértices y aristas listos para análisis y consulta
+     */
     public Graph<GraphVertex> construirGrafoDeMovilidadComercial() {
         Graph<GraphVertex> grafo = new Graph<>(false);
         DynamicArrayList<Cliente> clientes = clienteRepository.findAll();
@@ -140,6 +147,13 @@ public class GraphService {
         return grafo;
     }
 
+    /**
+     * Detecta inmuebles que han sido consultados por múltiples clientes en conjunto
+     * y que además cumplen criterios de similitud (tipo, zona, rango de precio).
+     * Se usa para identificar propiedades con demanda compartida.
+     *
+     * @return lista de vértices de inmuebles considerados similares y con consultas compartidas
+     */
     public DynamicArrayList<GraphVertex> detectarPropiedadesSimilaresConsultadasPorMultiplesClientes() {
         DynamicArrayList<GraphVertex> similares = new DynamicArrayList<>();
         DynamicArrayList<Inmueble> inmuebles = inmuebleRepository.findAll();
@@ -205,6 +219,13 @@ public class GraphService {
         return similares;
     }
 
+    /**
+     * Obtiene patrones de movilidad para un cliente concreto, por ejemplo la secuencia
+     * de zonas visitadas ordenadas cronológicamente.
+     *
+     * @param clienteId identificador del cliente
+     * @return lista dinámica de nombres de zona representando el patrón detectado
+     */
     public DynamicArrayList<String> obtenerPatronesDeMovilidadComercial(String clienteId) {
         List<Visita> visitas = new ArrayList<>();
         for (int i = 0; i < visitasRepository.findByClienteId(clienteId).size(); i++) {
@@ -228,6 +249,12 @@ public class GraphService {
         return zonas;
     }
 
+    /**
+     * Analiza el grafo y retorna las zonas (vértices tipo ZONA) que tienen conexiones
+     * activas con clientes u operaciones — útil para identificar zonas con tránsito comercial.
+     *
+     * @return lista de vértices ZONA con conexiones
+     */
     public DynamicArrayList<GraphVertex> analizarConexionesEntreZonasClientesYOperaciones() {
         Graph<GraphVertex> grafo = construirGrafoDeMovilidadComercial();
         DynamicArrayList<GraphVertex> zonasConConexion = new DynamicArrayList<>();
@@ -244,6 +271,13 @@ public class GraphService {
         return zonasConConexion;
     }
 
+    /**
+     * Consulta las relaciones alcanzables desde un cliente en el grafo (inmuebles, zonas, operaciones).
+     * Realiza un recorrido BFS desde el vértice del cliente y filtra sólo los tipos relevantes.
+     *
+     * @param clienteId identificador del cliente
+     * @return lista dinámica de vértices relacionados con el cliente
+     */
     public DynamicArrayList<GraphVertex> consultarRelacionesClienteInmuebles(String clienteId) {
         Cliente cliente = clienteRepository.findById(clienteId)
                 .orElseThrow(() -> new IllegalArgumentException("Cliente no encontrado: " + clienteId));
@@ -269,6 +303,14 @@ public class GraphService {
         return relaciones;
     }
 
+    /**
+     * Encuentra la ruta más corta en el grafo desde un cliente hasta un inmueble.
+     * Valida existencia de los vértices y devuelve una lista vacía si no es posible.
+     *
+     * @param clienteId identificador del cliente origen
+     * @param codigoInmueble código del inmueble destino
+     * @return ruta como lista dinámica de vértices o lista vacía
+     */
     public DynamicArrayList<GraphVertex> consultarRutaClienteAInmueble(String clienteId, String codigoInmueble) {
         Cliente cliente = clienteRepository.findById(clienteId)
                 .orElseThrow(() -> new IllegalArgumentException("Cliente no encontrado: " + clienteId));
@@ -288,6 +330,13 @@ public class GraphService {
         return grafo.shortestPath(inicio, destino);
     }
 
+    /**
+     * Calcula el peso que aporta un tipo de evento del historial a la relación cliente-inmueble.
+     * Los pesos determinan la fuerza de la arista en el grafo.
+     *
+     * @param tipoEvento tipo de evento de historial
+     * @return peso asociado (0 o positivo)
+     */
     private double calcularPesoPorEvento(TipoEventoHistorial tipoEvento) {
         if (tipoEvento == null) {
             return 0.0;
@@ -303,6 +352,15 @@ public class GraphService {
         };
     }
 
+    /**
+     * Añade una arista al grafo entre dos vértices o actualiza el peso si ya existe.
+     * Garantiza que ambos vértices estén presentes en el grafo antes de operar.
+     *
+     * @param grafo grafo donde se añade/actualiza la arista
+     * @param from vértice origen
+     * @param to vértice destino
+     * @param weight peso a sumar o establecer
+     */
     private void addOrUpdateEdge(Graph<GraphVertex> grafo,
                                  GraphVertex from,
                                  GraphVertex to,
@@ -327,6 +385,14 @@ public class GraphService {
         grafo.addEdge(from, to, weight);
     }
 
+    /**
+     * Determina si dos inmuebles son razonablemente similares en tipo, zona y rango de precio.
+     * Se usan reglas sencillas: misma tipología y zona, o diferencia de precio relativa <= 25%.
+     *
+     * @param a inmueble A
+     * @param b inmueble B
+     * @return true si se consideran similares, false en caso contrario
+     */
     private boolean inmueblesSimilares(Inmueble a, Inmueble b) {
         if (a == null || b == null) {
             return false;
@@ -342,11 +408,26 @@ public class GraphService {
         return diferenciaRelativa <= 0.25;
     }
 
+    /**
+     * Verifica si un evento de historial es una consulta válida y corresponde
+     * al código de inmueble indicado.
+     *
+     * @param evento evento de historial
+     * @param codigoInmueble código de inmueble a comparar
+     * @return true si el evento es una consulta sobre el inmueble dado
+     */
     private boolean esConsultaDeInmueble(EventoHistorial evento, String codigoInmueble) {
         return esConsultaValida(evento)
                 && Objects.equals(evento.getInmueble().getCodigo(), codigoInmueble);
     }
 
+    /**
+     * Comprueba si un EventoHistorial representa una consulta válida (tipo CONSULTA)
+     * y tiene cliente e inmueble correctamente referenciados.
+     *
+     * @param evento evento a validar
+     * @return true si es una consulta válida, false en otro caso
+     */
     private boolean esConsultaValida(EventoHistorial evento) {
         return evento != null
                 && evento.getTipoEvento() == TipoEventoHistorial.CONSULTA
@@ -356,6 +437,11 @@ public class GraphService {
                 && evento.getInmueble().getCodigo() != null;
     }
 
+    /**
+     * Genera alertas automáticas de negocio para inmuebles que muestran alta demanda
+     * (según la detección de propiedades similares consultadas por múltiples clientes).
+     * Crea una alerta para cada inmueble detectado.
+     */
     public void generarAlertasDeMovilidadComercial() {
         DynamicArrayList<GraphVertex> similares = detectarPropiedadesSimilaresConsultadasPorMultiplesClientes();
         for (int i = 0; i < similares.size(); i++) {

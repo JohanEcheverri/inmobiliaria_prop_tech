@@ -15,6 +15,11 @@ import java.util.Objects;
 import java.util.Optional;
 
 @Repository
+/**
+ * Repositorio para operaciones (ventas, arriendos, renovaciones, cancelaciones).
+ * Mantiene una lista en memoria y un índice por código; sincroniza con JPA y
+ * ofrece filtros por tipo, cliente, asesor e inmueble.
+ */
 public class OperacionRepository {
 
     private final OperacionJpaRepository operacionJpaRepository;
@@ -28,6 +33,12 @@ public class OperacionRepository {
         cargarDesdeBaseDeDatos();
     }
 
+    /**
+     * Persiste una operación y la indexa en memoria. Valida la presencia de código
+     * y unicidad.
+     *
+     * @param operacion operación a guardar (Venta/Arriendo/etc.)
+     */
     public void save(Operacion operacion) {
         Objects.requireNonNull(operacion, "La operación no puede ser nula");
         validarCodigo(operacion.getCodigo());
@@ -61,6 +72,11 @@ public class OperacionRepository {
         return true;
     }
 
+    /**
+     * Retorna todas las operaciones cargadas en memoria.
+     *
+     * @return DynamicArrayList de Operacion
+     */
     public DynamicArrayList<Operacion> findAll() {
         return operaciones;
     }
@@ -73,6 +89,12 @@ public class OperacionRepository {
         return operaciones.isEmpty();
     }
 
+    /**
+     * Busca una operación por su código en el índice en memoria.
+     *
+     * @param codigo código de la operación
+     * @return Optional con la operación si existe
+     */
     public Optional<Operacion> findByCodigo(String codigo) {
         if (codigo == null || !operacionesPorCodigo.containsKey(codigo)) {
             return Optional.empty();

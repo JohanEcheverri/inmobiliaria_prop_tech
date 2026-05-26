@@ -8,6 +8,10 @@ import java.util.Optional;
 
 @Repository
 @RequiredArgsConstructor
+/**
+ * Repositorio ligero que delega consultas básicas a UsuarioJpaRepository.
+ * Proporciona utilidades de búsqueda por id o por identificador/email combinado.
+ */
 public class UsuarioRepository {
 
     private final UsuarioJpaRepository jpaRepository;

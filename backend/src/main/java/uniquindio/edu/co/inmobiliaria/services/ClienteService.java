@@ -37,6 +37,13 @@ public class ClienteService {
         this.passwordEncoder = passwordEncoder;
     }
 
+    /**
+     * Registra un nuevo cliente a partir de un DTO de petición.
+     * Valida unicidad de cédula y correo, construye la entidad y la persiste.
+     *
+     * @param request datos del cliente
+     * @return ClienteResponse con los datos guardados
+     */
     public ClienteResponse registrarCliente(ClienteRequest request) {
         validarCliente(request, true);
         if (clienteRepository.existsById(request.id())) {
@@ -51,6 +58,14 @@ public class ClienteService {
         return mapear(cliente);
     }
 
+    /**
+     * Intenta autenticar a un cliente por id y contraseña. Devuelve Optional.empty()
+     * cuando faltan parámetros o la autenticación falla.
+     *
+     * @param id identificador del cliente
+     * @param password contraseña en texto plano a verificar
+     * @return Optional con AuthResponse si la autenticación fue exitosa
+     */
     public Optional<AuthResponse> autenticar(String id, String password) {
         if (estaVacio(id) || estaVacio(password)) {
             return Optional.empty();
@@ -60,6 +75,14 @@ public class ClienteService {
                 .map(this::mapearAuth);
     }
 
+    /**
+     * Conveniencia para registrar un cliente mínimo usando parámetros simples.
+     *
+     * @param cedula cédula del cliente
+     * @param nombre nombre del cliente
+     * @param telefono teléfono del cliente
+     * @param email email del cliente
+     */
     public void registrarCliente(String cedula, String nombre, String telefono, String email) {
         registrarCliente(new ClienteRequest(
                 cedula,
@@ -77,6 +100,14 @@ public class ClienteService {
         ));
     }
 
+    /**
+     * Recomienda inmuebles para un cliente según sus preferencias y su historial de eventos.
+     * Calcula puntajes por zona, tipo, presupuesto y eventos previos y devuelve la lista
+     * ordenada por relevancia.
+     *
+     * @param clienteId id del cliente para el que se generan recomendaciones
+     * @return lista dinámica de inmuebles recomendados (ordenada)
+     */
     public DynamicArrayList<Inmueble> recomendarInmueblesPorPreferencias(String clienteId) {
         Cliente cliente = clienteRepository.findById(clienteId)
                 .orElseThrow(() -> new IllegalArgumentException("No se encontró un cliente con el id: " + clienteId));
@@ -101,6 +132,16 @@ public class ClienteService {
         return recomendados;
     }
 
+    /**
+     * Calcula un puntaje heurístico para un inmueble dado un cliente y su historial.
+     * Suma puntos por coincidencia de zona, tipo, ajuste de presupuesto, número de habitaciones
+     * y eventos previos (favoritos, visitas, etc.).
+     *
+     * @param cliente cliente objetivo
+     * @param inmueble inmueble a evaluar
+     * @param eventos historial del cliente para ponderar preferencias
+     * @return puntaje entero (mayor = más relevante)
+     */
     private int calcularPuntajeInmueble(Cliente cliente, Inmueble inmueble, DynamicArrayList<EventoHistorial> eventos) {
         int score = 0;
         if (cliente.getZonaInteres() != null
@@ -139,6 +180,12 @@ public class ClienteService {
         return score;
     }
 
+    /**
+     * Traduce un TipoEventoHistorial a un impacto numérico en el puntaje de un inmueble.
+     *
+     * @param tipo tipo de evento
+     * @return valor entero que ajusta el puntaje del inmueble
+     */
     private int obtenerPuntajePorEvento(TipoEventoHistorial tipo) {
         return switch (tipo) {
             case FAVORITO -> 50;
@@ -170,6 +217,14 @@ public class ClienteService {
     }
 
 
+    /**
+     * Actualiza parcialmente los datos de un cliente existente.
+     * Valida campos numéricos y evita colisiones de email.
+     *
+     * @param id identificador del cliente a actualizar
+     * @param request DTO con los campos a actualizar (parciales permitidos)
+     * @return ClienteResponse con los datos actualizados
+     */
     public ClienteResponse actualizarCliente(String id, ClienteRequest request) {
         if (estaVacio(id)) {
             throw new IllegalArgumentException("El id del cliente es obligatorio");
@@ -225,18 +280,35 @@ public class ClienteService {
         return mapear(clienteActualizado);
     }
 
+    /**
+     * Obtiene un cliente por id y lo mapea a DTO de respuesta.
+     *
+     * @param id identificador del cliente
+     * @return ClienteResponse
+     */
     public ClienteResponse obtenerCliente(String id) {
         return clienteRepository.findById(id)
                 .map(this::mapear)
                 .orElseThrow(() -> new IllegalArgumentException("No se encontró un cliente con el id: " + id));
     }
 
+    /**
+     * Obtiene un cliente por correo electrónico y lo mapea a DTO.
+     *
+     * @param email correo del cliente
+     * @return ClienteResponse
+     */
     public ClienteResponse obtenerClientePorEmail(String email) {
         return clienteRepository.findByEmail(email)
                 .map(this::mapear)
                 .orElseThrow(() -> new IllegalArgumentException("No se encontró un cliente con el email: " + email));
     }
 
+    /**
+     * Lista todos los clientes y los mapea a DTOs de respuesta.
+     *
+     * @return lista de ClienteResponse
+     */
     public List<ClienteResponse> listarClientes() {
         List<ClienteResponse> respuesta = new ArrayList<>();
         DynamicArrayList<Cliente> clientes = clienteRepository.findAll();
@@ -246,6 +318,11 @@ public class ClienteService {
         return respuesta;
     }
 
+    /**
+     * Elimina un cliente por su identificador; lanza IllegalArgumentException si no existe.
+     *
+     * @param id identificador del cliente a eliminar
+     */
     public void eliminarCliente(String id) {
         if (!clienteRepository.deleteById(id)) {
             throw new IllegalArgumentException("No se encontró un cliente con el id: " + id);

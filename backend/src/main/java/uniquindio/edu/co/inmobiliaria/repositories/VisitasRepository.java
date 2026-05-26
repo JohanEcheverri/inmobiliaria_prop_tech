@@ -13,6 +13,11 @@ import java.util.Objects;
 import java.util.Optional;
 
 @Repository
+/**
+ * Repositorio en memoria para visitas. Mantiene índices por código y una cola
+ * de visitas pendientes para procesamiento FIFO. Sincroniza con VisitaJpaRepository
+ * usando queries que traen relaciones para evitar problemas de carga perezosa.
+ */
 public class VisitasRepository {
 
     private final VisitaJpaRepository visitaJpaRepository;
@@ -28,10 +33,21 @@ public class VisitasRepository {
         cargarDesdeBaseDeDatos();
     }
 
+    /**
+     * Procesa (decola) la siguiente visita pendiente para su ejecución/atención.
+     *
+     * @return Visita desencolada o null si no hay pendientes
+     */
     public Visita procesarVisita() {
         return visitasPendientes.dequeue();
     }
 
+    /**
+     * Persiste una visita nueva y la indexa en memoria. Valida que tenga código
+     * único.
+     *
+     * @param visita entidad Visita a guardar
+     */
     public void save(Visita visita) {
         if (visita == null || visita.getCodigo() == null || visita.getCodigo().isBlank()) {
             throw new IllegalArgumentException("La visita o su código no pueden ser nulos");
@@ -43,6 +59,12 @@ public class VisitasRepository {
         agregarAIndices(visita);
     }
 
+    /**
+     * Actualiza una visita existente; mantiene referencia en memoria y actualiza
+     * las colas e índices según el nuevo estado.
+     *
+     * @param visitaActualizada visita con cambios
+     */
     public void update(Visita visitaActualizada) {
         if (visitaActualizada == null || visitaActualizada.getCodigo() == null || visitaActualizada.getCodigo().isBlank()) {
             throw new IllegalArgumentException("La visita o su código no pueden ser nulos");

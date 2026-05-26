@@ -11,6 +11,11 @@ import java.util.Objects;
 import java.util.Optional;
 
 @Repository
+/**
+ * Repositorio para administradores que sincroniza con la capa JPA y mantiene
+ * índices en memoria para búsquedas por id y email, además de un árbol de
+ * ordenamiento por nombre.
+ */
 public class AdministradorRepository {
 
     private final AdministradorJpaRepository administradorJpaRepository;

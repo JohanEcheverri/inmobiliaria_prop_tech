@@ -6,6 +6,10 @@ import uniquindio.edu.co.inmobiliaria.models.entities.Operacion;
 
 import java.util.List;
 
+/**
+ * Repositorio JPA para operaciones. Contiene una query con JOIN FETCH para
+ * evitar problemas de carga perezosa al traer relaciones necesarias.
+ */
 public interface OperacionJpaRepository extends CrudRepository<Operacion, String> {
 
     @Query("""

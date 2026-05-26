@@ -18,6 +18,11 @@ import java.util.Objects;
 import java.util.Optional;
 
 @Repository
+/**
+ * Repositorio avanzado para inmuebles que combina estructuras en memoria
+ * (árbol, tablas hash, colas) y queries JPA con join-fetch para operaciones
+ * que requieren relaciones. Provee consultas por ciudad, tipo, precio y demanda.
+ */
 public class InmuebleRepository {
 
     private final InmuebleJpaRepository inmuebleJpaRepository;
@@ -43,6 +48,12 @@ public class InmuebleRepository {
         cargarDesdeBaseDeDatos();
     }
 
+    /**
+     * Persiste un inmueble y lo añade a índices en memoria para búsquedas rápidas.
+     * Valida unicidad por código.
+     *
+     * @param inmueble entidad Inmueble a guardar
+     */
     public void save(Inmueble inmueble) {
         if (inmueble == null || inmueble.getCodigo() == null) {
             throw new IllegalArgumentException("El inmueble o su código no pueden ser nulos");
@@ -54,6 +65,11 @@ public class InmuebleRepository {
         agregarAIndices(inmueble);
     }
 
+    /**
+     * Actualiza un inmueble existente y actualiza los índices en memoria.
+     *
+     * @param inmueble inmueble con código existente
+     */
     public void update(Inmueble inmueble) {
         if (inmueble == null || inmueble.getCodigo() == null) {
             throw new IllegalArgumentException("El inmueble o su código no pueden ser nulos");
@@ -67,6 +83,11 @@ public class InmuebleRepository {
         agregarAIndices(inmueble);
     }
 
+    /**
+     * Elimina un inmueble por su código tanto en la base de datos como de los índices.
+     *
+     * @param codigo código del inmueble
+     */
     public void deleteByCodigo(String codigo) {
         if (codigo == null || codigo.isBlank()) {
             throw new IllegalArgumentException("El código del inmueble no puede estar vacío");
@@ -115,6 +136,12 @@ public class InmuebleRepository {
         return inmueblesMayorDemanda.isEmpty() ? null : inmueblesMayorDemanda.peek();
     }
 
+    /**
+     * Retorna el primer inmueble ordenado por número de habitaciones descendente
+     * (mayor número de habitaciones). Usado para queries de ejemplo/estadística.
+     *
+     * @return Optional con el inmueble si existe
+     */
     public Optional<Inmueble> findFirstByOrderByNumeroHabitacionesDesc() {
         Inmueble inmueble = findInmuebleMayorDemanda();
         return inmueble != null ? Optional.of(inmueble) : Optional.empty();
@@ -143,6 +170,12 @@ public class InmuebleRepository {
         return inmueblesPorCodigo.values();
     }
 
+    /**
+     * Consulta JPA que devuelve todos los inmuebles con el asesor asociado ya
+     * inicializado (join-fetch) para evitar LazyInitializationException.
+     *
+     * @return lista de inmuebles con asesor cargado
+     */
     public List<Inmueble> findAllConAsesor() {
         return inmuebleJpaRepository.findAllConAsesor();
     }

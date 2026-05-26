@@ -26,6 +26,14 @@ public class AsesorService {
         this.passwordEncoder = passwordEncoder;
     }
 
+    /**
+     * Intenta autenticar a un asesor por id y contraseña.
+     * Si los parámetros son inválidos devuelve Optional.empty().
+     *
+     * @param id identificador del asesor
+     * @param password contraseña en texto plano a verificar
+     * @return Optional con AuthResponse si la autenticación fue exitosa
+     */
     public Optional<AuthResponse> autenticar(String id, String password) {
         if (estaVacio(id) || estaVacio(password)) {
             return Optional.empty();
@@ -35,6 +43,13 @@ public class AsesorService {
                 .map(this::mapearAuth);
     }
 
+    /**
+     * Registra una entidad Asesor en el repositorio, validando campos obligatorios
+     * y codificando la contraseña.
+     *
+     * @param asesor entidad Asesor a persistir
+     * @return la entidad persistida
+     */
     public Asesor registrarAsesor(Asesor asesor) {
         if (asesor == null) {
             throw new IllegalArgumentException("El asesor no puede ser nulo");
@@ -53,6 +68,13 @@ public class AsesorService {
         return asesor;
     }
 
+    /**
+     * Actualiza la información de un asesor existente. Mantiene la contraseña
+     * previa si no se proporciona una nueva.
+     *
+     * @param asesorActualizado asesor con los datos actualizados
+     * @return asesor actualizado
+     */
     public Asesor modificarAsesor(Asesor asesorActualizado) {
         if (asesorActualizado == null) {
             throw new IllegalArgumentException("El asesor no puede ser nulo");
@@ -77,6 +99,12 @@ public class AsesorService {
         return asesorActualizado;
     }
 
+    /**
+     * Recupera un asesor por su identificador.
+     *
+     * @param id identificador del asesor
+     * @return Optional con el asesor si existe
+     */
     public Optional<Asesor> consultarAsesorPorId(String id) {
         if (estaVacio(id)) {
             return Optional.empty();
@@ -84,10 +112,20 @@ public class AsesorService {
         return asesorRepository.findById(id);
     }
 
+    /**
+     * Devuelve la colección interna de asesores como DynamicArrayList (entidades).
+     *
+     * @return lista dinámica de Asesor
+     */
     public DynamicArrayList<Asesor> listarAsesoresEntidades() {
         return asesorRepository.findAll();
     }
 
+    /**
+     * Lista los asesores y los transforma a DTOs de respuesta para el API.
+     *
+     * @return lista de AsesorResponse
+     */
     public List<AsesorResponse> listarAsesores() {
         List<AsesorResponse> respuesta = new ArrayList<>();
         DynamicArrayList<Asesor> asesores = asesorRepository.findAll();
@@ -97,12 +135,25 @@ public class AsesorService {
         return respuesta;
     }
 
+    /**
+     * Obtiene un asesor y lo mapea a DTO; lanza IllegalArgumentException si no existe.
+     *
+     * @param id identificador del asesor
+     * @return AsesorResponse con la información del asesor
+     */
     public AsesorResponse obtenerAsesor(String id) {
         Asesor asesor = asesorRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("No se encontró el asesor con ID: " + id));
         return convertirAResponse(asesor);
     }
 
+    /**
+     * Registra un asesor a partir de un DTO de petición.
+     * Realiza validaciones de unicidad (id y email) y codifica la contraseña antes de guardar.
+     *
+     * @param request DTO con los datos del asesor
+     * @return DTO de respuesta con el asesor creado
+     */
     public AsesorResponse registrarAsesor(AsesorRequest request) {
         validarAsesorRequest(request, true);
         if (asesorRepository.findById(request.getId()).isPresent()) {
@@ -128,6 +179,14 @@ public class AsesorService {
         return convertirAResponse(nuevoAsesor);
     }
 
+    /**
+     * Actualiza un asesor identificado por id con los datos proporcionados en el request.
+     * Valida conflictos de email y solo codifica la contraseña si se envía una nueva.
+     *
+     * @param id identificador del asesor a actualizar
+     * @param request DTO con los nuevos datos
+     * @return DTO con la información actualizada
+     */
     public AsesorResponse actualizarAsesor(String id, AsesorRequest request) {
         if (estaVacio(id)) {
             throw new IllegalArgumentException("El id del asesor es obligatorio");
@@ -162,6 +221,11 @@ public class AsesorService {
         return convertirAResponse(asesor);
     }
 
+    /**
+     * Elimina un asesor por su identificador; lanza excepción si no existe.
+     *
+     * @param id identificador del asesor a eliminar
+     */
     public void eliminarAsesor(String id) {
         if (!asesorRepository.deleteById(id)) {
             throw new IllegalArgumentException("No se encontró el asesor con ID: " + id);

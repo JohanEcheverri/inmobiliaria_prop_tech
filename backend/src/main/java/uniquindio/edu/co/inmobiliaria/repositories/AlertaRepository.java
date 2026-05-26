@@ -17,6 +17,12 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
+/**
+ * Repositorio que mantiene en memoria un historial de alertas, una cola de
+ * alertas pendientes y una cola priorizada para contratos próximos a vencer.
+ * Sincroniza con AlertaJpaRepository y proporciona operaciones de consulta y
+ * manipulación con semántica de cache.
+ */
 public class AlertaRepository {
 
     private final AlertaJpaRepository alertaJpaRepository;
@@ -78,6 +84,13 @@ public class AlertaRepository {
         }
     }
 
+    /**
+     * Persiste una alerta y la coloca en el cache/local queues para atención.
+     * Valida nulidad y actualiza estructuras auxiliares.
+     *
+     * @param alerta alerta a persistir
+     * @return alerta persistida
+     */
     public Alerta save(Alerta alerta) {
         if (alerta == null) {
             throw new IllegalArgumentException("La alerta no puede ser nula");
@@ -101,14 +114,30 @@ public class AlertaRepository {
         return alertaJpaRepository.findFirstByTipoAndReferenciaIdAndAtendidaFalseOrderByFechaGeneracionDesc(tipo, referenciaId);
     }
 
+    /**
+     * Retorna la lista de alertas pendientes encoladas para atención.
+     *
+     * @return lista de alertas pendientes
+     */
     public List<Alerta> findPending() {
         return alertasPendientes.toList();
     }
 
+    /**
+     * Retorna el historial completo de alertas (orden reciente primero).
+     *
+     * @return lista completa de alertas
+     */
     public List<Alerta> findAll() {
         return historialAlertas.toList();
     }
 
+    /**
+     * Busca alertas por su tipo y las ordena por fecha de generación descendente.
+     *
+     * @param tipo tipo de alerta
+     * @return lista de alertas que coinciden con el tipo
+     */
     public List<Alerta> findByTipo(TipoAlerta tipo) {
         if (tipo == null) {
             throw new IllegalArgumentException("El tipo de alerta no puede ser nulo");
@@ -137,6 +166,13 @@ public class AlertaRepository {
         return alertaJpaRepository.findById(codigo);
     }
 
+    /**
+     * Marca una alerta como atendida, registra fecha de atención y actualiza las
+     * colas internas (pendientes y contratos próximos).
+     *
+     * @param codigo código de la alerta a marcar
+     * @return Optional con la alerta actualizada
+     */
     @Transactional
     public Optional<Alerta> markAsAttended(String codigo) {
         if (codigo == null || codigo.isBlank()) {

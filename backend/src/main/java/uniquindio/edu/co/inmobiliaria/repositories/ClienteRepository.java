@@ -15,6 +15,12 @@ import java.util.Objects;
 import java.util.Optional;
 
 @Repository
+/**
+ * Repositorio en memoria para clientes con sincronización a la base de datos
+ * a través de ClienteJpaRepository. Mantiene índices auxiliares (hash tables,
+ * árbol y lista dinámica) para consultas rápidas por id, email y rango de
+ * presupuesto.
+ */
 public class ClienteRepository {
 
     private final ClienteJpaRepository clienteJpaRepository;
@@ -32,6 +38,12 @@ public class ClienteRepository {
         cargarDesdeBaseDeDatos();
     }
 
+    /**
+     * Guarda un cliente en la base de datos y lo añade a los índices en memoria.
+     * Valida unicidad por id y email.
+     *
+     * @param cliente entidad Cliente a persistir
+     */
     public void save(Cliente cliente) {
         Objects.requireNonNull(cliente, "El cliente no puede ser nulo");
         validarId(cliente);
@@ -45,6 +57,12 @@ public class ClienteRepository {
         agregarAIndices(cliente);
     }
 
+    /**
+     * Actualiza un cliente existente. Sincroniza cambios con la base y actualiza
+     * los índices en memoria (elimina la versión anterior e indexa la nueva).
+     *
+     * @param clienteActualizado entidad Cliente con id existente
+     */
     public void update(Cliente clienteActualizado) {
         Objects.requireNonNull(clienteActualizado, "El cliente no puede ser nulo");
         validarId(clienteActualizado);
@@ -70,6 +88,13 @@ public class ClienteRepository {
         return deleteById(cliente.get().getId());
     }
 
+    /**
+     * Elimina un cliente por id tanto en la base de datos como de los índices en memoria.
+     * Devuelve true si la eliminación se realizó.
+     *
+     * @param id identificador del cliente
+     * @return true si se eliminó
+     */
     public boolean deleteById(String id) {
         Optional<Cliente> cliente = findById(id);
         if (cliente.isEmpty()) {
@@ -80,6 +105,11 @@ public class ClienteRepository {
         return true;
     }
 
+    /**
+     * Retorna la lista en memoria de todos los clientes indexados.
+     *
+     * @return DynamicArrayList de clientes
+     */
     public DynamicArrayList<Cliente> findAll() {
         return clientes;
     }
@@ -96,6 +126,12 @@ public class ClienteRepository {
         return id != null && clientesPorId.containsKey(id);
     }
 
+    /**
+     * Busca un cliente por id usando el índice en memoria (HashTable).
+     *
+     * @param id identificador del cliente
+     * @return Optional con el cliente si existe
+     */
     public Optional<Cliente> findById(String id) {
         if (id == null || !clientesPorId.containsKey(id)) {
             return Optional.empty();
@@ -103,6 +139,12 @@ public class ClienteRepository {
         return Optional.of(clientesPorId.get(id));
     }
 
+    /**
+     * Busca un cliente por email usando el índice de email en memoria.
+     *
+     * @param email correo electrónico
+     * @return Optional con el cliente si existe
+     */
     public Optional<Cliente> findByEmail(String email) {
         if (email == null || !clientesPorEmail.containsKey(email)) {
             return Optional.empty();
@@ -160,6 +202,14 @@ public class ClienteRepository {
         return resultado;
     }
 
+    /**
+     * Consulta clientes cuyo presupuesto está entre min y max. Utiliza el árbol
+     * ordenado por presupuesto para eficiencia en búsquedas por rango.
+     *
+     * @param min mínimo presupuesto
+     * @param max máximo presupuesto
+     * @return DynamicArrayList de clientes que cumplen el rango
+     */
     public DynamicArrayList<Cliente> findByPresupuestoBetween(double min, double max) {
         DynamicArrayList<Cliente> resultado = new DynamicArrayList<>();
         DynamicArrayList<Cliente> ordenados = clientesPorPresupuesto.inOrder();

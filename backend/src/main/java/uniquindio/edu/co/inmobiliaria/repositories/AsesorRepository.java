@@ -12,6 +12,10 @@ import java.util.Objects;
 import java.util.Optional;
 
 @Repository
+/**
+ * Repositorio en memoria para asesores. Mantiene índices por id y email y un
+ * árbol que ordena por numero de cierres para consultas de ranking.
+ */
 public class AsesorRepository {
 
     private final AsesorJpaRepository asesorJpaRepository;
@@ -31,6 +35,11 @@ public class AsesorRepository {
         cargarDesdeBaseDeDatos();
     }
 
+    /**
+     * Guarda un asesor en la base y lo indexa en memoria (id, email y árbol de cierres).
+     *
+     * @param asesor entidad Asesor a guardar
+     */
     public void save(Asesor asesor) {
         validarAsesorConId(asesor);
         if (asesoresPorId.containsKey(asesor.getId())) {
@@ -43,6 +52,11 @@ public class AsesorRepository {
         agregarAIndices(asesor);
     }
 
+    /**
+     * Actualiza un asesor existente y sincroniza índices en memoria.
+     *
+     * @param asesorActualizado asesor con id existente
+     */
     public void update(Asesor asesorActualizado) {
         validarAsesorConId(asesorActualizado);
         if (!asesoresPorId.containsKey(asesorActualizado.getId())) {
@@ -71,6 +85,12 @@ public class AsesorRepository {
         return true;
     }
 
+    /**
+     * Busca un asesor por id usando el índice en memoria.
+     *
+     * @param id identificador del asesor
+     * @return Optional con el asesor si existe
+     */
     public Optional<Asesor> findById(String id) {
         if (id == null || !asesoresPorId.containsKey(id)) {
             return Optional.empty();

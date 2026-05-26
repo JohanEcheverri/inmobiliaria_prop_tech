@@ -10,6 +10,10 @@ import uniquindio.edu.co.inmobiliaria.structures.HashTable;
 import java.util.Objects;
 
 @Repository
+/**
+ * Repositorio en memoria para eventos de historial. Mantiene una lista y un
+ * índice por id para búsquedas rápidas, sincronizándose con EventoHistorialJpaRepository.
+ */
 public class EventoHistorialRepository {
 
     private final EventoHistorialJpaRepository eventoHistorialJpaRepository;
@@ -23,6 +27,13 @@ public class EventoHistorialRepository {
         cargarDesdeBaseDeDatos();
     }
 
+    /**
+     * Persiste un evento de historial en la base de datos y lo añade al cache en memoria.
+     * Valida que el evento tenga cliente e inmueble asociados.
+     *
+     * @param evento EventoHistorial a guardar
+     * @return evento persistido con id asignado
+     */
     public EventoHistorial save(EventoHistorial evento) {
         if (evento == null) {
             throw new IllegalArgumentException("El evento de historial no puede ser nulo");
@@ -41,6 +52,12 @@ public class EventoHistorialRepository {
         return guardado;
     }
 
+    /**
+     * Obtiene los eventos de historial asociados a un cliente por su id.
+     *
+     * @param clienteId id del cliente
+     * @return lista de eventos asociados
+     */
     public DynamicArrayList<EventoHistorial> findByClienteId(String clienteId) {
         DynamicArrayList<EventoHistorial> resultado = new DynamicArrayList<>();
         for (int i = 0; i < eventos.size(); i++) {
@@ -52,6 +69,13 @@ public class EventoHistorialRepository {
         return resultado;
     }
 
+    /**
+     * Filtra eventos por cliente y tipo de evento (VISITA, FAVORITO, etc.).
+     *
+     * @param clienteId id del cliente
+     * @param tipo tipo de evento historial
+     * @return lista de eventos que coinciden
+     */
     public DynamicArrayList<EventoHistorial> findByClienteIdAndTipo(String clienteId, TipoEventoHistorial tipo) {
         DynamicArrayList<EventoHistorial> resultado = new DynamicArrayList<>();
         for (int i = 0; i < eventos.size(); i++) {

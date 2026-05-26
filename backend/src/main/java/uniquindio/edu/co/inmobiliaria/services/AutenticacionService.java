@@ -15,6 +15,14 @@ public class AutenticacionService {
     private final UsuarioRepository usuarioRepository;
     private final PasswordEncoder passwordEncoder;
 
+    /**
+     * Realiza el proceso de autenticación: valida entrada, busca el usuario por
+     * identificación o email, verifica la contraseña y construye un DTO de sesión.
+     *
+     * @param request DTO con identificador (id o email) y contraseña
+     * @return SesionDTO con información básica del usuario y rol
+     * @throws Exception si faltan datos, usuario no existe o contraseña es inválida
+     */
     public SesionDTO login(LoginRequest request) throws Exception {
         if (request == null || request.getIdentificacion() == null || request.getIdentificacion().isBlank()) {
             throw new Exception("La identificación o el correo son obligatorios");

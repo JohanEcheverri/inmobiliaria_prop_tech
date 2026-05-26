@@ -8,6 +8,10 @@ import uniquindio.edu.co.inmobiliaria.models.enums.EstadoVisita;
 import java.time.LocalDate;
 import java.util.List;
 
+/**
+ * Repositorio JPA para Visita. Incluye consultas para traer relaciones
+ * (cliente, inmueble, asesor) y filtros por fecha/estado.
+ */
 public interface VisitaJpaRepository extends CrudRepository<Visita, String> {
 
     @Query("""

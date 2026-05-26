@@ -46,6 +46,12 @@ public class OperacionService {
         this.asesorRepository = asesorRepository;
     }
 
+    /**
+     * Registra una operación de arriendo en repositorio, validando estado por defecto.
+     *
+     * @param arriendo entidad Arriendo a persistir
+     * @return la entidad persistida
+     */
     public Arriendo registerRental(Arriendo arriendo) {
         if (arriendo == null) {
             throw new IllegalArgumentException("La operación de arriendo no puede ser nula");
@@ -57,6 +63,12 @@ public class OperacionService {
         return arriendo;
     }
 
+    /**
+     * Registra una operación de venta; establece estado por defecto si no está presente.
+     *
+     * @param venta entidad Venta a persistir
+     * @return la entidad persistida
+     */
     public Venta registerSale(Venta venta) {
         if (venta == null) {
             throw new IllegalArgumentException("La operación de venta no puede ser nula");
@@ -70,6 +82,13 @@ public class OperacionService {
 
     /**
      * Helper usado por controladores para registrar una venta completa a partir de ids y valores.
+     * Valida la existencia de inmueble y cliente, determina asesor y persiste la venta en estado COMPLETADA.
+     *
+     * @param inmuebleCodigo código del inmueble vendido
+     * @param clienteId id del cliente comprador
+     * @param asesorId id del asesor (opcional, si es null se usa el asesor del inmueble)
+     * @param valorAcordado valor pactado de la venta
+     * @param comision comisión asociada
      */
     public void registrarVentaCompleta(String inmuebleCodigo, String clienteId, String asesorId, double valorAcordado, double comision) {
         if (inmuebleCodigo == null || inmuebleCodigo.isBlank()) {
@@ -110,6 +129,12 @@ public class OperacionService {
         operacionRepository.save(venta);
     }
 
+    /**
+     * Registra una renovación de arriendo y persiste la entidad.
+     *
+     * @param renovacion entidad Renovacion
+     * @return la renovación persistida
+     */
     public Renovacion registerRenewal(Renovacion renovacion) {
         if (renovacion == null) {
             throw new IllegalArgumentException("La renovación no puede ser nula");
@@ -121,6 +146,12 @@ public class OperacionService {
         return renovacion;
     }
 
+    /**
+     * Registra una cancelación de operación y la persiste en estado CANCELADA por defecto.
+     *
+     * @param cancelacion entidad Cancelacion
+     * @return la cancelación persistida
+     */
     public Cancelacion registerTermination(Cancelacion cancelacion) {
         if (cancelacion == null) {
             throw new IllegalArgumentException("La cancelación no puede ser nula");
@@ -132,6 +163,12 @@ public class OperacionService {
         return cancelacion;
     }
 
+    /**
+     * Consulta una operación por su código.
+     *
+     * @param codigo código de la operación
+     * @return Optional con la operación si existe
+     */
     public Optional<Operacion> consultarOperacion(String codigo) {
         if (codigo == null || codigo.isBlank()) {
             return Optional.empty();
@@ -140,6 +177,12 @@ public class OperacionService {
     }
 
 
+    /**
+     * Lista operaciones asociadas a un cliente dado.
+     *
+     * @param clienteId identificador del cliente
+     * @return lista dinámica de operaciones del cliente
+     */
     @Transactional(readOnly = true)
     public DynamicArrayList<Operacion> listarOperacionesCliente(String clienteId) {
         if (clienteId == null || clienteId.isBlank()) {
@@ -150,6 +193,12 @@ public class OperacionService {
 
     /**
      * Obtener ventas (propiedades adquiridas) por cliente.
+     */
+    /**
+     * Obtiene las ventas (propiedades adquiridas) realizadas por un cliente.
+     *
+     * @param clienteId identificador del cliente
+     * @return lista dinámica de ventas del cliente
      */
     @Transactional(readOnly = true)
     public DynamicArrayList<Venta> obtenerPropiedadesAdquiridasCliente(String clienteId) {
@@ -167,6 +216,12 @@ public class OperacionService {
         return resultado;
     }
 
+    /**
+     * Filtra operaciones cuyo inmueble pertenezca a la zona indicada.
+     *
+     * @param zona zona a filtrar
+     * @return lista dinámica de operaciones en la zona
+     */
     public DynamicArrayList<Operacion> consultarOperacionesPorZona(Zona zona) {
         DynamicArrayList<Operacion> resultado = new DynamicArrayList<>();
         if (zona == null) {
@@ -184,6 +239,13 @@ public class OperacionService {
         return resultado;
     }
 
+    /**
+     * Devuelve operaciones cuyo precio (del inmueble o valor acordado) esté dentro del rango.
+     *
+     * @param min precio mínimo
+     * @param max precio máximo
+     * @return lista dinámica de operaciones en el rango de precio
+     */
     public DynamicArrayList<Operacion> consultarOperacionesPorPrecio(double min, double max) {
         DynamicArrayList<Operacion> resultado = new DynamicArrayList<>();
         if (min > max) {
@@ -200,6 +262,12 @@ public class OperacionService {
         return resultado;
     }
 
+    /**
+     * Filtra visitas según la zona del inmueble asociado.
+     *
+     * @param zona zona a filtrar
+     * @return lista dinámica de Visita en la zona
+     */
     public DynamicArrayList<Visita> consultarVisitasPorZona(Zona zona) {
         DynamicArrayList<Visita> resultado = new DynamicArrayList<>();
         if (zona == null) {
@@ -217,10 +285,21 @@ public class OperacionService {
         return resultado;
     }
 
+    /**
+     * Recupera operaciones cuyo estado sea COMPLETADA.
+     *
+     * @return lista dinámica de operaciones cerradas
+     */
     public DynamicArrayList<Operacion> consultarOperacionesCerradas() {
         return operacionRepository.findByEstado(EstadoOperacion.COMPLETADA);
     }
 
+    /**
+     * Filtra operaciones cerradas dentro de una zona específica.
+     *
+     * @param zona zona a filtrar
+     * @return lista dinámica de operaciones cerradas en la zona
+     */
     public DynamicArrayList<Operacion> consultarOperacionesCerradasPorZona(Zona zona) {
         DynamicArrayList<Operacion> resultado = new DynamicArrayList<>();
         if (zona == null) {

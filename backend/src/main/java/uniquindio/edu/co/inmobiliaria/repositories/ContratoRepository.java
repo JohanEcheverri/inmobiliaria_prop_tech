@@ -9,6 +9,10 @@ import java.util.Objects;
 import java.util.Optional;
 
 @Repository
+/**
+ * Repositorio sencillo para contratos que sincroniza con ContratoJpaRepository
+ * y mantiene una lista enlazada en memoria. Provee operaciones CRUD básicas.
+ */
 public class ContratoRepository {
 
     private final ContratoJpaRepository contratoJpaRepository;
@@ -20,6 +24,12 @@ public class ContratoRepository {
         cargarDesdeBaseDeDatos();
     }
 
+    /**
+     * Persiste un contrato y lo añade al final de la lista en memoria.
+     *
+     * @param contrato contrato a guardar
+     * @return contrato persistido
+     */
     public Contrato save(Contrato contrato) {
         if (contrato == null) {
             throw new IllegalArgumentException("El contrato no puede ser nulo");
@@ -29,6 +39,11 @@ public class ContratoRepository {
         return guardado;
     }
 
+    /**
+     * Actualiza un contrato en la base y reemplaza la versión en memoria.
+     *
+     * @param contratoActualizado contrato con código existente
+     */
     public void update(Contrato contratoActualizado) {
         if (contratoActualizado == null || contratoActualizado.getCodigo() == null) {
             throw new IllegalArgumentException("El contrato o su código no pueden ser nulos");
