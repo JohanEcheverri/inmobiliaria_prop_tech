@@ -32,6 +32,18 @@ public class Asesor extends Usuario {
     @Column(name = "numero_de_cierres")
     private Integer numeroDeCierres = 0;
 
+    /**
+     * Construye un Asesor inicializando datos de {@link Usuario} y atributos propios.
+     *
+     * @param nombre nombre completo o visible del asesor
+     * @param id identificador único
+     * @param email correo electrónico
+     * @param telefono número de teléfono
+     * @param contrasenia contraseña (almacenar como hash en producción)
+     * @param fotoPerfil referencia a la imagen de perfil
+     * @param zonaAsignada zona geográfica de cobertura del asesor
+     * @param especialidad tipo de inmueble de mayor experiencia
+     */
     public Asesor(String nombre, String id, String email, String telefono,String contrasenia, String fotoPerfil, Zona zonaAsignada, TipoInmueble especialidad) {
         super(nombre, id, email, telefono, contrasenia, fotoPerfil);
         this.zonaAsignada = zonaAsignada;

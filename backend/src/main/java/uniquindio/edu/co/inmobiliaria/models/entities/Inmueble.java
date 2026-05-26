@@ -78,19 +78,48 @@ public class Inmueble {
     private List<String> imagen = new ArrayList<>();
 
     @Transient
+    /**
+     * Devuelve la dirección principal del inmueble (mapeada en campo {@code direccionBarrio}).
+     *
+     * Este método está marcado @Transient porque es una vista derivada del campo persistente
+     * {@code direccionBarrio} y no crea una columna adicional en la entidad.
+     */
     public String getDireccion() {
         return direccionBarrio;
     }
 
+    /**
+     * Establece la dirección principal del inmueble. Internamente actualiza el campo
+     * {@code direccionBarrio} usado para persistencia.
+     *
+     * @param direccion texto representando la dirección o nombre de barrio
+     */
     public void setDireccion(String direccion) {
         this.direccionBarrio = direccion;
     }
 
     @Transient
+    /**
+     * Construye y devuelve un objeto {@link Barrio} derivado de los campos internos
+     * {@code zona}, {@code direccionBarrio} y {@code ciudad}.
+     *
+     * Nota: devuelve una nueva instancia en cada llamada; no está ligada al estado de
+     * la entidad para persistencia directa.
+     *
+     * @return instancia de {@link Barrio} representando la ubicación del inmueble
+     */
     public Barrio getBarrio() {
         return new Barrio(zona, direccionBarrio, ciudad);
     }
 
+    /**
+     * Actualiza los campos internos de ubicación a partir de un {@link Barrio}.
+     *
+     * La operación copia zona, nombre (como direcciónBarrio) y ciudad. Si se pasa
+     * {@code null} no realiza cambios.
+     *
+     * @param barrio objeto Barrio con los datos de ubicación
+     */
     public void setBarrio(Barrio barrio) {
         if (barrio == null) {
             return;
