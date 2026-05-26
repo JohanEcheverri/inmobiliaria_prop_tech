@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import axiosDirect from 'axios';
-
-const API_BASE_URL = "http://localhost:8080/api";
+import { apiUrl } from '../api';
 
 const formDataBase = {
     // Inmuebles
@@ -83,7 +82,7 @@ function AdminModal({ seccion, datos, onClose, onSuccess }) {
         e.preventDefault();
         setError('');
 
-        let endpoint = `${API_BASE_URL}/${seccion}`;
+        let endpoint = apiUrl(`/${seccion}`);
         let payload = {};
 
         try {
@@ -152,7 +151,7 @@ function AdminModal({ seccion, datos, onClose, onSuccess }) {
         } catch (err) {
             console.error("Error al guardar en el modal:", err);
             if (err.response) {
-                setError(err.response.data.message || err.response.data.error || `No se pudo procesar la solicitud en ${seccion}`);
+                setError(err.response.data?.mensaje || err.response.data?.message || err.response.data?.error || err.response.data || `No se pudo procesar la solicitud en ${seccion}`);
             } else {
                 setError('No se pudo conectar con el servidor backend');
             }

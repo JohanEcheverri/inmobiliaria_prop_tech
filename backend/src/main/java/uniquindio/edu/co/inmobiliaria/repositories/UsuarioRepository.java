@@ -16,4 +16,14 @@ public class UsuarioRepository {
         return jpaRepository.findById(id);
     }
 
+    public Optional<Usuario> buscarPorIdentificacionOEmail(String identificacionOEmail) {
+        if (identificacionOEmail == null || identificacionOEmail.isBlank()) {
+            return Optional.empty();
+        }
+
+        String valor = identificacionOEmail.trim();
+        return jpaRepository.findById(valor)
+                .or(() -> jpaRepository.findByEmail(valor));
+    }
+
 }

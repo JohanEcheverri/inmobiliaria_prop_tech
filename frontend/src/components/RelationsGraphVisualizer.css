@@ -1,0 +1,433 @@
+/* RelationsGraphVisualizer.css */
+
+.relations-dashboard-container {
+    display: flex;
+    gap: 20px;
+    height: calc(100vh - 160px);
+    min-height: 580px;
+    color: #e2e8f0;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   1. CONTROL SIDEBAR
+   ══════════════════════════════════════════════════════════════════════════ */
+.graph-sidebar-controls {
+    width: 320px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    flex-shrink: 0;
+}
+
+.sidebar-control-card {
+    background-color: #151324;
+    border: 1px solid #2a253d;
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+    display: flex;
+    flex-direction: column;
+}
+
+.sidebar-control-card h4 {
+    margin: 0 0 6px 0;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #ffffff;
+    letter-spacing: 0.02em;
+}
+
+.control-desc {
+    margin: 0 0 16px 0;
+    font-size: 0.8rem;
+    color: #8c88a5;
+    line-height: 1.35;
+}
+
+/* Filtros de Red buttons */
+.filter-checkbox-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.filter-toggle-btn {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    background-color: #1e1b30;
+    border: 1px solid #312b4b;
+    border-radius: 10px;
+    color: #a5a1c0;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-align: left;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.filter-toggle-btn:hover {
+    background-color: #27233f;
+    color: #ffffff;
+}
+
+.filter-toggle-btn.active {
+    background-color: #272144;
+    border-color: #9370db;
+    color: #ffffff;
+    box-shadow: 0 0 10px rgba(147, 112, 219, 0.15);
+}
+
+.type-color-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+/* Ruta Corta dropdowns & inputs */
+.route-select-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 12px;
+}
+
+.route-select-group label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #a5a1c0;
+}
+
+.route-select-group select {
+    background-color: #1e1b30;
+    border: 1px solid #312b4b;
+    border-radius: 8px;
+    padding: 9px 12px;
+    color: #ffffff;
+    font-size: 0.85rem;
+    outline: none;
+    transition: border-color 0.2s;
+    cursor: pointer;
+}
+
+.route-select-group select:focus {
+    border-color: #9370db;
+}
+
+.route-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 6px;
+}
+
+.btn-action-route-calc {
+    flex: 1;
+    background: linear-gradient(135deg, #9370db 0%, #7e57c2 100%);
+    border: none;
+    border-radius: 8px;
+    padding: 10px 14px;
+    color: #ffffff;
+    font-weight: 700;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 12px rgba(147, 112, 219, 0.2);
+}
+
+.btn-action-route-calc:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(147, 112, 219, 0.35);
+}
+
+.btn-action-route-calc:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+.btn-action-route-clear {
+    background-color: transparent;
+    border: 1px solid #f44336;
+    border-radius: 8px;
+    padding: 10px 14px;
+    color: #ff8a80;
+    font-weight: 700;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2;
+}
+
+.btn-action-route-clear:hover {
+    background-color: rgba(244, 67, 54, 0.1);
+    color: #ffffff;
+}
+
+/* Info Display Panel */
+.info-display-card {
+    flex: 1;
+    min-height: 180px;
+    border-left: 4px solid #9370db;
+}
+
+.info-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    margin: auto;
+    color: #66617e;
+    max-width: 220px;
+}
+
+.placeholder-icon {
+    width: 32px;
+    height: 32px;
+    margin-bottom: 12px;
+    stroke: currentColor;
+}
+
+.info-placeholder p {
+    font-size: 0.8rem;
+    line-height: 1.4;
+    margin: 0;
+}
+
+.selected-node-info {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    animation: fadeIn 0.25s ease-out;
+}
+
+.info-node-badge {
+    align-self: flex-start;
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border: 1px solid currentColor;
+}
+
+.selected-node-info h5 {
+    margin: 4px 0 0 0;
+    font-size: 1.15rem;
+    color: #ffffff;
+    font-weight: 700;
+}
+
+.selected-node-info .node-id {
+    margin: 0;
+    font-size: 0.75rem;
+    color: #8c88a5;
+    font-family: monospace;
+}
+
+.selected-node-info .node-summary {
+    margin: 6px 0 0 0;
+    font-size: 0.85rem;
+    color: #c9c5e2;
+    line-height: 1.45;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   2. GRAPH VIEWPORT DISPLAY
+   ══════════════════════════════════════════════════════════════════════════ */
+.graph-display-panel {
+    flex: 1;
+    background-color: #0b0a12;
+    border: 1px solid #2a253d;
+    border-radius: 16px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+}
+
+.graph-panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    background-color: #12101f;
+    border-bottom: 1px solid #201b31;
+    z-index: 10;
+}
+
+.header-meta h3 {
+    margin: 0 0 3px 0;
+    font-size: 1rem;
+    font-weight: 700;
+    color: #ffffff;
+}
+
+.header-meta span {
+    font-size: 0.75rem;
+    color: #8c88a5;
+}
+
+.zoom-controls {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.zoom-controls button {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    border: 1px solid #312b4b;
+    background-color: #1a162b;
+    color: #c9c5e2;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.zoom-controls button:hover {
+    background-color: #272144;
+    border-color: #9370db;
+    color: #ffffff;
+}
+
+.refresh-graph-btn {
+    font-size: 0.85rem !important;
+}
+
+/* Canvas Area */
+.graph-canvas-container {
+    flex: 1;
+    position: relative;
+    cursor: grab;
+}
+
+.graph-canvas-container:active {
+    cursor: grabbing;
+}
+
+.graph-svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+/* Loading & Error overlays */
+.graph-loading-overlay,
+.graph-error-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(11, 10, 18, 0.85);
+    z-index: 100;
+    backdrop-filter: blur(4px);
+    text-align: center;
+    color: #c9c5e2;
+}
+
+.loading-spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid rgba(147, 112, 219, 0.2);
+    border-top: 3px solid #9370db;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 16px;
+}
+
+.graph-loading-overlay p {
+    font-size: 0.9rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   3. SVG SVG NODES & EDGES STYLING
+   ══════════════════════════════════════════════════════════════════════════ */
+.graph-edge-line {
+    stroke-linecap: round;
+    transition: stroke-width 0.25s, stroke 0.25s, opacity 0.25s;
+    opacity: 0.45;
+}
+
+.graph-edge-line.highlighted {
+    opacity: 0.95;
+}
+
+.graph-edge-line.shortest-path {
+    opacity: 1;
+    stroke-dasharray: 6, 4;
+    animation: dash-flow 24s linear infinite;
+}
+
+.graph-edge-line.dimmed {
+    opacity: 0.05 !important;
+}
+
+/* Node Groups */
+.node-group {
+    cursor: pointer;
+    transition: opacity 0.25s;
+}
+
+.node-group:hover {
+    filter: brightness(1.2);
+}
+
+.node-circle {
+    transition: r 0.2s, stroke-width 0.2s;
+}
+
+.node-group:hover .node-circle {
+    r: 15;
+}
+
+.node-group.dimmed {
+    pointer-events: none;
+}
+
+/* Labels on Nodes */
+.node-label {
+    font-size: 8px;
+    font-weight: 600;
+    pointer-events: none;
+    letter-spacing: 0.02em;
+    font-family: inherit;
+    transition: font-size 0.2s, fill 0.2s;
+}
+
+.node-label.active {
+    font-size: 10px;
+    font-weight: 700;
+}
+
+/* Animations */
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes dash-flow {
+    from { stroke-dashoffset: 200; }
+    to { stroke-dashoffset: 0; }
+}

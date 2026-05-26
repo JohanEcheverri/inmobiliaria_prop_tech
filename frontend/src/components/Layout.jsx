@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import logo from '../assets/logo.png';
 import './Layout.css';
+import { apiUrl } from '../api';
 
 const Layout = ({ children, actions, contentClassName = '' }) => {
     const navigate = useNavigate();
@@ -24,6 +25,20 @@ const Layout = ({ children, actions, contentClassName = '' }) => {
         const savedSession = localStorage.getItem("user_session");
         return savedSession ? JSON.parse(savedSession) : null;
     });
+
+    useEffect(() => {
+        const refreshUserSession = () => {
+            const savedSession = localStorage.getItem("user_session");
+            setUser(savedSession ? JSON.parse(savedSession) : null);
+        };
+
+        window.addEventListener('storage', refreshUserSession);
+        window.addEventListener('user_session_updated', refreshUserSession);
+        return () => {
+            window.removeEventListener('storage', refreshUserSession);
+            window.removeEventListener('user_session_updated', refreshUserSession);
+        };
+    }, []);
 
     useEffect(() => {
         const handleClickOutside = (event) => {
@@ -51,7 +66,7 @@ const Layout = ({ children, actions, contentClassName = '' }) => {
         setIsChatLoading(true);
 
         try {
-            const response = await fetch('http://localhost:8080/api/ia/chat', {
+            const response = await fetch(apiUrl('/ia/chat'), {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'

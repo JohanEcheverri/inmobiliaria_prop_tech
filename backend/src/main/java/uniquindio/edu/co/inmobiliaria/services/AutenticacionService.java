@@ -16,8 +16,15 @@ public class AutenticacionService {
     private final PasswordEncoder passwordEncoder;
 
     public SesionDTO login(LoginRequest request) throws Exception {
-        // 1. Buscar al usuario por id de forma global en la tabla de usuarios
-        Usuario usuario = usuarioRepository.buscarPorId(request.getIdentificacion())
+        if (request == null || request.getIdentificacion() == null || request.getIdentificacion().isBlank()) {
+            throw new Exception("La identificación o el correo son obligatorios");
+        }
+        if (request.getContrasenia() == null || request.getContrasenia().isBlank()) {
+            throw new Exception("La contraseña es obligatoria");
+        }
+
+        // 1. Buscar al usuario por identificación o correo de forma global.
+        Usuario usuario = usuarioRepository.buscarPorIdentificacionOEmail(request.getIdentificacion())
                 .orElseThrow(() -> new Exception("Usuario no encontrado"));
 
         // 2. Comparar la contraseña ingresada con el hash de la base de datos usando BCrypt

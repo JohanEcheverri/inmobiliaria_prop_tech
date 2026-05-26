@@ -2,6 +2,8 @@ package uniquindio.edu.co.inmobiliaria.services;
 
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.stereotype.Service;
+import uniquindio.edu.co.inmobiliaria.alerts.AlertaMonitor;
+import uniquindio.edu.co.inmobiliaria.comportamiento.ComportamientoService;
 import uniquindio.edu.co.inmobiliaria.models.entities.Asesor;
 import uniquindio.edu.co.inmobiliaria.models.entities.Cliente;
 import uniquindio.edu.co.inmobiliaria.models.entities.Inmueble;
@@ -28,17 +30,23 @@ public class VisitaService {
     private final InmuebleRepository inmuebleRepository;
     private final AsesorRepository asesorRepository;
     private final EventoHistorialService eventoHistorialService;
+    private final ComportamientoService comportamientoService;
+    private final AlertaMonitor alertaMonitor;
 
     public VisitaService(VisitasRepository visitasRepository,
                          ClienteRepository clienteRepository,
                          InmuebleRepository inmuebleRepository,
                          AsesorRepository asesorRepository,
-                         EventoHistorialService eventoHistorialService) {
+                         EventoHistorialService eventoHistorialService,
+                         ComportamientoService comportamientoService,
+                         AlertaMonitor alertaMonitor) {
         this.visitasRepository = visitasRepository;
         this.clienteRepository = clienteRepository;
         this.inmuebleRepository = inmuebleRepository;
         this.asesorRepository = asesorRepository;
         this.eventoHistorialService = eventoHistorialService;
+        this.comportamientoService = comportamientoService;
+        this.alertaMonitor = alertaMonitor;
     }
 
     @Transactional
@@ -66,6 +74,7 @@ public class VisitaService {
         );
         visitasRepository.save(visita);
         eventoHistorialService.registrarEvento(cliente, inmueble, TipoEventoHistorial.VISITA);
+        ejecutarMonitoresComerciales();
         return visita;
     }
 
@@ -90,6 +99,7 @@ public class VisitaService {
         reprogramada.setObservaciones(combinarObservaciones(visita.getObservaciones(), observaciones));
 
         visitasRepository.update(reprogramada);
+        ejecutarMonitoresComerciales();
         return reprogramada;
     }
 
@@ -108,6 +118,7 @@ public class VisitaService {
         cancelada.setObservaciones(combinarObservaciones(visita.getObservaciones(), observaciones));
 
         visitasRepository.update(cancelada);
+        ejecutarMonitoresComerciales();
         return cancelada;
     }
 
@@ -125,6 +136,7 @@ public class VisitaService {
         confirmada.setEstado(EstadoVisita.CONFIRMADA);
         confirmada.setObservaciones(combinarObservaciones(visita.getObservaciones(), observaciones));
         visitasRepository.update(confirmada);
+        ejecutarMonitoresComerciales();
         return confirmada;
     }
 
@@ -146,6 +158,7 @@ public class VisitaService {
         if (realizada.getCliente() != null && realizada.getInmueble() != null) {
             eventoHistorialService.registrarEvento(realizada.getCliente(), realizada.getInmueble(), TipoEventoHistorial.VISITA);
         }
+        ejecutarMonitoresComerciales();
         return realizada;
     }
 
@@ -179,7 +192,14 @@ public class VisitaService {
     }
 
     public Visita processPendingVisit() {
-        return visitasRepository.procesarVisita();
+        Visita visita = visitasRepository.procesarVisita();
+        ejecutarMonitoresComerciales();
+        return visita;
+    }
+
+    private void ejecutarMonitoresComerciales() {
+        comportamientoService.analizarComportamientoAtipico();
+        alertaMonitor.verificarTodo();
     }
 
     private Cliente obtenerCliente(String clienteId) {

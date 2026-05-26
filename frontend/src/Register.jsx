@@ -3,6 +3,7 @@ import axiosDirect from 'axios';
 import { useNavigate } from 'react-router-dom';
 import './App.css';
 import Layout from './components/Layout';
+import { apiUrl } from './api';
 
 function Register() {
     const navigate = useNavigate();
@@ -64,12 +65,12 @@ function Register() {
 
         try {
             // Envío con axios tradicional (JSON) tal como lo hace el Modal
-            await axiosDirect.post('http://localhost:8080/api/clientes', payload);
+            await axiosDirect.post(apiUrl('/clientes'), payload);
             navigate('/login');
         } catch (err) {
             console.error("Error al registrar cliente:", err);
             if (err.response) {
-                setError(err.response.data.error || 'No se pudo crear la cuenta');
+                setError(err.response.data?.mensaje || err.response.data?.error || err.response.data || 'No se pudo crear la cuenta');
             } else {
                 setError('No se pudo conectar con el servidor backend');
             }
