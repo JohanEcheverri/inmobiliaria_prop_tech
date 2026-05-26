@@ -22,7 +22,7 @@ export default function SearchBar({ onSearch, initialClienteId }) {
             payload.minPrecio = pr.min !== '' ? pr.min : '';
             payload.maxPrecio = pr.max !== '' ? pr.max : '';
         }
-        if (onSearch) onSearch({ ...payload, clienteId: initialClienteId });
+        if (onSearch) onSearch({ ...payload });
     };
 
     const handleChange = (e) => {
