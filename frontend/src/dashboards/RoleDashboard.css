@@ -164,6 +164,21 @@
 
 
 
+.property-table-preview, .property-table-img {
+    border-radius: 6px !important;
+    width: 60px;
+    height: 45px;
+    object-fit: cover;
+}
+
+.property-table-placeholder {
+    border-radius: 6px !important;
+    font-size: 1.2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #f0f2f5;
+}
 
 .property-images-preview {
     display: grid;
