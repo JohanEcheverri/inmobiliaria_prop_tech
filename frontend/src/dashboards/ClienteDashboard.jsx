@@ -19,9 +19,11 @@ const today = () => new Date().toISOString().slice(0, 10);
 function ClienteDashboard() {
     const navigate = useNavigate();
     const [session, setSession] = useState(null);
-    const [seccionActiva, setSeccionActiva] = useState('catalogo');
+    const [seccionActiva, setSeccionActiva] = useState('recomendados');
     const [propiedades, setPropiedades] = useState([]);
-    const [showFirstLoginModal, setShowFirstLoginModal] = useState(false);    const [inmuebles, setInmuebles] = useState([]);
+    const [showFirstLoginModal, setShowFirstLoginModal] = useState(false);
+    const [inmuebles, setInmuebles] = useState([]);
+    const [recomendados, setRecomendados] = useState([]);
     const [visitas, setVisitas] = useState([]);
     const [historial, setHistorial] = useState([]);
     const [selectedInmueble, setSelectedInmueble] = useState(null);
@@ -81,6 +83,17 @@ function ClienteDashboard() {
         }
     }, []);
 
+    const fetchRecomendados = useCallback(async (clienteId) => {
+        try {
+            const response = await fetch(`${API_BASE_URL}/clientes/${clienteId}/recomendados`);
+            if (!response.ok) throw new Error('No se pudieron cargar las recomendaciones');
+            setRecomendados(await response.json());
+        } catch (e) {
+            console.warn('fetchRecomendados failed', e);
+            setRecomendados([]);
+        }
+    }, []);
+
     const fetchHistorial = useCallback(async (clienteId) => {
         const response = await fetch(`${API_BASE_URL}/historial/cliente/${clienteId}`);
         if (!response.ok) throw new Error('No se pudo cargar el historial');
@@ -96,7 +109,8 @@ function ClienteDashboard() {
             const others = [
                 fetchVisitas(clienteId).catch(e => { console.warn('fetchVisitas failed', e); setVisitas([]); }),
                 fetchHistorial(clienteId).catch(e => { console.warn('fetchHistorial failed', e); setHistorial([]); }),
-                fetchPropiedades(clienteId).catch(e => { console.warn('fetchPropiedades failed', e); setPropiedades([]); })
+                fetchPropiedades(clienteId).catch(e => { console.warn('fetchPropiedades failed', e); setPropiedades([]); }),
+                fetchRecomendados(clienteId)
             ];
             await Promise.all(others);
 
@@ -111,7 +125,7 @@ function ClienteDashboard() {
         } catch (error) {
             setStatusMessage(error.message);
         }
-    }, [fetchHistorial, fetchInmuebles, fetchVisitas]);
+    }, [fetchHistorial, fetchInmuebles, fetchRecomendados, fetchVisitas]);
 
     useEffect(() => {
         const savedSession = JSON.parse(localStorage.getItem('user_session'));
@@ -397,12 +411,57 @@ function ClienteDashboard() {
         </div>
     );
 
+    const renderRecomendados = () => (
+        <>
+            {recomendados.length === 0 ? (
+                <p className="empty-text">No hay recomendaciones disponibles. Completa tus preferencias para obtener sugerencias personalizadas.</p>
+            ) : (
+                <div className="property-grid">
+                    {recomendados.map((inmueble, idx) => (
+                        <article className="property-card" key={inmueble.codigo}>
+                            <span className="recommendation-badge">#{idx + 1} Recomendado</span>
+                            <button
+                                className={`favorite-star ${localFavorites.has(inmueble.codigo) ? 'active' : ''}`}
+                                onClick={() => toggleFavorito(inmueble.codigo)}
+                                aria-label={localFavorites.has(inmueble.codigo) ? 'Quitar de favoritos' : 'Marcar favorito'}
+                            >
+                                ★
+                            </button>
+                            <div className="property-thumb">
+                                {getImages(inmueble)[0] ? <img src={getImages(inmueble)[0]} alt={inmueble.direccionBarrio || inmueble.direccion} /> : <span>{inmueble.tipoInmueble}</span>}
+                            </div>
+                            <div className="property-body">
+                                <div className="property-title-row">
+                                    <h3>{inmueble.direccionBarrio || inmueble.direccion}</h3>
+                                    <span className={`status-pill ${String(inmueble.estado || '').toLowerCase()}`}>{inmueble.estado}</span>
+                                </div>
+                                <p>{inmueble.ciudad} {inmueble.departamento ? `(${inmueble.departamento})` : ''} · {inmueble.zona}</p>
+                                <strong>{formatCurrency(inmueble.precio)}</strong>
+                                <div className="property-meta">
+                                    <span>{inmueble.tipoInmueble}</span>
+                                    <span>{inmueble.finalidad}</span>
+                                    <span>{inmueble.area} m2</span>
+                                    <span>{inmueble.habitaciones} hab.</span>
+                                </div>
+                            </div>
+                            <div className="card-actions">
+                                <button onClick={() => abrirDetalle(inmueble)}>Ver detalle</button>
+                                <button onClick={() => registrarEvento(inmueble.codigo, 'DESCARTADO', 'Inmueble descartado')}>Descartar</button>
+                            </div>
+                        </article>
+                    ))}
+                </div>
+            )}
+        </>
+    );
+
     return (
         <Layout contentClassName="admin-layout-container">
             <div className="dashboard-wrapper">
                 <aside className="dashboard-sidebar">
                     <div className="sidebar-header"><h3>Cliente Menú</h3></div>
                     <nav className="sidebar-nav">
+                        <button className={`nav-item ${seccionActiva === 'recomendados' ? 'active' : ''}`} onClick={() => { setSeccionActiva('recomendados'); if (session?.id) fetchRecomendados(session.id); }}>Recomendados</button>
                         <button className={`nav-item ${seccionActiva === 'catalogo' ? 'active' : ''}`} onClick={() => setSeccionActiva('catalogo')}>Catalogo completo</button>
                         <button className={`nav-item ${seccionActiva === 'visitas' ? 'active' : ''}`} onClick={() => setSeccionActiva('visitas')}>Mis visitas</button>
                         <button className={`nav-item ${seccionActiva === 'mispropiedades' ? 'active' : ''}`} onClick={() => setSeccionActiva('mispropiedades')}>Mis propiedades</button>
@@ -413,11 +472,12 @@ function ClienteDashboard() {
                 <main className="dashboard-content">
                     <div className="content-view-header">
                         <div>
-                            <h1>{seccionActiva === 'catalogo' ? 'Catalogo de inmuebles' : seccionActiva === 'detalle' ? 'Detalle del inmueble' : seccionActiva === 'visitas' ? 'Visitas agendadas' : seccionActiva === 'mispropiedades' ? 'Mis propiedades' : 'Historial de interacciones'}</h1>
+                            <h1>{seccionActiva === 'recomendados' ? 'Inmuebles recomendados' : seccionActiva === 'catalogo' ? 'Catalogo de inmuebles' : seccionActiva === 'detalle' ? 'Detalle del inmueble' : seccionActiva === 'visitas' ? 'Visitas agendadas' : seccionActiva === 'mispropiedades' ? 'Mis propiedades' : 'Historial de interacciones'}</h1>
                             <p>{session?.nombre}, gestiona tu busqueda inmobiliaria desde un solo lugar.</p>
                         </div>
                     </div>
                     {statusMessage && <div className="dashboard-alert">{statusMessage}</div>}
+                    {seccionActiva === 'recomendados' && renderRecomendados()}
                     {seccionActiva === 'catalogo' && renderCatalogo()}
                     {seccionActiva === 'detalle' && renderDetalle()}
                     {seccionActiva === 'visitas' && renderVisitas()}

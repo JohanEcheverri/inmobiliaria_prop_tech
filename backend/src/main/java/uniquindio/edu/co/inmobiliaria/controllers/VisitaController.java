@@ -29,6 +29,11 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/visitas")
 @Transactional(readOnly = true)
+/**
+ * Controlador REST encargado de gestionar el ciclo de vida de las visitas a inmuebles.
+ * Contiene operaciones para agendar, confirmar, realizar, cancelar o reprogramar visitas,
+ * además de métodos de consulta específicos para clientes y asesores.
+ */
 public class VisitaController {
 
     private final VisitaService visitaService;

@@ -11,6 +11,10 @@ import uniquindio.edu.co.inmobiliaria.services.AutenticacionService;
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
 @CrossOrigin(origins = "*") // Para que tu frontend pueda conectar sin líos de CORS
+/**
+ * Controlador REST encargado del proceso de autenticación de usuarios.
+ * Recibe credenciales, valida contra la base de datos y retorna datos de sesión activos.
+ */
 public class AutenticacionController {
 
     private final AutenticacionService autenticacionService;

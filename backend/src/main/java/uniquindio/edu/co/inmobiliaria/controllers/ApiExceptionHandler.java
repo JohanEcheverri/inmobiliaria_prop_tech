@@ -9,6 +9,11 @@ import uniquindio.edu.co.inmobiliaria.models.dto.ApiError;
 import java.time.LocalDateTime;
 
 @RestControllerAdvice
+/**
+ * Interceptor global de excepciones para la capa de controladores REST.
+ * Captura excepciones específicas arrojadas por la lógica de negocio y las
+ * traduce en respuestas HTTP estructuradas (ej. 400 Bad Request) con un formato estándar.
+ */
 public class ApiExceptionHandler {
 
     /**

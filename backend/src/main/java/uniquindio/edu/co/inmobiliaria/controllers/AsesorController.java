@@ -11,6 +11,10 @@ import java.util.List;
 @CrossOrigin(origins = {"http://localhost:5173", "http://localhost:5174", "http://127.0.0.1:5173", "http://127.0.0.1:5174", "http://localhost:3000"})
 @RestController
 @RequestMapping("/api/asesores")
+/**
+ * Controlador REST que expone los servicios relacionados con los asesores de la inmobiliaria.
+ * Permite listar, registrar, consultar, actualizar y eliminar asesores.
+ */
 public class AsesorController {
 
     private final AsesorService asesorService;

@@ -17,6 +17,10 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
+/**
+ * Entidad que representa un contrato legal formalizado tras una operación inmobiliaria
+ * (Venta o Arriendo). Incluye el contenido, vigencia y conexión directa con su operación.
+ */
 public class Contrato {
     @Id
     private String codigo;

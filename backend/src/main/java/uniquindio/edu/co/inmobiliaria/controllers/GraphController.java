@@ -13,6 +13,11 @@ import java.util.List;
 @CrossOrigin(origins = {"http://localhost:5173", "http://localhost:5174", "http://127.0.0.1:5173", "http://127.0.0.1:5174", "http://localhost:3000"})
 @RestController
 @RequestMapping("/api/grafo")
+/**
+ * Controlador REST que expone las operaciones basadas en la estructura de datos Grafo.
+ * Permite visualizar relaciones comerciales, detectar propiedades similares, analizar rutas
+ * de interacciones cliente-inmueble y extraer patrones de movilidad comercial.
+ */
 public class GraphController {
 
     private final GraphService graphService;

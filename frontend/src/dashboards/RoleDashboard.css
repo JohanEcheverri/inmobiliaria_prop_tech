@@ -462,3 +462,20 @@
 
 /* Acquired badge */
 .acquired-badge { position:absolute; top:10px; left:10px; background:#2e7d32; color:#fff; padding:6px 8px; font-weight:700; border-radius:6px; z-index:3; }
+
+/* Recommendation badge */
+.recommendation-badge {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
+    color: #ffffff;
+    padding: 5px 10px;
+    font-weight: 700;
+    font-size: 0.72rem;
+    border-radius: 6px;
+    z-index: 3;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    box-shadow: 0 2px 8px rgba(124, 58, 237, 0.35);
+}

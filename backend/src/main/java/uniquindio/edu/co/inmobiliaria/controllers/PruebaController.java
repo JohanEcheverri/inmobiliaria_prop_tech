@@ -5,6 +5,10 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.ui.Model;
 
 @Controller
+/**
+ * Controlador de prueba para verificar la configuración básica de Spring MVC y Thymeleaf.
+ * Exclusivamente para desarrollo y validación de plantillas iniciales.
+ */
 public class PruebaController {
 
     /**

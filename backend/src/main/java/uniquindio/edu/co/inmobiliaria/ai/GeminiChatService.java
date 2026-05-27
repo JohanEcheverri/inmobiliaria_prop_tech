@@ -12,6 +12,11 @@ import java.util.List;
 import java.util.Map;
 
 @Service
+/**
+ * Servicio de integración con la API de Google Gemini para habilitar el asistente conversacional.
+ * Construye dinámicamente el contexto del usuario (preferencias, presupuesto, etc.) para
+ * personalizar las respuestas de la IA según los datos reales de la plataforma inmobiliaria.
+ */
 public class GeminiChatService {
 
     private static final String SYSTEM_PROMPT = """

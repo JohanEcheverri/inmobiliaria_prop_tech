@@ -9,6 +9,11 @@ import uniquindio.edu.co.inmobiliaria.models.enums.TipoInmueble;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+/**
+ * DTO que representa la respuesta con la información de un Asesor.
+ * Oculta datos sensibles (como contraseñas) y se envía al frontend para
+ * construir perfiles, listados o asignaciones.
+ */
 public class AsesorResponse {
     private String id;
     private String nombre;

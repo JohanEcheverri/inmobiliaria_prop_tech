@@ -20,6 +20,11 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
+/**
+ * Servicio encargado de la lógica de negocio para la gestión de Clientes.
+ * Incluye operaciones CRUD, autenticación específica de clientes, y un sistema 
+ * de recomendación heurístico basado en preferencias y eventos históricos.
+ */
 public class ClienteService {
 
     private final ClienteRepository clienteRepository;

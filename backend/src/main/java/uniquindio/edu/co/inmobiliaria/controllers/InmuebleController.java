@@ -21,6 +21,11 @@ import java.util.List;
 @CrossOrigin(origins = {"http://localhost:5173", "http://localhost:5174", "http://127.0.0.1:5173", "http://127.0.0.1:5174", "http://localhost:3000"})
 @RestController
 @RequestMapping("/api/inmuebles")
+/**
+ * Controlador REST para la gestión del catálogo de propiedades (inmuebles).
+ * Permite a los asesores y administradores listar, crear, modificar y eliminar inmuebles,
+ * así como proveer endpoints de búsqueda con filtros avanzados para los clientes.
+ */
 public class InmuebleController {
 
     private final InmuebleService inmuebleService;

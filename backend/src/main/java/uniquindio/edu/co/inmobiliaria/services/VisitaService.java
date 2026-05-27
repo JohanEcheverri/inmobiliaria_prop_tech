@@ -23,6 +23,11 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Service
+/**
+ * Servicio especializado en el ciclo de vida de las Visitas inmobiliarias.
+ * Coordina la agenda, validación de disponibilidad y cambios de estado (reprogramar,
+ * cancelar, confirmar, completar), disparando alertas y eventos de historial según aplique.
+ */
 public class VisitaService {
 
     private final VisitasRepository visitasRepository;

@@ -42,6 +42,11 @@ import java.time.LocalTime;
 import java.util.List;
 
 @Configuration
+/**
+ * Clase encargada de poblar la base de datos con datos de prueba o iniciales (semilla).
+ * Se ejecuta al arrancar la aplicación e inyecta clientes, asesores, administradores,
+ * inmuebles, operaciones y visitas para permitir la validación inmediata del sistema.
+ */
 public class DataSeeder {
 
     @Bean

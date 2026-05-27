@@ -10,6 +10,10 @@ import uniquindio.edu.co.inmobiliaria.models.entities.Usuario;
 
 @RequestMapping("/api") // Opcional, para agrupar las rutas de la API
 @RestController
+/**
+ * Controlador REST auxiliar para propósitos de prueba y depuración.
+ * Proporciona endpoints simples para validar la correcta configuración de serialización JSON.
+ */
 public class PruebaRestController {
 
     /**

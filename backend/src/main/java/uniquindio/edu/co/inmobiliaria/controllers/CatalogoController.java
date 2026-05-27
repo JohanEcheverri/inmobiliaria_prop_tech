@@ -14,6 +14,10 @@ import java.util.Map;
 @CrossOrigin(origins = {"http://localhost:5173", "http://localhost:3000"})
 @RestController
 @RequestMapping("/api/catalogos")
+/**
+ * Controlador REST que proporciona información estática de catálogos y enumeraciones
+ * necesarios para alimentar las interfaces de usuario.
+ */
 public class CatalogoController {
 
     /**

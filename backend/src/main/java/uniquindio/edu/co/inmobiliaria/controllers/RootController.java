@@ -6,6 +6,10 @@ import java.util.Map;
 import java.util.HashMap;
 
 @RestController
+/**
+ * Controlador REST básico para el punto de entrada principal (raíz) de la API.
+ * Proporciona un health check simple para verificar que la aplicación está levantada y aceptando peticiones.
+ */
 public class RootController {
 
     /**

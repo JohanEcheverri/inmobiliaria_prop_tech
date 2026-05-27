@@ -10,6 +10,11 @@ import uniquindio.edu.co.inmobiliaria.repositories.UsuarioRepository;
 
 @Service
 @RequiredArgsConstructor
+/**
+ * Servicio transversal que maneja la autenticación y la gestión de sesiones.
+ * Valida credenciales, comprueba roles dinámicamente según la herencia de Usuario
+ * y genera DTOs seguros para la sesión del frontend.
+ */
 public class AutenticacionService {
 
     private final UsuarioRepository usuarioRepository;

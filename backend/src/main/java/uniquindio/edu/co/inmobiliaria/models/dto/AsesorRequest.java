@@ -9,6 +9,11 @@ import uniquindio.edu.co.inmobiliaria.models.enums.TipoInmueble;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+/**
+ * DTO utilizado para la creación o actualización de Asesores.
+ * Contiene todos los campos configurables por un administrador o el propio asesor,
+ * incluyendo su credencial en texto plano (que luego es codificada por el servicio).
+ */
 public class AsesorRequest {
     private String id;
     private String nombre;

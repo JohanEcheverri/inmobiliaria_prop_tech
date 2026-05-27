@@ -20,6 +20,10 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/operaciones")
 @Transactional(readOnly = true) // Mantiene viva la sesión de Hibernate para toda la clase, incluyendo métodos privados al mapear asociaciones lazy
+/**
+ * Controlador REST para la gestión de operaciones comerciales (como ventas o alquileres).
+ * Contiene endpoints para el registro de operaciones, así como para la consulta de datos analíticos.
+ */
 public class OperacionController {
 
     private final OperacionService operacionService;

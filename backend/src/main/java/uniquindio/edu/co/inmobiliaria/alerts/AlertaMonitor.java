@@ -30,6 +30,11 @@ import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 @Component
+/**
+ * Componente programado o invocado manualmente para analizar el estado global del sistema
+ * y generar alertas de negocio (contratos por vencer, propiedades estancadas o con alta demanda,
+ * reservas sin cierre, etc.). Nutre la bandeja de notificaciones del administrador.
+ */
 public class AlertaMonitor {
 
     private final AlertaService alertaService;

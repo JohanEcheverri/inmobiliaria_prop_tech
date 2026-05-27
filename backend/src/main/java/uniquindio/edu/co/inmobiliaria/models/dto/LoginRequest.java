@@ -1,5 +1,9 @@
 package uniquindio.edu.co.inmobiliaria.models.dto;
 
+/**
+ * DTO para la petición de inicio de sesión de cualquier usuario (Administrador, Asesor, Cliente).
+ * Encapsula las credenciales de acceso básicas.
+ */
 public class LoginRequest {
     private String identificacion;
     private String contrasenia;

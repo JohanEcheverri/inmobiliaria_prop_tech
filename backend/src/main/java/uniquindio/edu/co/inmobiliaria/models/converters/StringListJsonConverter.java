@@ -9,6 +9,11 @@ import java.util.Base64;
 import java.util.List;
 
 @Converter
+/**
+ * Conversor JPA para transformar listas de cadenas (String) en una única cadena Base64
+ * separada por saltos de línea para su persistencia en base de datos relacional.
+ * Útil para campos multivaluados como fotos o amenidades de un inmueble.
+ */
 public class StringListJsonConverter implements AttributeConverter<List<String>, String> {
 
     @Override

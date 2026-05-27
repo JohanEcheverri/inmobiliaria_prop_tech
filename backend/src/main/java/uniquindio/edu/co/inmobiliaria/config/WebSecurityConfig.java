@@ -13,6 +13,12 @@ import java.util.List;
 
 @Configuration
 @EnableWebSecurity
+/**
+ * Configuración de seguridad web principal de la aplicación.
+ * Permite el acceso sin autenticación (para facilitar el entorno de desarrollo y pruebas)
+ * y configura la política de CORS para permitir solicitudes desde los entornos frontend
+ * (React/Vite).
+ */
 public class WebSecurityConfig {
 
     @Bean

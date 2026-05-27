@@ -25,6 +25,11 @@ import java.util.List;
 @CrossOrigin(origins = {"http://localhost:5173", "http://localhost:5174", "http://127.0.0.1:5173", "http://127.0.0.1:5174", "http://localhost:3000"})
 @RestController
 @RequestMapping("/api/historial")
+/**
+ * Controlador REST encargado del seguimiento de la actividad de los clientes en la plataforma.
+ * Administra y expone el historial de eventos (ej. visualizaciones, favoritos) que nutren 
+ * el sistema de recomendaciones y las métricas analíticas.
+ */
 public class EventoHistorialController {
 
     private final EventoHistorialService eventoHistorialService;

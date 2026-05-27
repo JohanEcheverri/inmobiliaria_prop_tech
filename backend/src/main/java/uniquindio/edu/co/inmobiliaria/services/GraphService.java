@@ -28,6 +28,11 @@ import java.util.List;
 import java.util.Objects;
 
 @Service
+/**
+ * Servicio especializado en el análisis de datos mediante estructuras de grafos.
+ * Permite descubrir patrones de movilidad comercial, relaciones ocultas entre clientes e inmuebles,
+ * rutas de interacción y detectar propiedades similares para el sistema de recomendaciones y alertas.
+ */
 public class GraphService {
 
     private static final int MIN_CLIENTES_COMPARTIDOS = 2;

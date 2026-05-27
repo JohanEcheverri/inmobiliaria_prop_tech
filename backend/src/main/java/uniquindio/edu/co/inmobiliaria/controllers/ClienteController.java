@@ -26,6 +26,11 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/clientes")
 @Transactional(readOnly = true)
+/**
+ * Controlador REST para la gestión integral de clientes.
+ * Proporciona endpoints para registro, actualización, búsqueda, listado y 
+ * recomendación personalizada de inmuebles basada en las preferencias del cliente.
+ */
 public class ClienteController {
 
     private final ClienteService clienteService;

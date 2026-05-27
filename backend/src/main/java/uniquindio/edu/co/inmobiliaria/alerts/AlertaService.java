@@ -12,6 +12,11 @@ import java.util.Objects;
 import java.util.Optional;
 
 @Service
+/**
+ * Servicio principal para la gestión del sistema de alertas empresariales.
+ * Permite generar, consultar y resolver alertas de diferente prioridad (alta, media, baja)
+ * desencadenadas por la monitorización de contratos por vencer o comportamientos atípicos.
+ */
 public class AlertaService {
 
     private final AlertaRepository alertaRepository;

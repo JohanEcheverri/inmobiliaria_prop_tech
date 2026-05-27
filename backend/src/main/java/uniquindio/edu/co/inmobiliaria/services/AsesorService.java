@@ -16,6 +16,11 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
+/**
+ * Servicio central para la administración de Asesores inmobiliarios.
+ * Gestiona el ciclo de vida completo de la cuenta de un asesor (registro, modificación, listado)
+ * e incluye el proceso de autenticación validando credenciales de forma segura.
+ */
 public class AsesorService {
 
     private final AsesorRepository asesorRepository;

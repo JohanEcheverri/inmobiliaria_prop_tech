@@ -15,6 +15,10 @@ import java.util.Optional;
 @RestController
 @RequestMapping("/api/alertas")
 @CrossOrigin(origins = "*")
+/**
+ * Controlador REST dedicado a la gestión y consulta de notificaciones/alertas en el sistema.
+ * Permite buscar alertas por estado, tipo, o prioridad, además de permitir acciones como marcar como leídas.
+ */
 public class AlertaController {
 
     private final AlertaService alertaService;

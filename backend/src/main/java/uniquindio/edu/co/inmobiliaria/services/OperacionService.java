@@ -26,6 +26,11 @@ import java.time.LocalDateTime;
 import java.util.Optional;
 
 @Service
+/**
+ * Servicio para la gestión de las operaciones comerciales de la inmobiliaria.
+ * Orquesta la creación y consulta de transacciones (Venta, Arriendo, Renovación, Cancelación)
+ * y vincula entidades como Cliente, Inmueble y Asesor durante los cierres de negocio.
+ */
 public class OperacionService {
 
     private final OperacionRepository operacionRepository;

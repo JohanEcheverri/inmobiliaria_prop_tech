@@ -26,6 +26,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Service
+/**
+ * Servicio central para la lógica de negocio relacionada con Inmuebles.
+ * Gestiona el catálogo de propiedades, el registro, la actualización, el filtrado complejo,
+ * el cambio de estados y la vinculación con operaciones y alertas comerciales.
+ */
 public class InmuebleService {
 
     private final InmuebleRepository inmuebleRepository;

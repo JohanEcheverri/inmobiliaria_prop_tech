@@ -13,6 +13,11 @@ import uniquindio.edu.co.inmobiliaria.structures.DynamicArrayList;
 
 @Service
 @Transactional(readOnly = true)
+/**
+ * Servicio transaccional encargado de registrar y consultar el historial de interacción
+ * de los clientes con los inmuebles (vistas, favoritos, descartados, etc.).
+ * Esta información nutre el sistema de recomendación y grafos de comportamiento comercial.
+ */
 public class EventoHistorialService {
 
     private final EventoHistorialRepository eventoHistorialRepository;

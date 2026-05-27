@@ -5,6 +5,11 @@ import jakarta.persistence.Converter;
 import uniquindio.edu.co.inmobiliaria.models.entities.Ciudad;
 
 @Converter
+/**
+ * Conversor JPA para persistir el objeto de valor {@link Ciudad} como una cadena
+ * simple separada por un pipe '|' (ej. "Armenia|Quindío") en la base de datos,
+ * y viceversa.
+ */
 public class CiudadConverter implements AttributeConverter<Ciudad, String> {
 
     private static final String SEPARATOR = "|";
