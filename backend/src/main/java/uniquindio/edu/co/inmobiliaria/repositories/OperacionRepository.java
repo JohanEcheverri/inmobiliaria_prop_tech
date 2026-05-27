@@ -184,6 +184,23 @@ public class OperacionRepository {
         operacionJpaRepository.findAllConRelaciones().forEach(this::agregarAIndices);
     }
 
+    /**
+     * Recarga una operación desde la base de datos y actualiza el índice en memoria.
+     * Útil para evitar desincronización tras rollbacks o cambios externos.
+     */
+    public void refreshFromDatabase(String codigo) {
+        if (codigo == null || codigo.isBlank()) {
+            return;
+        }
+        operacionJpaRepository.findByIdConRelaciones(codigo).ifPresent(operacion -> {
+            Operacion anterior = operacionesPorCodigo.get(codigo);
+            if (anterior != null) {
+                eliminarDeIndices(anterior);
+            }
+            agregarAIndices(operacion);
+        });
+    }
+
     private void agregarAIndices(Operacion operacion) {
         operaciones.add(operacion);
         operacionesPorCodigo.put(operacion.getCodigo(), operacion);

@@ -1,28 +1,35 @@
 package uniquindio.edu.co.inmobiliaria.services;
 
 import org.springframework.stereotype.Service;
+import uniquindio.edu.co.inmobiliaria.alerts.AlertaService;
 import uniquindio.edu.co.inmobiliaria.models.entities.Arriendo;
 import uniquindio.edu.co.inmobiliaria.models.entities.Cancelacion;
+import uniquindio.edu.co.inmobiliaria.models.entities.Contrato;
 import uniquindio.edu.co.inmobiliaria.models.entities.Operacion;
 import uniquindio.edu.co.inmobiliaria.models.entities.Renovacion;
 import uniquindio.edu.co.inmobiliaria.models.entities.Venta;
 import uniquindio.edu.co.inmobiliaria.models.entities.Visita;
+import uniquindio.edu.co.inmobiliaria.models.enums.Estado;
 import uniquindio.edu.co.inmobiliaria.models.enums.EstadoOperacion;
+import uniquindio.edu.co.inmobiliaria.models.enums.PrioridadAlerta;
+import uniquindio.edu.co.inmobiliaria.models.enums.TipoAlerta;
 import uniquindio.edu.co.inmobiliaria.models.enums.Zona;
 import uniquindio.edu.co.inmobiliaria.repositories.OperacionRepository;
 import uniquindio.edu.co.inmobiliaria.repositories.VisitasRepository;
 import uniquindio.edu.co.inmobiliaria.repositories.ClienteRepository;
+import uniquindio.edu.co.inmobiliaria.repositories.ContratoRepository;
 import uniquindio.edu.co.inmobiliaria.repositories.InmuebleRepository;
 import uniquindio.edu.co.inmobiliaria.repositories.AsesorRepository;
+import uniquindio.edu.co.inmobiliaria.repositories.jpa.OperacionJpaRepository;
 import uniquindio.edu.co.inmobiliaria.models.entities.Cliente;
 import uniquindio.edu.co.inmobiliaria.models.entities.Inmueble;
 import uniquindio.edu.co.inmobiliaria.models.entities.Asesor;
-import uniquindio.edu.co.inmobiliaria.models.entities.Venta;
-import uniquindio.edu.co.inmobiliaria.models.enums.EstadoOperacion;
 import uniquindio.edu.co.inmobiliaria.structures.DynamicArrayList;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -38,17 +45,26 @@ public class OperacionService {
     private final ClienteRepository clienteRepository;
     private final InmuebleRepository inmuebleRepository;
     private final AsesorRepository asesorRepository;
+    private final ContratoRepository contratoRepository;
+    private final AlertaService alertaService;
+    private final OperacionJpaRepository operacionJpaRepository;
 
     public OperacionService(OperacionRepository operacionRepository,
                             VisitasRepository visitasRepository,
                             ClienteRepository clienteRepository,
                             InmuebleRepository inmuebleRepository,
-                            AsesorRepository asesorRepository) {
+                            AsesorRepository asesorRepository,
+                            ContratoRepository contratoRepository,
+                            AlertaService alertaService,
+                            OperacionJpaRepository operacionJpaRepository) {
         this.operacionRepository = operacionRepository;
         this.visitasRepository = visitasRepository;
         this.clienteRepository = clienteRepository;
         this.inmuebleRepository = inmuebleRepository;
         this.asesorRepository = asesorRepository;
+        this.contratoRepository = contratoRepository;
+        this.alertaService = alertaService;
+        this.operacionJpaRepository = operacionJpaRepository;
     }
 
     /**
@@ -197,28 +213,173 @@ public class OperacionService {
     }
 
     /**
-     * Obtener ventas (propiedades adquiridas) por cliente.
-     */
-    /**
-     * Obtiene las ventas (propiedades adquiridas) realizadas por un cliente.
+     * Obtiene ventas y arriendos vigentes del cliente (excluye cancelados).
      *
      * @param clienteId identificador del cliente
-     * @return lista dinámica de ventas del cliente
+     * @return operaciones de compra o arriendo del cliente
      */
     @Transactional(readOnly = true)
-    public DynamicArrayList<Venta> obtenerPropiedadesAdquiridasCliente(String clienteId) {
-        DynamicArrayList<Venta> resultado = new DynamicArrayList<>();
+    public DynamicArrayList<Operacion> obtenerPropiedadesCliente(String clienteId) {
+        DynamicArrayList<Operacion> resultado = new DynamicArrayList<>();
         if (clienteId == null || clienteId.isBlank()) {
             return resultado;
         }
-        DynamicArrayList<Venta> ventas = operacionRepository.findVentas();
-        for (int i = 0; i < ventas.size(); i++) {
-            Venta v = ventas.get(i);
-            if (v.getCliente() != null && clienteId.equals(v.getCliente().getId())) {
-                resultado.add(v);
+        agregarPropiedadesCliente(resultado, operacionRepository.findVentas(), clienteId);
+        agregarPropiedadesCliente(resultado, operacionRepository.findArriendos(), clienteId);
+        return resultado;
+    }
+
+    private void agregarPropiedadesCliente(DynamicArrayList<Operacion> resultado,
+                                           DynamicArrayList<? extends Operacion> operaciones,
+                                           String clienteId) {
+        for (int i = 0; i < operaciones.size(); i++) {
+            Operacion operacion = operaciones.get(i);
+            if (operacion.getCliente() == null || !clienteId.equals(operacion.getCliente().getId())) {
+                continue;
+            }
+            if (operacion.getEstado() == EstadoOperacion.CANCELADA) {
+                continue;
+            }
+            resultado.add(operacion);
+        }
+    }
+
+    /**
+     * El cliente solicita cancelar un contrato de arriendo; genera alerta para el asesor.
+     */
+    @Transactional
+    public void solicitarCancelacionArriendo(String operacionCodigo, String clienteId, String motivo) {
+        if (operacionCodigo == null || operacionCodigo.isBlank()) {
+            throw new IllegalArgumentException("El código de la operación es obligatorio");
+        }
+        if (clienteId == null || clienteId.isBlank()) {
+            throw new IllegalArgumentException("El id del cliente es obligatorio");
+        }
+        if (motivo == null || motivo.isBlank()) {
+            throw new IllegalArgumentException("El motivo de cancelación es obligatorio");
+        }
+
+        operacionRepository.refreshFromDatabase(operacionCodigo);
+
+        Operacion operacion = operacionJpaRepository.findByIdConRelaciones(operacionCodigo)
+                .orElseThrow(() -> new IllegalArgumentException("No se encontró la operación: " + operacionCodigo));
+        if (!(operacion instanceof Arriendo arriendo)) {
+            throw new IllegalArgumentException("Solo se pueden cancelar contratos de arriendo");
+        }
+        if (arriendo.getCliente() == null || !clienteId.equals(arriendo.getCliente().getId())) {
+            throw new IllegalArgumentException("La operación no pertenece al cliente indicado");
+        }
+        if (arriendo.getEstado() == EstadoOperacion.CANCELADA) {
+            throw new IllegalArgumentException("El contrato ya fue cancelado");
+        }
+
+        String inmuebleCodigo = arriendo.getInmueble() != null ? arriendo.getInmueble().getCodigo() : "N/A";
+        String clienteNombre = arriendo.getCliente().getNombre();
+        String asesorNombre = arriendo.getAsesor() != null ? arriendo.getAsesor().getNombre() : "sin asignar";
+        String asesorId = arriendo.getAsesor() != null ? arriendo.getAsesor().getId() : null;
+
+        if (arriendo.getEstado() == EstadoOperacion.EN_PROCESO) {
+            if (alertaService.obtenerAlertasPorReferencia(operacionCodigo).stream()
+                    .anyMatch(a -> !a.isAtendida() && a.getTipo() == TipoAlerta.SOLICITUD_CANCELACION_CONTRATO)) {
+                throw new IllegalArgumentException("Ya existe una solicitud de cancelación en trámite");
+            }
+            // Recuperación: quedó EN_PROCESO sin alerta por un fallo previo
+            crearAlertaCancelacion(operacionCodigo, clienteNombre, inmuebleCodigo, asesorNombre, asesorId, motivo);
+            operacionRepository.refreshFromDatabase(operacionCodigo);
+            return;
+        }
+
+        // Primero la alerta; si falla, no se cambia el estado del arriendo
+        crearAlertaCancelacion(operacionCodigo, clienteNombre, inmuebleCodigo, asesorNombre, asesorId, motivo);
+
+        arriendo.setEstado(EstadoOperacion.EN_PROCESO);
+        operacionRepository.update(arriendo);
+        operacionRepository.refreshFromDatabase(operacionCodigo);
+    }
+
+    private void crearAlertaCancelacion(String operacionCodigo,
+                                        String clienteNombre,
+                                        String inmuebleCodigo,
+                                        String asesorNombre,
+                                        String asesorId,
+                                        String motivo) {
+        String descripcion = "El cliente " + clienteNombre + " solicita cancelar el arriendo del inmueble "
+                + inmuebleCodigo + ". Motivo: " + motivo.trim()
+                + ". Asesor responsable: " + asesorNombre
+                + (asesorId != null ? " (id: " + asesorId + ")." : ".");
+        alertaService.generarAlerta(
+                TipoAlerta.SOLICITUD_CANCELACION_CONTRATO,
+                PrioridadAlerta.ALTA,
+                "Solicitud de cancelación de arriendo",
+                descripcion,
+                operacionCodigo
+        );
+    }
+
+    /**
+     * Solicitudes de cancelación pendientes asignadas a un asesor.
+     */
+    @Transactional(readOnly = true)
+    public List<uniquindio.edu.co.inmobiliaria.models.entities.Alerta> obtenerSolicitudesCancelacionPorAsesor(String asesorId) {
+        if (asesorId == null || asesorId.isBlank()) {
+            return List.of();
+        }
+        List<uniquindio.edu.co.inmobiliaria.models.entities.Alerta> pendientes = new ArrayList<>();
+        for (uniquindio.edu.co.inmobiliaria.models.entities.Alerta alerta
+                : alertaService.obtenerAlertasPorTipo(TipoAlerta.SOLICITUD_CANCELACION_CONTRATO)) {
+            if (alerta.isAtendida()) {
+                continue;
+            }
+            Optional<Operacion> operacion = operacionJpaRepository.findByIdConRelaciones(alerta.getReferenciaId());
+            if (operacion.isPresent()
+                    && operacion.get().getAsesor() != null
+                    && asesorId.equals(operacion.get().getAsesor().getId())) {
+                pendientes.add(alerta);
             }
         }
-        return resultado;
+        return pendientes;
+    }
+
+    /**
+     * El asesor procesa la cancelación del arriendo solicitada por el cliente.
+     */
+    @Transactional
+    public void procesarCancelacionArriendo(String operacionCodigo, String asesorId) {
+        Operacion operacion = operacionRepository.findByCodigo(operacionCodigo)
+                .orElseThrow(() -> new IllegalArgumentException("No se encontró la operación: " + operacionCodigo));
+        if (!(operacion instanceof Arriendo arriendo)) {
+            throw new IllegalArgumentException("La operación no es un arriendo");
+        }
+        if (arriendo.getAsesor() != null && asesorId != null && !asesorId.isBlank()
+                && !asesorId.equals(arriendo.getAsesor().getId())) {
+            throw new IllegalArgumentException("El asesor no está autorizado para gestionar esta cancelación");
+        }
+        if (arriendo.getEstado() == EstadoOperacion.CANCELADA) {
+            throw new IllegalArgumentException("El contrato ya fue cancelado");
+        }
+
+        arriendo.setEstado(EstadoOperacion.CANCELADA);
+        operacionRepository.update(arriendo);
+
+        if (arriendo.getContrato() != null) {
+            Contrato contrato = arriendo.getContrato();
+            contrato.setVigente(false);
+            contratoRepository.update(contrato);
+        }
+
+        if (arriendo.getInmueble() != null) {
+            Inmueble inmueble = arriendo.getInmueble();
+            inmueble.setEstado(Estado.DISPONIBLE);
+            inmuebleRepository.update(inmueble);
+        }
+
+        List<uniquindio.edu.co.inmobiliaria.models.entities.Alerta> alertas =
+                alertaService.obtenerAlertasPorReferencia(operacionCodigo);
+        for (uniquindio.edu.co.inmobiliaria.models.entities.Alerta alerta : alertas) {
+            if (!alerta.isAtendida() && alerta.getTipo() == TipoAlerta.SOLICITUD_CANCELACION_CONTRATO) {
+                alertaService.atenderAlerta(alerta.getCodigo());
+            }
+        }
     }
 
     /**

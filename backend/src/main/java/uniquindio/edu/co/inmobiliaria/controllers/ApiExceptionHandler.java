@@ -7,6 +7,8 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import uniquindio.edu.co.inmobiliaria.models.dto.ApiError;
 
 import java.time.LocalDateTime;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @RestControllerAdvice
 /**
@@ -15,6 +17,8 @@ import java.time.LocalDateTime;
  * traduce en respuestas HTTP estructuradas (ej. 400 Bad Request) con un formato estándar.
  */
 public class ApiExceptionHandler {
+
+    private static final Logger log = LoggerFactory.getLogger(ApiExceptionHandler.class);
 
     /**
      * Mapea IllegalArgumentException a una respuesta HTTP 400 con un cuerpo ApiError.
@@ -28,5 +32,15 @@ public class ApiExceptionHandler {
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
                 .body(new ApiError(exception.getMessage(), LocalDateTime.now()));
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ApiError> manejarExceptionGenerica(Exception exception) {
+        log.error("Error no controlado en la API", exception);
+        return ResponseEntity
+                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(new ApiError(
+                        exception.getMessage() != null ? exception.getMessage() : "Error interno del servidor",
+                        LocalDateTime.now()));
     }
 }

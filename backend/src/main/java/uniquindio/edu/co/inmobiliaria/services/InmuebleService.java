@@ -14,14 +14,22 @@ import uniquindio.edu.co.inmobiliaria.models.enums.Finalidad;
 import uniquindio.edu.co.inmobiliaria.models.enums.TipoInmueble;
 import uniquindio.edu.co.inmobiliaria.models.enums.Zona;
 import uniquindio.edu.co.inmobiliaria.repositories.AsesorRepository;
+import uniquindio.edu.co.inmobiliaria.repositories.ContratoRepository;
 import uniquindio.edu.co.inmobiliaria.repositories.InmuebleRepository;
 import uniquindio.edu.co.inmobiliaria.repositories.VisitasRepository;
 import uniquindio.edu.co.inmobiliaria.services.OperacionService;
 import uniquindio.edu.co.inmobiliaria.repositories.ClienteRepository;
+import uniquindio.edu.co.inmobiliaria.models.entities.Arriendo;
+import uniquindio.edu.co.inmobiliaria.models.entities.Contrato;
+import uniquindio.edu.co.inmobiliaria.models.entities.Operacion;
 import uniquindio.edu.co.inmobiliaria.models.entities.Venta;
+import uniquindio.edu.co.inmobiliaria.models.enums.EstadoOperacion;
+import uniquindio.edu.co.inmobiliaria.models.enums.TipoContrato;
 import uniquindio.edu.co.inmobiliaria.structures.DynamicArrayList;
 import uniquindio.edu.co.inmobiliaria.structures.SinglyLinkedList;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -39,6 +47,7 @@ public class InmuebleService {
     private final ComportamientoService comportamientoService;
     private final OperacionService operacionService;
     private final ClienteRepository clienteRepository;
+    private final ContratoRepository contratoRepository;
     private final AlertaMonitor alertaMonitor;
 
     public InmuebleService(InmuebleRepository inmuebleRepository,
@@ -47,6 +56,7 @@ public class InmuebleService {
                            ComportamientoService comportamientoService,
                            OperacionService operacionService,
                            ClienteRepository clienteRepository,
+                           ContratoRepository contratoRepository,
                            AlertaMonitor alertaMonitor) {
         this.inmuebleRepository = inmuebleRepository;
         this.asesorRepository = asesorRepository;
@@ -54,6 +64,7 @@ public class InmuebleService {
         this.comportamientoService = comportamientoService;
         this.operacionService = operacionService;
         this.clienteRepository = clienteRepository;
+        this.contratoRepository = contratoRepository;
         this.alertaMonitor = alertaMonitor;
     }
 
@@ -63,8 +74,8 @@ public class InmuebleService {
         List<Inmueble> inmuebles = inmuebleRepository.findAllConAsesor();
         for (int i = 0; i < inmuebles.size(); i++) {
             Inmueble inmueble = inmuebles.get(i);
-            // No mostrar inmuebles vendidos en el catálogo público
-            if (inmueble.getEstado() == Estado.VENDIDO) {
+            // No mostrar inmuebles cerrados en el catálogo público
+            if (inmueble.getEstado() == Estado.VENDIDO || inmueble.getEstado() == Estado.ARRENDADO) {
                 continue;
             }
             respuesta.add(mapear(inmueble));
@@ -135,7 +146,7 @@ public class InmuebleService {
         List<Inmueble> inmuebles = inmuebleRepository.findAllConAsesor();
         for (int i = 0; i < inmuebles.size(); i++) {
             Inmueble inmueble = inmuebles.get(i);
-            if (inmueble.getEstado() == Estado.VENDIDO) {
+            if (inmueble.getEstado() == Estado.VENDIDO || inmueble.getEstado() == Estado.ARRENDADO) {
                 continue;
             }
             if (zona != null && inmueble.getZona() != null && !zona.equals(inmueble.getZona())) {
@@ -255,9 +266,9 @@ public class InmuebleService {
         Inmueble inmueble = inmuebleRepository.findById(codigo)
                 .orElseThrow(() -> new IllegalArgumentException("No se encontró un inmueble con el código: " + codigo));
 
-        // Si ya está vendido, no permitir cambios
-        if (inmueble.getEstado() == Estado.VENDIDO) {
-            throw new IllegalArgumentException("No se puede cambiar el estado de un inmueble ya vendido");
+        // Si ya está cerrado (vendido o arrendado), no permitir cambios
+        if (inmueble.getEstado() == Estado.VENDIDO || inmueble.getEstado() == Estado.ARRENDADO) {
+            throw new IllegalArgumentException("No se puede cambiar el estado de un inmueble ya cerrado");
         }
 
         Estado estadoAnterior = inmueble.getEstado();
@@ -282,17 +293,58 @@ public class InmuebleService {
             var comprador = compradorOpt.get();
 
             // Construir objeto Venta (subclase de Operacion)
+            LocalDateTime ahora = LocalDateTime.now();
             Venta venta = Venta.builder()
                     .codigo("VENTA-" + inmueble.getCodigo() + "-" + System.currentTimeMillis())
                     .inmueble(inmueble)
                     .cliente(comprador)
                     .asesor(inmueble.getAsesor())
-                    .fecha(java.time.LocalDateTime.now())
+                    .fecha(ahora)
                     .valorAcordado(ventaReq.valorAcordado())
                     .comision(ventaReq.comision())
+                    .estado(EstadoOperacion.COMPLETADA)
                     .build();
 
             operacionService.registerSale(venta);
+            registrarContrato(venta, TipoContrato.VENTA, ahora, null,
+                    "Contrato de compraventa del inmueble " + inmueble.getCodigo());
+        }
+
+        if (estado == Estado.ARRENDADO && request.arriendo() != null) {
+            uniquindio.edu.co.inmobiliaria.models.dto.ArriendoRequest arriendoReq = request.arriendo();
+            var arrendatarioOpt = clienteRepository.findById(arriendoReq.clienteId());
+            if (arrendatarioOpt.isEmpty()) {
+                throw new IllegalArgumentException("No se encontró el cliente arrendatario con id: " + arriendoReq.clienteId());
+            }
+            var arrendatario = arrendatarioOpt.get();
+
+            if (arriendoReq.duracionMeses() <= 0) {
+                throw new IllegalArgumentException("La duración del arriendo debe ser mayor a cero");
+            }
+            if (arriendoReq.fechaVencimiento() == null) {
+                throw new IllegalArgumentException("La fecha de vencimiento del arriendo es obligatoria");
+            }
+
+            LocalDateTime ahora = LocalDateTime.now();
+            LocalDateTime vencimiento = arriendoReq.fechaVencimiento().atTime(23, 59);
+
+            Arriendo arriendo = Arriendo.builder()
+                    .codigo("ARRIENDO-" + inmueble.getCodigo() + "-" + System.currentTimeMillis())
+                    .inmueble(inmueble)
+                    .cliente(arrendatario)
+                    .asesor(inmueble.getAsesor())
+                    .fecha(ahora)
+                    .valorAcordado(arriendoReq.valorAcordado())
+                    .comision(arriendoReq.comision())
+                    .duracionMeses(arriendoReq.duracionMeses())
+                    .fechaVencimiento(arriendoReq.fechaVencimiento())
+                    .estado(EstadoOperacion.COMPLETADA)
+                    .build();
+
+            operacionService.registerRental(arriendo);
+            registrarContrato(arriendo, TipoContrato.ARRIENDO, ahora, vencimiento,
+                    "Contrato de arriendo del inmueble " + inmueble.getCodigo()
+                            + " por " + arriendoReq.duracionMeses() + " meses.");
         }
 
         ejecutarMonitoresComerciales();
@@ -641,5 +693,22 @@ public class InmuebleService {
 
     private boolean estaVacio(String valor) {
         return valor == null || valor.isBlank();
+    }
+
+    private void registrarContrato(Operacion operacion,
+                                   TipoContrato tipoContrato,
+                                   LocalDateTime fechaInicio,
+                                   LocalDateTime fechaVencimiento,
+                                   String contenido) {
+        Contrato contrato = new Contrato();
+        contrato.setCodigo("CONT-" + operacion.getCodigo());
+        contrato.setOperacion(operacion);
+        contrato.setTipoContrato(tipoContrato);
+        contrato.setFechaIncio(fechaInicio);
+        contrato.setFechaVencimiento(fechaVencimiento);
+        contrato.setContenido(contenido);
+        contrato.setVigente(true);
+        contratoRepository.save(contrato);
+        operacion.setContrato(contrato);
     }
 }

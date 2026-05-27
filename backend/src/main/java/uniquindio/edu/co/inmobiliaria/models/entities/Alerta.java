@@ -34,16 +34,20 @@ public class Alerta {
 
     /** Regla de negocio que origino la alerta. */
     @Enumerated(EnumType.STRING)
+    @Column(length = 64, nullable = false)
     private TipoAlerta tipo;
 
     /** Nivel de urgencia para ordenar la atencion. */
     @Enumerated(EnumType.STRING)
+    @Column(length = 16)
     private PrioridadAlerta prioridad;
 
     /** Resumen corto para mostrar en listados. */
+    @Column(length = 255)
     private String titulo;
 
     /** Detalle de la situacion detectada. */
+    @Column(columnDefinition = "TEXT")
     private String descripcion;
 
     /** Identificador de la entidad relacionada (contrato, inmueble, visita, cliente). */

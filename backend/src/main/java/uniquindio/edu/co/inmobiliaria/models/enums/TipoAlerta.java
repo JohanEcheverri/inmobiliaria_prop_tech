@@ -26,5 +26,7 @@ public enum TipoAlerta {
     /** Propiedades cuyo precio cambia con demasiada frecuencia. */
     PROPIEDAD_PRECIO_CAMBIO_FRECUENTE,
     /** Concentración de interés en una misma zona en un tiempo reducido. */
-    ZONA_CONCENTRACION_INTERES
+    ZONA_CONCENTRACION_INTERES,
+    /** Cliente solicita cancelar un contrato de arriendo vigente. */
+    SOLICITUD_CANCELACION_CONTRATO
 }

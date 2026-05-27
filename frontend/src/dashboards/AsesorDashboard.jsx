@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout';
 import './RoleDashboard.css';
 import VentaModal from '../components/VentaModal';
+import ArriendoModal from '../components/ArriendoModal';
 
 const API_BASE_URL = 'http://localhost:8080/api';
 
@@ -19,6 +20,7 @@ function AsesorDashboard() {
     const [asesor, setAsesor] = useState(null);
     const [inmuebles, setInmuebles] = useState([]);
     const [visitas, setVisitas] = useState([]);
+    const [solicitudesCancelacion, setSolicitudesCancelacion] = useState([]);
     const [statusMessage, setStatusMessage] = useState('');
 
     const fetchAsesor = useCallback(async (asesorId) => {
@@ -39,13 +41,36 @@ function AsesorDashboard() {
         setVisitas(await response.json());
     }, []);
 
+    const fetchSolicitudesCancelacion = useCallback(async (asesorId) => {
+        if (!asesorId) {
+            setSolicitudesCancelacion([]);
+            return;
+        }
+        try {
+            const response = await fetch(`${API_BASE_URL}/operaciones/asesor/${asesorId}/solicitudes-cancelacion`);
+            if (!response.ok) {
+                setSolicitudesCancelacion([]);
+                return;
+            }
+            const data = await response.json();
+            setSolicitudesCancelacion(Array.isArray(data) ? data : []);
+        } catch {
+            setSolicitudesCancelacion([]);
+        }
+    }, []);
+
     const cargarDatos = useCallback(async (asesorId) => {
         try {
-            await Promise.all([fetchAsesor(asesorId), fetchInmuebles(), fetchVisitas(asesorId)]);
+            await Promise.all([
+                fetchAsesor(asesorId),
+                fetchInmuebles(),
+                fetchVisitas(asesorId),
+                fetchSolicitudesCancelacion(asesorId)
+            ]);
         } catch (error) {
             setStatusMessage(error.message);
         }
-    }, [fetchAsesor, fetchInmuebles, fetchVisitas]);
+    }, [fetchAsesor, fetchInmuebles, fetchVisitas, fetchSolicitudesCancelacion]);
 
     useEffect(() => {
         const savedSession = JSON.parse(localStorage.getItem('user_session'));
@@ -96,12 +121,16 @@ function AsesorDashboard() {
     const getImages = (inmueble) => inmueble?.imagenes?.length ? inmueble.imagenes : (inmueble?.imagen ? [inmueble.imagen] : []);
 
     const [ventaModal, setVentaModal] = useState({ open: false, codigo: null });
+    const [arriendoModal, setArriendoModal] = useState({ open: false, codigo: null });
 
-    const actualizarEstadoInmueble = async (codigo, estado, inmueble) => {
+    const actualizarEstadoInmueble = async (codigo, estado) => {
         try {
-            // Si se trata de cerrar venta, abrir modal para detalles de venta
             if (estado === 'VENDIDO') {
                 setVentaModal({ open: true, codigo });
+                return;
+            }
+            if (estado === 'ARRENDADO') {
+                setArriendoModal({ open: true, codigo });
                 return;
             }
 
@@ -120,6 +149,52 @@ function AsesorDashboard() {
             setStatusMessage(error.message);
         }
     };
+
+    const procesarCancelacion = async (operacionCodigo) => {
+        try {
+            const response = await fetch(
+                `${API_BASE_URL}/operaciones/arriendos/${operacionCodigo}/procesar-cancelacion?asesorId=${session.id}`,
+                { method: 'PUT' }
+            );
+            if (!response.ok) {
+                const err = await response.json().catch(() => null);
+                throw new Error(err?.mensaje || err?.error || 'No se pudo procesar la cancelación');
+            }
+            await Promise.all([fetchInmuebles(), fetchSolicitudesCancelacion(session.id)]);
+            setStatusMessage('Cancelación de arriendo procesada. El inmueble quedó disponible.');
+        } catch (error) {
+            setStatusMessage(error.message);
+        }
+    };
+
+    const renderSolicitudesCancelacion = () => (
+        <div className="table-responsive-wrapper">
+            <table className="domustech-admin-table">
+                <thead>
+                    <tr><th>Operación</th><th>Detalle</th><th>Fecha</th><th>Acciones</th></tr>
+                </thead>
+                <tbody>
+                    {solicitudesCancelacion.length === 0 ? (
+                        <tr><td colSpan="4" className="table-empty-row">No hay solicitudes de cancelación pendientes.</td></tr>
+                    ) : solicitudesCancelacion.map(alerta => (
+                        <tr key={alerta.codigo}>
+                            <td>{alerta.referenciaId}</td>
+                            <td>{alerta.descripcion}</td>
+                            <td>{alerta.fechaGeneracion ? new Date(alerta.fechaGeneracion).toLocaleString('es-CO') : '-'}</td>
+                            <td>
+                                <button
+                                    className="table-action-button"
+                                    onClick={() => procesarCancelacion(alerta.referenciaId)}
+                                >
+                                    Procesar cancelación
+                                </button>
+                            </td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
+        </div>
+    );
 
     const renderResumen = () => (
         <div className="role-summary">
@@ -211,13 +286,23 @@ function AsesorDashboard() {
                         <button className={`nav-item ${seccionActiva === 'inmuebles' ? 'active' : ''}`} onClick={() => setSeccionActiva('inmuebles')}>Inmuebles asignados</button>
                         <button className={`nav-item ${seccionActiva === 'visitas' ? 'active' : ''}`} onClick={() => setSeccionActiva('visitas')}>Visitas agendadas</button>
                         <button className={`nav-item ${seccionActiva === 'cierres' ? 'active' : ''}`} onClick={() => setSeccionActiva('cierres')}>Cierres</button>
+                        <button className={`nav-item ${seccionActiva === 'cancelaciones' ? 'active' : ''}`} onClick={() => { setSeccionActiva('cancelaciones'); fetchSolicitudesCancelacion(session?.id); }}>
+                            Cancelaciones
+                            {solicitudesCancelacion.length > 0 && <span className="nav-badge">{solicitudesCancelacion.length}</span>}
+                        </button>
                     </nav>
                 </aside>
 
                 <main className="dashboard-content">
                     <div className="content-view-header">
                         <div>
-                            <h1>{seccionActiva === 'resumen' ? 'Panel del asesor' : seccionActiva === 'inmuebles' ? 'Inmuebles asignados' : seccionActiva === 'visitas' ? 'Visitas agendadas' : 'Cierres realizados'}</h1>
+                            <h1>{
+                                seccionActiva === 'resumen' ? 'Panel del asesor'
+                                    : seccionActiva === 'inmuebles' ? 'Inmuebles asignados'
+                                    : seccionActiva === 'visitas' ? 'Visitas agendadas'
+                                    : seccionActiva === 'cancelaciones' ? 'Solicitudes de cancelación'
+                                    : 'Cierres realizados'
+                            }</h1>
                             <p>{session?.nombre}, consulta tu zona, especialidad, agenda e indicadores comerciales.</p>
                         </div>
                     </div>
@@ -226,9 +311,33 @@ function AsesorDashboard() {
                     {seccionActiva === 'inmuebles' && renderInmuebles()}
                     {seccionActiva === 'visitas' && renderVisitas()}
                     {seccionActiva === 'cierres' && <section className="dashboard-panel"><h2>Cierres realizados</h2><div className="metric-hero">{asesor?.numeroDeCierres ?? 0}</div><p>Este contador proviene del perfil del asesor registrado en el sistema.</p></section>}
+                    {seccionActiva === 'cancelaciones' && renderSolicitudesCancelacion()}
                 </main>
             </div>
-            {ventaModal.open && <VentaModal inmuebleCodigo={ventaModal.codigo} asesorId={session?.id} onClose={() => setVentaModal({ open: false, codigo: null })} onCompleted={() => { fetchInmuebles(); fetchAsesor(session.id); setStatusMessage('Venta registrada correctamente'); }} />}
+            {ventaModal.open && (
+                <VentaModal
+                    inmuebleCodigo={ventaModal.codigo}
+                    asesorId={session?.id}
+                    onClose={() => setVentaModal({ open: false, codigo: null })}
+                    onCompleted={() => {
+                        fetchInmuebles();
+                        fetchAsesor(session.id);
+                        setStatusMessage('Venta registrada correctamente');
+                    }}
+                />
+            )}
+            {arriendoModal.open && (
+                <ArriendoModal
+                    inmuebleCodigo={arriendoModal.codigo}
+                    asesorId={session?.id}
+                    onClose={() => setArriendoModal({ open: false, codigo: null })}
+                    onCompleted={() => {
+                        fetchInmuebles();
+                        fetchAsesor(session.id);
+                        setStatusMessage('Arriendo registrado correctamente');
+                    }}
+                />
+            )}
         </Layout>
     );
 }

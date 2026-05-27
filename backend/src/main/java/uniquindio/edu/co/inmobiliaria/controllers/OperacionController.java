@@ -4,8 +4,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
+import uniquindio.edu.co.inmobiliaria.models.dto.CancelacionSolicitudRequest;
 import uniquindio.edu.co.inmobiliaria.models.dto.PropiedadAdquiridaResponse;
 import uniquindio.edu.co.inmobiliaria.models.dto.VentaRequest;
+import uniquindio.edu.co.inmobiliaria.models.entities.Alerta;
+import uniquindio.edu.co.inmobiliaria.models.entities.Arriendo;
+import uniquindio.edu.co.inmobiliaria.models.entities.Inmueble;
 import uniquindio.edu.co.inmobiliaria.models.entities.Operacion;
 import uniquindio.edu.co.inmobiliaria.models.entities.Venta;
 import uniquindio.edu.co.inmobiliaria.models.entities.Visita;
@@ -55,14 +59,46 @@ public class OperacionController {
     }
 
     /**
-     * Obtiene las propiedades adquiridas por un cliente específico.
+     * Obtiene las propiedades del cliente (compras y arriendos vigentes).
      *
      * @param clienteId id del cliente
-     * @return lista de PropiedadAdquiridaResponse con las compras del cliente
+     * @return lista de PropiedadAdquiridaResponse
      */
     @GetMapping("/cliente/{clienteId}/propiedades")
     public List<PropiedadAdquiridaResponse> obtenerPropiedadesAdquiridas(@PathVariable String clienteId) {
-        return mapearPropiedades(operacionService.obtenerPropiedadesAdquiridasCliente(clienteId));
+        return mapearPropiedades(operacionService.obtenerPropiedadesCliente(clienteId));
+    }
+
+    /**
+     * El cliente solicita la cancelación de un contrato de arriendo.
+     */
+    @PostMapping("/arriendos/{operacionCodigo}/solicitar-cancelacion")
+    @Transactional
+    public ResponseEntity<Void> solicitarCancelacionArriendo(
+            @PathVariable String operacionCodigo,
+            @RequestBody CancelacionSolicitudRequest request) {
+        operacionService.solicitarCancelacionArriendo(operacionCodigo, request.clienteId(), request.motivo());
+        return ResponseEntity.ok().build();
+    }
+
+    /**
+     * Lista solicitudes de cancelación pendientes para el asesor indicado.
+     */
+    @GetMapping("/asesor/{asesorId}/solicitudes-cancelacion")
+    public List<Alerta> obtenerSolicitudesCancelacionAsesor(@PathVariable String asesorId) {
+        return operacionService.obtenerSolicitudesCancelacionPorAsesor(asesorId);
+    }
+
+    /**
+     * El asesor procesa la cancelación de un arriendo solicitada por el cliente.
+     */
+    @PutMapping("/arriendos/{operacionCodigo}/procesar-cancelacion")
+    @Transactional
+    public ResponseEntity<Void> procesarCancelacionArriendo(
+            @PathVariable String operacionCodigo,
+            @RequestParam String asesorId) {
+        operacionService.procesarCancelacionArriendo(operacionCodigo, asesorId);
+        return ResponseEntity.ok().build();
     }
 
     // --- Endpoints Analíticos y de Reportes (de tu commit local) ---
@@ -125,63 +161,70 @@ public class OperacionController {
     // --- Métodos Auxiliares ---
 
     /**
-     * Mapea una lista dinámica de operaciones a DTOs PropiedadAdquiridaResponse filtrando
-     * solamente las instancias de Venta.
-     *
-     * @param operaciones lista dinámica que puede contener diferentes tipos de operaciones
-     * @return lista de PropiedadAdquiridaResponse para las ventas encontradas
+     * Mapea ventas y arriendos del cliente a DTOs de propiedad.
      */
-    private List<PropiedadAdquiridaResponse> mapearPropiedades(DynamicArrayList<?> operaciones) {
+    private List<PropiedadAdquiridaResponse> mapearPropiedades(DynamicArrayList<? extends Operacion> operaciones) {
         List<PropiedadAdquiridaResponse> respuesta = new ArrayList<>();
         if (operaciones == null) {
             return respuesta;
         }
         for (int i = 0; i < operaciones.size(); i++) {
-            Object obj = operaciones.get(i);
-            if (!(obj instanceof Venta)) {
-                continue;
+            Operacion operacion = operaciones.get(i);
+            if (operacion instanceof Venta venta) {
+                respuesta.add(mapearPropiedad(venta, "VENTA", null, null));
+            } else if (operacion instanceof Arriendo arriendo) {
+                respuesta.add(mapearPropiedad(arriendo, "ARRIENDO",
+                        arriendo.getDuracionMeses(), arriendo.getFechaVencimiento()));
             }
-            Venta venta = (Venta) obj;
-
-            String codigo = venta.getInmueble() != null ? venta.getInmueble().getCodigo() : null;
-            String direccion = venta.getInmueble() != null ? venta.getInmueble().getDireccion() : null;
-            String ciudad = venta.getInmueble() != null && venta.getInmueble().getCiudad() != null ? venta.getInmueble().getCiudad().getNombre() : null;
-            String zona = venta.getInmueble() != null && venta.getInmueble().getBarrio() != null ? venta.getInmueble().getBarrio().getZona().name() : null;
-            String tipoInmueble = venta.getInmueble() != null && venta.getInmueble().getTipoInmueble() != null ? venta.getInmueble().getTipoInmueble().name() : null;
-            String finalidad = venta.getInmueble() != null && venta.getInmueble().getFinalidad() != null ? venta.getInmueble().getFinalidad().name() : null;
-            double precio = venta.getInmueble() != null ? venta.getInmueble().getPrecio() : 0;
-            double area = venta.getInmueble() != null ? venta.getInmueble().getArea() : 0;
-            int habitaciones = venta.getInmueble() != null ? venta.getInmueble().getNumeroHabitaciones() : 0;
-            int banios = venta.getInmueble() != null ? venta.getInmueble().getNumeroBanios() : 0;
-            String asesorNombre = venta.getAsesor() != null ? venta.getAsesor().getNombre() : null;
-            List<String> imagenes = venta.getInmueble() != null && venta.getInmueble().getImagen() != null
-                    ? venta.getInmueble().getImagen()
-                    : Collections.emptyList();
-            String imagenPrincipal = imagenes.isEmpty() ? null : imagenes.get(0);
-            double comision = venta.getComision();
-            double valorAcordado = venta.getValorAcordado();
-            java.time.LocalDateTime fechaCompra = venta.getFecha();
-
-            respuesta.add(new PropiedadAdquiridaResponse(
-                    codigo,
-                    direccion,
-                    ciudad,
-                    zona,
-                    tipoInmueble,
-                    finalidad,
-                    precio,
-                    area,
-                    habitaciones,
-                    banios,
-                    asesorNombre,
-                    imagenPrincipal,
-                    imagenes,
-                    comision,
-                    valorAcordado,
-                    fechaCompra
-            ));
         }
         return respuesta;
+    }
+
+    private PropiedadAdquiridaResponse mapearPropiedad(Operacion operacion,
+                                                       String tipoOperacion,
+                                                       Integer duracionMeses,
+                                                       java.time.LocalDate fechaVencimiento) {
+        Inmueble inmueble = operacion.getInmueble();
+        String codigo = inmueble != null ? inmueble.getCodigo() : null;
+        String direccion = inmueble != null ? inmueble.getDireccion() : null;
+        String ciudad = inmueble != null && inmueble.getCiudad() != null ? inmueble.getCiudad().getNombre() : null;
+        String zona = inmueble != null && inmueble.getZona() != null ? inmueble.getZona().name() : null;
+        String tipoInmueble = inmueble != null && inmueble.getTipoInmueble() != null ? inmueble.getTipoInmueble().name() : null;
+        String finalidad = inmueble != null && inmueble.getFinalidad() != null ? inmueble.getFinalidad().name() : null;
+        double precio = inmueble != null ? inmueble.getPrecio() : 0;
+        double area = inmueble != null ? inmueble.getArea() : 0;
+        int habitaciones = inmueble != null ? inmueble.getNumeroHabitaciones() : 0;
+        int banios = inmueble != null ? inmueble.getNumeroBanios() : 0;
+        String asesorNombre = operacion.getAsesor() != null ? operacion.getAsesor().getNombre() : null;
+        List<String> imagenes = inmueble != null && inmueble.getImagen() != null
+                ? inmueble.getImagen()
+                : Collections.emptyList();
+        String imagenPrincipal = imagenes.isEmpty() ? null : imagenes.get(0);
+        String operacionEstado = operacion.getEstado() != null ? operacion.getEstado().name() : null;
+
+        return new PropiedadAdquiridaResponse(
+                codigo,
+                direccion,
+                ciudad,
+                zona,
+                tipoInmueble,
+                finalidad,
+                precio,
+                area,
+                habitaciones,
+                banios,
+                asesorNombre,
+                imagenPrincipal,
+                imagenes,
+                operacion.getComision(),
+                operacion.getValorAcordado(),
+                operacion.getFecha(),
+                tipoOperacion,
+                operacion.getCodigo(),
+                operacionEstado,
+                duracionMeses,
+                fechaVencimiento
+        );
     }
 
     /**

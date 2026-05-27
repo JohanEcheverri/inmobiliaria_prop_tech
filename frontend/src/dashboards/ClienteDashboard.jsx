@@ -494,10 +494,17 @@ function ClienteDashboard() {
                     {seccionActiva === 'catalogo' && renderCatalogo()}
                     {seccionActiva === 'detalle' && renderDetalle()}
                     {seccionActiva === 'visitas' && renderVisitas()}
-                    {seccionActiva === 'mispropiedades' && <MisProperties propiedades={propiedades} onVerDetalle={(codigo) => {
-                        const found = inmuebles.find(i => i.codigo === codigo);
-                        if (found) abrirDetalle(found);
-                    }} />}
+                    {seccionActiva === 'mispropiedades' && (
+                        <MisProperties
+                            propiedades={propiedades}
+                            clienteId={session?.id}
+                            onRefresh={() => session?.id && fetchPropiedades(session.id)}
+                            onVerDetalle={(codigo) => {
+                                const found = inmuebles.find(i => i.codigo === codigo);
+                                if (found) abrirDetalle(found);
+                            }}
+                        />
+                    )}
                     {seccionActiva === 'favoritos' && (favoritos.length ? <div className="property-grid">{favoritos.map(inmueble => <article className="property-card" key={inmueble.codigo}><button className={`favorite-star active`} onClick={() => toggleFavorito(inmueble.codigo)} aria-label="Quitar de favoritos">★</button><div className="property-thumb">{getImages(inmueble)[0] ? <img src={getImages(inmueble)[0]} alt={inmueble.direccionBarrio || inmueble.direccion} /> : <span>{inmueble.tipoInmueble}</span>}</div><div className="property-body"><h3>{inmueble.direccionBarrio || inmueble.direccion}</h3><p>{inmueble.ciudad} · {inmueble.zona}</p><strong>{formatCurrency(inmueble.precio)}</strong></div><div className="card-actions"><button onClick={() => abrirDetalle(inmueble)}>Ver detalle</button></div></article>)}</div> : <p className="empty-text">No tienes favoritos registrados.</p>)}
                     {seccionActiva === 'historial' && renderHistorial()}
                 {showFirstLoginModal && session?.id && <FirstLoginModal clienteId={session.id} onClose={handleCloseFirstLogin} onSaved={handleSavedPreferences} />}

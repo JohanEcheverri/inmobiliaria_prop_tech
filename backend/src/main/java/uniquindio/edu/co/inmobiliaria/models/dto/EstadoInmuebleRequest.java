@@ -5,6 +5,7 @@ import uniquindio.edu.co.inmobiliaria.models.dto.VentaRequest;
 
 public record EstadoInmuebleRequest(
         Estado estado,
-        VentaRequest venta
+        VentaRequest venta,
+        ArriendoRequest arriendo
 ) {
 }
