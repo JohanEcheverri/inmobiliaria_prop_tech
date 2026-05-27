@@ -20,8 +20,13 @@ export default function MisProperties({ propiedades, onVerDetalle }) {
 
         if (typeof src !== 'string') src = String(src);
 
-        // Base64 o URL absoluta
+        // Base64 data URL o URL absoluta
         if (src.startsWith('data:') || src.startsWith('http')) return src;
+
+        // Si es Base64 puro (sin prefijo data:), asumimos image/jpeg como fallback
+        // Detectar cadenas base64 largas que sólo contienen el alfabeto base64
+        const base64Like = /^[A-Za-z0-9+/=\n\r]+$/.test(src) && src.length > 100;
+        if (base64Like) return `data:image/jpeg;base64,${src.replace(/\s+/g, '')}`;
 
         // Ruta absoluta en el servidor (ej. '/uploads/...') => resolver contra el origin del API
         if (src.startsWith('/')) {

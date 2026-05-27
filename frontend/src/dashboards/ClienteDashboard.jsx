@@ -484,7 +484,7 @@ function ClienteDashboard() {
                     {seccionActiva === 'catalogo' && renderCatalogo()}
                     {seccionActiva === 'detalle' && renderDetalle()}
                     {seccionActiva === 'visitas' && renderVisitas()}
-                    {seccionActiva === 'mispropiedades' && <MisProperties propiedades={propiedades} onVerDetalle={(codigo) => {
+                    {seccionActiva === 'mispropiedades' && <MisProperties propiedades={propiedadesEnriquecidas} onVerDetalle={(codigo) => {
                         const found = inmuebles.find(i => i.codigo === codigo);
                         if (found) abrirDetalle(found);
                     }} />}
