@@ -15,6 +15,7 @@ import uniquindio.edu.co.inmobiliaria.structures.DynamicArrayList;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Collections;
 
 @CrossOrigin(origins = {"http://localhost:5173", "http://localhost:5174", "http://127.0.0.1:5173", "http://127.0.0.1:5174", "http://localhost:3000"})
 @RestController
@@ -153,6 +154,10 @@ public class OperacionController {
             int habitaciones = venta.getInmueble() != null ? venta.getInmueble().getNumeroHabitaciones() : 0;
             int banios = venta.getInmueble() != null ? venta.getInmueble().getNumeroBanios() : 0;
             String asesorNombre = venta.getAsesor() != null ? venta.getAsesor().getNombre() : null;
+            List<String> imagenes = venta.getInmueble() != null && venta.getInmueble().getImagen() != null
+                    ? venta.getInmueble().getImagen()
+                    : Collections.emptyList();
+            String imagenPrincipal = imagenes.isEmpty() ? null : imagenes.get(0);
             double comision = venta.getComision();
             double valorAcordado = venta.getValorAcordado();
             java.time.LocalDateTime fechaCompra = venta.getFecha();
@@ -169,6 +174,8 @@ public class OperacionController {
                     habitaciones,
                     banios,
                     asesorNombre,
+                    imagenPrincipal,
+                    imagenes,
                     comision,
                     valorAcordado,
                     fechaCompra
