@@ -567,3 +567,204 @@
         height: 26px;
     }
 }
+
+
+/* ==========================================================================
+   ESTILOS DE LOS ENLACES LEGALES (INTEGRADOS AL PIE DE PÁGINA DEL LAYOUT)
+   ========================================================================== */
+.layout-footer {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 2rem 5%;
+    color: #ffffff;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    font-size: 0.95rem;
+    gap: 0.8rem;
+}
+
+.footer-left p {
+    margin: 0;
+    color: #bdc3c7;
+    text-align: center;
+}
+
+.footer-right {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1.2rem;
+}
+
+.footer-legal-link {
+    background: none;
+    border: none;
+    color: #7f8c8d;
+    text-decoration: none;
+    font-size: 0.95rem;
+    font-weight: 500;
+    font-family: inherit;
+    cursor: pointer;
+    padding: 0;
+    transition: color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.footer-legal-link:hover {
+    color: var(--accent-orange, #e67e22);
+    text-decoration: underline;
+}
+
+.footer-legal-separator {
+    color: #7f8c8d;
+    font-size: 0.85rem;
+    user-select: none;
+}
+
+/* ==========================================================================
+   ESTILOS E INTERACTIVIDAD DEL MODAL LEGAL FLOTANTE (ARREGLO DE VISIBILIDAD)
+   ========================================================================== */
+.layout-legal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.6); /* Oscurece el fondo de la app */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000; /* Asegura estar sobre menús y contenidos */
+    backdrop-filter: blur(3px);
+}
+
+.layout-legal-modal {
+    background-color: #ffffff;
+    width: 90%;
+    max-width: 650px;
+    max-height: 80vh;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+    overflow: hidden;
+    animation: fadeInModal 0.25s ease-out;
+}
+
+.layout-legal-tabs {
+    display: flex;
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #e9ecef;
+    position: relative;
+}
+
+.layout-tab-btn {
+    flex: 1;
+    padding: 1rem;
+    background: none;
+    border: none;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #6c757d;
+    cursor: pointer;
+    transition: all 0.2s;
+    border-bottom: 3px solid transparent;
+}
+
+.layout-tab-btn:hover {
+    color: #2c3e50;
+    background-color: #f1f3f5;
+}
+
+.layout-tab-btn.active {
+    color: #a29bfe;
+    border-bottom-color: #a29bfe;
+    background-color: #ffffff;
+}
+
+.layout-legal-close-x {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    padding: 0 1rem;
+    cursor: pointer;
+    color: #adb5bd;
+    transition: color 0.2s;
+}
+
+.layout-legal-close-x:hover {
+    color: #dc3545;
+}
+
+.layout-legal-body {
+    padding: 1.5rem;
+    overflow-y: auto;
+    color: #333333;
+    font-size: 0.95rem;
+    line-height: 1.6;
+}
+
+.layout-legal-body h3 {
+    margin-top: 0;
+    margin-bottom: 0.5rem;
+    color: #2c3e50;
+    font-size: 1.15rem;
+}
+
+.layout-legal-body p {
+    margin-bottom: 1.2rem;
+}
+
+.layout-legal-footer {
+    padding: 1rem 1.5rem;
+    background-color: #f8f9fa;
+    border-top: 1px solid #e9ecef;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.btn-layout-legal-close {
+    padding: 0.5rem 1.5rem;
+    background-color: #6c757d;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.btn-layout-legal-close:hover {
+    background-color: #495057;
+}
+
+@keyframes fadeInModal {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+@media (max-width: 600px) {
+    .layout-footer {
+        padding: 1.5rem 5%;
+        gap: 0.6rem;
+    }
+
+    .footer-right {
+        flex-direction: column;
+        gap: 0.6rem;
+    }
+
+    .footer-legal-separator {
+        display: none;
+    }
+
+    .layout-legal-tabs {
+        flex-direction: column;
+    }
+
+    .layout-legal-close-x {
+        position: absolute;
+        top: 0.5rem;
+        right: 0.5rem;
+    }
+}

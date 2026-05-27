@@ -289,10 +289,14 @@ function ClienteDashboard() {
 
     const renderCatalogo = () => (
         <>
-        <div className="catalog-filter-bar">
+        <div className="catalog-search-bar">
             <SearchBar onSearch={(filters) => fetchInmuebles(filters)} initialClienteId={session?.id} />
+
+            <button type="button" className="btn-recommendations" >
+                ✨Para ti
+            </button>
             <button className={showFavoritesOnly ? 'active' : ''} onClick={() => setShowFavoritesOnly(prev => !prev)}>
-                {showFavoritesOnly ? 'Ver todo el catalogo' : 'Filtrar favoritos'}
+                {showFavoritesOnly ? 'Todos' : 'Filtrar favoritos'}
             </button>
         </div>
         <div className="property-grid">

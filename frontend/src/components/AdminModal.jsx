@@ -30,7 +30,24 @@ const crearFormDataInicial = (datos) => ({
     zona: datos?.zona || 'CENTRO',
     direccionBarrio: datos?.direccionBarrio || datos?.direccion || datos?.barrio || '',
     departamento: datos?.departamento || '',
-    imagenes: datos?.imagenes || (datos?.imagen ? [datos.imagen] : []),
+
+
+    imagenes: (() => {
+        if (!datos) return [];
+        // Buscamos la lista de imágenes dentro del objeto 'datos'
+        const imgsCandidate = datos.imagenes || datos.imagen || [];
+        const arr = Array.isArray(imgsCandidate) ? imgsCandidate : [imgsCandidate];
+
+        return arr.filter(Boolean).map(i => {
+            if (typeof i === 'object') return i.url || i.path || String(i);
+            if (typeof i !== 'string') return String(i);
+            if (i.startsWith('data:') || i.startsWith('http')) return i;
+            if (i.startsWith('/')) return `${window.location.origin}${i}`;
+            return i;
+        });
+    })(),
+
+
     especialidad: datos?.especialidad || 'CASA',
     estadoInmueble: datos?.estadoInmueble || datos?.estado || 'DISPONIBLE',
     disponibilidad: datos?.disponibilidad || datos?.estado || 'DISPONIBLE',

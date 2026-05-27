@@ -1,4 +1,5 @@
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 import './Portada.css';
 import Layout from './components/Layout';
 
@@ -6,8 +7,45 @@ import imgBusqueda from './assets/Busqueda.png';
 import imgGestion from './assets/Gestion.png';
 import imgAnalisis from './assets/Analisis.png';
 
+// Datos estáticos para el carrusel de inmuebles destacados
+const INMUEBLES_DESTACADOS = [
+    {
+        id: 1,
+        tipo: 'CASA',
+        finalidad: 'VENTA',
+        ubicacion: 'La Castellana, Armenia',
+        precio: '$420.000.000',
+        imagen: 'https://images.unsplash.com/photo-1580587771525-78b9dba3b914?auto=format&fit=crop&w=800&q=80'
+    },
+    {
+        id: 2,
+        tipo: 'APARTAMENTO',
+        finalidad: 'VENTA',
+        ubicacion: 'Norte, Armenia',
+        precio: '$280.000.000',
+        imagen: 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=800&q=80'
+    },
+    {
+        id: 3,
+        tipo: 'LOCAL COMERCIAL',
+        finalidad: 'ARRENDAMIENTO',
+        ubicacion: 'Granada, Armenia',
+        precio: '$4.800.000 / mes',
+        imagen: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=800&q=80'
+    }
+];
+
 const Portada = () => {
     const navigate = useNavigate();
+    const [currentSlide, setCurrentSlide] = useState(0);
+
+    // Loop automático para rotar el carrusel de imágenes cada 5 segundos
+    useEffect(() => {
+        const timer = setInterval(() => {
+            setCurrentSlide((prev) => (prev === INMUEBLES_DESTACADOS.length - 1 ? 0 : prev + 1));
+        }, 5000);
+        return () => clearInterval(timer);
+    }, []);
 
     return (
         <Layout
@@ -40,12 +78,51 @@ const Portada = () => {
                         </select>
                         <button type="submit">Buscar</button>
                     </form>
-
-                    {/* Los botones inferiores se han eliminado por redundancia */}
                 </div>
 
+                {/* --- SECCIÓN VISUAL CON CARRUSEL DE IMÁGENES --- */}
                 <div className="hero-visual">
-                    <div className="abstract-blob"></div>
+                    <div className="carousel-wrapper">
+                        {INMUEBLES_DESTACADOS.map((inm, index) => (
+                            <div
+                                key={inm.id}
+                                className={`carousel-slide ${index === currentSlide ? 'active' : ''}`}
+                                style={{ backgroundImage: `url(${inm.imagen})` }}
+                            >
+                                <div className="carousel-overlay">
+                                    <span className="carousel-badge">{inm.tipo} · {inm.finalidad}</span>
+                                    <h4>{inm.ubicacion}</h4>
+                                    <p className="carousel-price">{inm.precio}</p>
+                                </div>
+                            </div>
+                        ))}
+
+                        {/* Controles manuales */}
+                        <button
+                            className="carousel-btn prev"
+                            onClick={() => setCurrentSlide(currentSlide === 0 ? INMUEBLES_DESTACADOS.length - 1 : currentSlide - 1)}
+                        >
+                            &#10094;
+                        </button>
+                        <button
+                            className="carousel-btn next"
+                            onClick={() => setCurrentSlide(currentSlide === INMUEBLES_DESTACADOS.length - 1 ? 0 : currentSlide + 1)}
+                        >
+                            &#10095;
+                        </button>
+
+                        {/* Indicadores de puntos inferiores */}
+                        <div className="carousel-dots">
+                            {INMUEBLES_DESTACADOS.map((_, index) => (
+                                <button
+                                    key={index}
+                                    className={`dot ${index === currentSlide ? 'active' : ''}`}
+                                    onClick={() => setCurrentSlide(index)}
+                                />
+                            ))}
+                        </div>
+                    </div>
+
                     <div className="stats-mini-card">
                         <span>+500</span>
                         <p>Propiedades Activas</p>
@@ -53,7 +130,7 @@ const Portada = () => {
                 </div>
             </header>
 
-            {/* Sección de Valor Técnico con Imágenes Mejoradas */}
+            {/* Características de valor de DomusTech */}
             <section className="features">
                 <div className="feature-card">
                     <div className="feature-image-container">
@@ -80,7 +157,7 @@ const Portada = () => {
                 </div>
             </section>
 
-            {/* Zonas en Tendencia */}
+            {/* Seccion de Zonas en Tendencia */}
             <section className="trending-zones">
                 <h2>Zonas con mayor actividad</h2>
                 <div className="zones-grid">
@@ -90,6 +167,8 @@ const Portada = () => {
                     <div className="zone-tag">Occidente - En Crecimiento</div>
                 </div>
             </section>
+
+
         </Layout>
     );
 };

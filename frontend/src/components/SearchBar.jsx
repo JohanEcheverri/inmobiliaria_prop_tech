@@ -5,7 +5,7 @@ export default function SearchBar({ onSearch, initialClienteId }) {
     const TIPOS = ['', 'APARTAMENTO', 'CASA', 'LOCAL_COMERCIAL', 'OFICINA', 'LOTE', 'BODEGA'];
     const FINALIDADES = ['', 'VENTA', 'ARRENDAMIENTO'];
     const PRICE_RANGES = [
-        { id: '', label: 'Cualquiera', min: '', max: '' },
+        { id: '', label: 'Rango de Precio', min: '', max: '' },
         { id: '0-50000000', label: '< 50.000.000', min: 0, max: 50000000 },
         { id: '50000000-100000000', label: '50.000.000 - 100.000.000', min: 50000000, max: 100000000 },
         { id: '100000000-200000000', label: '100.000.000 - 200.000.000', min: 100000000, max: 200000000 },
@@ -39,25 +39,29 @@ export default function SearchBar({ onSearch, initialClienteId }) {
     };
 
     return (
-        <form className="catalog-search-bar" onSubmit={submit}>
-            <select name="zona" value={filters.zona} onChange={handleChange}>
-                {ZONAS.map(z => <option key={z} value={z}>{z === '' ? 'Zona (Cualquiera)' : z}</option>)}
-            </select>
+        <form onSubmit={submit}>
+            {/* Grupo de controles superiores */}
+            <div className="catalog-filter-bar">
+                <select name="zona" value={filters.zona} onChange={handleChange}>
+                    {ZONAS.map(z => <option key={z} value={z}>{z === '' ? 'Zona (Cualquiera)' : z}</option>)}
+                </select>
 
-            <select name="tipo" value={filters.tipo} onChange={handleChange}>
-                {TIPOS.map(t => <option key={t} value={t}>{t === '' ? 'Tipo (Cualquiera)' : t.replace('_', ' ')}</option>)}
-            </select>
+                <select name="tipo" value={filters.tipo} onChange={handleChange}>
+                    {TIPOS.map(t => <option key={t} value={t}>{t === '' ? 'Tipo (Cualquiera)' : t.replace('_', ' ')}</option>)}
+                </select>
 
-            <select name="finalidad" value={filters.finalidad} onChange={handleChange}>
-                {FINALIDADES.map(f => <option key={f} value={f}>{f === '' ? 'Venta / Arriendo' : f}</option>)}
-            </select>
+                <select name="finalidad" value={filters.finalidad} onChange={handleChange}>
+                    {FINALIDADES.map(f => <option key={f} value={f}>{f === '' ? 'Venta / Arriendo' : f}</option>)}
+                </select>
 
-            <select name="priceRange" value={filters.priceRange} onChange={handleChange}>
-                {PRICE_RANGES.map(p => <option key={p.id} value={p.id}>{p.label}</option>)}
-            </select>
+                <select name="priceRange" value={filters.priceRange} onChange={handleChange}>
+                    {PRICE_RANGES.map(p => <option key={p.id} value={p.id}>{p.label}</option>)}
+                </select>
 
-            <input name="minHabitaciones" type="number" placeholder="Min hab" value={filters.minHabitaciones} onChange={handleChange} />
-            <button type="submit" className="btn small">Buscar</button>
+                <input name="minHabitaciones" type="number" placeholder="Min hab" value={filters.minHabitaciones} onChange={handleChange} />
+            </div>
+
+
         </form>
     );
 }
