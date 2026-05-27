@@ -456,6 +456,8 @@ function ClienteDashboard() {
         </>
     );
 
+    const propiedadesEnriquecidas = propiedades.map(p => ({ ...p, inmueble: inmuebles.find(i => i.codigo === p.codigo) || null }));
+
     return (
         <Layout contentClassName="admin-layout-container">
             <div className="dashboard-wrapper">

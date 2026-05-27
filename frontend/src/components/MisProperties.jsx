@@ -67,7 +67,7 @@ export default function MisProperties({ propiedades, onVerDetalle }) {
                     <article
                         className="property-card"
                         key={datosInmueble.codigo || `prop-${index}`}
-                        onClick={() => onVerDetalle && onVerDetalle(p)}
+                        onClick={() => onVerDetalle && onVerDetalle(datosInmueble.codigo || p.codigo)}
                         style={{ cursor: onVerDetalle ? 'pointer' : 'default' }}
                     >
                         {/* Contenedor de la foto con su Badge de Adquirido encima */}
