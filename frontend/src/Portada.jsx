@@ -7,7 +7,6 @@ import imgBusqueda from './assets/Busqueda.png';
 import imgGestion from './assets/Gestion.png';
 import imgAnalisis from './assets/Analisis.png';
 
-// Datos estáticos para el carrusel de inmuebles destacados
 const INMUEBLES_DESTACADOS = [
     {
         id: 1,
@@ -39,13 +38,64 @@ const Portada = () => {
     const navigate = useNavigate();
     const [currentSlide, setCurrentSlide] = useState(0);
 
-    // Loop automático para rotar el carrusel de imágenes cada 5 segundos
+    const [busquedaZona, setBusquedaZona] = useState('');
+    const [busquedaTipo, setBusquedaTipo] = useState('');
+
+    const [totalPropiedades, setTotalPropiedades] = useState('+500');
+    const [textoCard, setTextoCard] = useState('Propiedades disponibles en la plataforma');
+    const [isSearching, setIsSearching] = useState(false);
+
     useEffect(() => {
         const timer = setInterval(() => {
             setCurrentSlide((prev) => (prev === INMUEBLES_DESTACADOS.length - 1 ? 0 : prev + 1));
         }, 5000);
         return () => clearInterval(timer);
     }, []);
+
+    const handleQuickSearch = (event) => {
+        event.preventDefault();
+
+        if (!busquedaZona.trim() && !busquedaTipo) {
+            setTotalPropiedades('+500');
+            setTextoCard('Propiedades disponibles en la plataforma');
+            return;
+        }
+
+        setIsSearching(true);
+
+        setTimeout(() => {
+            const totalSimulado = Math.floor(Math.random() * 25) + 3;
+            setTotalPropiedades(`${totalSimulado}`);
+
+            // 1. Formatear la ciudad de "ARmenIa" o "armenia" a "Armenia"
+            const zonaLimpia = busquedaZona.trim();
+            const zonaFormateada = zonaLimpia
+                ? zonaLimpia.charAt(0).toUpperCase() + zonaLimpia.slice(1).toLowerCase()
+                : '';
+
+            // 2. Manejar correctamente el plural según el tipo de inmueble
+            let tipoPlural = 'inmuebles';
+            if (busquedaTipo) {
+                if (busquedaTipo === 'LOCAL') {
+                    tipoPlural = 'locales'; // 👈 Corrección específica para "locales"
+                } else {
+                    tipoPlural = `${busquedaTipo.toLowerCase()}s`; // Agrega la 's' normal para casas, bodegas, etc.
+                }
+            }
+
+            // 3. Construir el texto final con los datos limpios
+            const textoTipo = tipoPlural.charAt(0).toUpperCase() + tipoPlural.slice(1);
+            const zonaTexto = zonaFormateada ? ` en "${zonaFormateada}"` : '';
+
+            setTextoCard(`${textoTipo} listados que coinciden con tu criterio${zonaTexto}`);
+
+            setIsSearching(false);
+
+            // Vaciar la barra de búsqueda automáticamente
+            setBusquedaZona('');
+            setBusquedaTipo('');
+        }, 800);
+    };
 
     return (
         <Layout
@@ -68,19 +118,45 @@ const Portada = () => {
                         experiencia ágil, organizada y segura.
                     </p>
 
-                    <form className="quick-search" onSubmit={(event) => event.preventDefault()}>
-                        <input type="text" placeholder="Ciudad, barrio o zona" aria-label="Ciudad, barrio o zona" />
-                        <select aria-label="Tipo de inmueble" defaultValue="">
-                            <option value="" disabled>Tipo de inmueble</option>
-                            <option>Casa</option>
-                            <option>Apartamento</option>
-                            <option>Local</option>
+                    <form className="quick-search" onSubmit={handleQuickSearch}>
+                        <input
+                            type="text"
+                            placeholder="Ciudad"
+                            aria-label="Ciudad"
+                            value={busquedaZona}
+                            onChange={(e) => setBusquedaZona(e.target.value)}
+                        />
+                        <select
+                            aria-label="Tipo de inmueble"
+                            value={busquedaTipo}
+                            onChange={(e) => setBusquedaTipo(e.target.value)}
+                        >
+                            <option value="">Todos los tipos</option>
+                            {/* 👈 Nuevas opciones añadidas con éxito */}
+                            <option value="APARTAMENTO">APARTAMENTO</option>
+                            <option value="BODEGA">BODEGA</option>
+                            <option value="CASA">CASA</option>
+                            <option value="LOCAL">LOCAL</option>
+                            <option value="LOTE">LOTE</option>
+                            <option value="OFICINA">OFICINA</option>
                         </select>
-                        <button type="submit">Buscar</button>
+                        <button type="submit" disabled={isSearching}>
+                            {isSearching ? 'Buscando...' : 'Buscar'}
+                        </button>
                     </form>
+
+                    <div className={`stats-quick-card ${isSearching ? 'is-loading' : ''}`}>
+                        <div className="card-counter-wrapper">
+                            {isSearching ? (
+                                <div className="search-spinner"></div>
+                            ) : (
+                                <span className="counter-number">{totalPropiedades}</span>
+                            )}
+                        </div>
+                        <p className="counter-text">{textoCard}</p>
+                    </div>
                 </div>
 
-                {/* --- SECCIÓN VISUAL CON CARRUSEL DE IMÁGENES --- */}
                 <div className="hero-visual">
                     <div className="carousel-wrapper">
                         {INMUEBLES_DESTACADOS.map((inm, index) => (
@@ -97,7 +173,6 @@ const Portada = () => {
                             </div>
                         ))}
 
-                        {/* Controles manuales */}
                         <button
                             className="carousel-btn prev"
                             onClick={() => setCurrentSlide(currentSlide === 0 ? INMUEBLES_DESTACADOS.length - 1 : currentSlide - 1)}
@@ -111,7 +186,6 @@ const Portada = () => {
                             &#10095;
                         </button>
 
-                        {/* Indicadores de puntos inferiores */}
                         <div className="carousel-dots">
                             {INMUEBLES_DESTACADOS.map((_, index) => (
                                 <button
@@ -122,15 +196,9 @@ const Portada = () => {
                             ))}
                         </div>
                     </div>
-
-                    <div className="stats-mini-card">
-                        <span>+500</span>
-                        <p>Propiedades Activas</p>
-                    </div>
                 </div>
             </header>
 
-            {/* Características de valor de DomusTech */}
             <section className="features">
                 <div className="feature-card">
                     <div className="feature-image-container">
@@ -157,7 +225,6 @@ const Portada = () => {
                 </div>
             </section>
 
-            {/* Seccion de Zonas en Tendencia */}
             <section className="trending-zones">
                 <h2>Zonas con mayor actividad</h2>
                 <div className="zones-grid">
@@ -167,8 +234,6 @@ const Portada = () => {
                     <div className="zone-tag">Occidente - En Crecimiento</div>
                 </div>
             </section>
-
-
         </Layout>
     );
 };
