@@ -104,7 +104,7 @@ export default function MisProperties({ propiedades, clienteId, onVerDetalle, on
                         </div>
 
                         <div className="card-actions">
-                            <button onClick={() => onVerDetalle(p.codigo)}>Ver detalle</button>
+
                             {puedeSolicitarCancelacion(p) && (
                                 <button
                                     className="danger"

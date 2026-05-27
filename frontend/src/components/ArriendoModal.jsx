@@ -61,7 +61,7 @@ export default function ArriendoModal({ inmuebleCodigo, asesorId, onClose, onCom
                     <label>Id del arrendatario
                         <input name="clienteId" value={form.clienteId} onChange={handleChange} required />
                     </label>
-                    <label>Canon mensual acordado (COP)
+                    <label>Valor mensual acordado (COP)
                         <input name="valorAcordado" type="number" value={form.valorAcordado} onChange={handleChange} required />
                     </label>
                     <label>Comisión (COP)
