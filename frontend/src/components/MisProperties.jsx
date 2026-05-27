@@ -60,12 +60,6 @@ export default function MisProperties({ propiedades, onVerDetalle }) {
                             </div>
                         </div>
 
-                        {/* Botón de acción para conectar con el abrirDetalle del Dashboard */}
-                        <div className="card-actions">
-                            <button onClick={() => onVerDetalle(p.codigo)}>
-                                Ver detalle
-                            </button>
-                        </div>
                     </article>
                 );
             })}

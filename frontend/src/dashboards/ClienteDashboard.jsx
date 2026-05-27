@@ -292,9 +292,6 @@ function ClienteDashboard() {
         <div className="catalog-search-bar">
             <SearchBar onSearch={(filters) => fetchInmuebles(filters)} initialClienteId={session?.id} />
 
-            <button type="button" className="btn-recommendations" >
-                ✨Para ti
-            </button>
             <button className={showFavoritesOnly ? 'active' : ''} onClick={() => setShowFavoritesOnly(prev => !prev)}>
                 {showFavoritesOnly ? 'Todos' : 'Filtrar favoritos'}
             </button>
