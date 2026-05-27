@@ -1,6 +1,7 @@
 package uniquindio.edu.co.inmobiliaria.models.dto;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 public record PropiedadAdquiridaResponse(
         String codigo,
@@ -14,6 +15,8 @@ public record PropiedadAdquiridaResponse(
         int habitaciones,
         int banios,
         String asesorNombre,
+        String imagen,
+        List<String> imagenes,
         double comision,
         double valorAcordado,
         LocalDateTime fechaCompra

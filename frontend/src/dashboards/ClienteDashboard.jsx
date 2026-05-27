@@ -87,7 +87,11 @@ function ClienteDashboard() {
         try {
             const response = await fetch(`${API_BASE_URL}/clientes/${clienteId}/recomendados`);
             if (!response.ok) throw new Error('No se pudieron cargar las recomendaciones');
-            setRecomendados(await response.json());
+            const data = await response.json();
+            // Evitar mostrar inmuebles ya no disponibles en recomendaciones
+            setRecomendados(
+                (Array.isArray(data) ? data : []).filter(i => i?.estado !== 'VENDIDO' && i?.estado !== 'ARRENDADO')
+            );
         } catch (e) {
             console.warn('fetchRecomendados failed', e);
             setRecomendados([]);
@@ -187,6 +191,11 @@ function ClienteDashboard() {
     const catalogoVisible = useMemo(
         () => showFavoritesOnly ? inmuebles.filter(inmueble => favoriteCodes.has(inmueble.codigo)) : inmuebles,
         [favoriteCodes, inmuebles, showFavoritesOnly]
+    );
+
+    const recomendadosVisibles = useMemo(
+        () => recomendados.filter(i => i?.estado !== 'VENDIDO' && i?.estado !== 'ARRENDADO'),
+        [recomendados]
     );
 
     const getImages = (inmueble) => inmueble?.imagenes?.length ? inmueble.imagenes : (inmueble?.imagen ? [inmueble.imagen] : []);
@@ -417,11 +426,11 @@ function ClienteDashboard() {
 
     const renderRecomendados = () => (
         <>
-            {recomendados.length === 0 ? (
+            {recomendadosVisibles.length === 0 ? (
                 <p className="empty-text">No hay recomendaciones disponibles. Completa tus preferencias para obtener sugerencias personalizadas.</p>
             ) : (
                 <div className="property-grid">
-                    {recomendados.map((inmueble, idx) => (
+                    {recomendadosVisibles.map((inmueble, idx) => (
                         <article className="property-card" key={inmueble.codigo}>
                             <span className="recommendation-badge">#{idx + 1} Recomendado</span>
                             <button
