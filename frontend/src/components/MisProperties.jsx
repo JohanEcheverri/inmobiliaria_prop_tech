@@ -1,5 +1,4 @@
 import React from 'react';
-import { API_BASE_URL } from '../api';
 
 export default function MisProperties({ propiedades, onVerDetalle }) {
     const formatCurrency = (value) =>
@@ -12,34 +11,20 @@ export default function MisProperties({ propiedades, onVerDetalle }) {
     const resolveImage = (img) => {
         if (!img) return null;
 
-        // Normalizar a string: soporta objetos devueltos por el backend y cadenas
-        let src = img;
+        // Si viene como un objeto (por ejemplo { url: '...', id: ... }), extraemos su ruta interna
         if (typeof img === 'object') {
-            src = img.url || img.path || img.ruta || img.src || img.nombre || img.toString();
+            return img.url || img.path || img.ruta || String(img);
         }
 
-        if (typeof src !== 'string') src = String(src);
+        if (typeof img !== 'string') return String(img);
 
-        // Base64 data URL o URL absoluta
-        if (src.startsWith('data:') || src.startsWith('http')) return src;
+        // Si es Base64 (data:) o una URL externa (http), se retorna tal cual como hace tu AdminModal
+        if (img.startsWith('data:') || img.startsWith('http')) return img;
 
-        // Si es Base64 puro (sin prefijo data:), asumimos image/jpeg como fallback
-        // Detectar cadenas base64 largas que sólo contienen el alfabeto base64
-        const base64Like = /^[A-Za-z0-9+/=\n\r]+$/.test(src) && src.length > 100;
-        if (base64Like) return `data:image/jpeg;base64,${src.replace(/\s+/g, '')}`;
+        // Si es una ruta relativa local
+        if (img.startsWith('/')) return `${window.location.origin}${img}`;
 
-        // Ruta absoluta en el servidor (ej. '/uploads/...') => resolver contra el origin del API
-        if (src.startsWith('/')) {
-            try {
-                const apiOrigin = new URL(API_BASE_URL).origin;
-                return `${apiOrigin}${src}`;
-            } catch (e) {
-                // Fallback al origin actual si API_BASE_URL no es válido
-                return `${window.location.origin}${src}`;
-            }
-        }
-
-        return src;
+        return img;
     };
 
     const getImages = (inmueble) => {
@@ -72,7 +57,7 @@ export default function MisProperties({ propiedades, onVerDetalle }) {
                     <article
                         className="property-card"
                         key={datosInmueble.codigo || `prop-${index}`}
-                        onClick={() => onVerDetalle && onVerDetalle(datosInmueble.codigo || p.codigo)}
+                        onClick={() => onVerDetalle && onVerDetalle(p)}
                         style={{ cursor: onVerDetalle ? 'pointer' : 'default' }}
                     >
                         {/* Contenedor de la foto con su Badge de Adquirido encima */}

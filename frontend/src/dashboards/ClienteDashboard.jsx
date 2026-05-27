@@ -456,8 +456,6 @@ function ClienteDashboard() {
         </>
     );
 
-    const propiedadesEnriquecidas = propiedades.map(p => ({ ...p, inmueble: inmuebles.find(i => i.codigo === p.codigo) || null }));
-
     return (
         <Layout contentClassName="admin-layout-container">
             <div className="dashboard-wrapper">
@@ -484,7 +482,7 @@ function ClienteDashboard() {
                     {seccionActiva === 'catalogo' && renderCatalogo()}
                     {seccionActiva === 'detalle' && renderDetalle()}
                     {seccionActiva === 'visitas' && renderVisitas()}
-                    {seccionActiva === 'mispropiedades' && <MisProperties propiedades={propiedadesEnriquecidas} onVerDetalle={(codigo) => {
+                    {seccionActiva === 'mispropiedades' && <MisProperties propiedades={propiedades} onVerDetalle={(codigo) => {
                         const found = inmuebles.find(i => i.codigo === codigo);
                         if (found) abrirDetalle(found);
                     }} />}
